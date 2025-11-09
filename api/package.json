@@ -1,0 +1,15 @@
+{
+  "name": "@tripmind/api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "supabase start",
+    "stop": "supabase stop",
+    "reset": "supabase db reset",
+    "generate-types": "supabase gen types typescript --local > ../shared/types/database.ts"
+  },
+  "devDependencies": {
+    "supabase": "^1.200.3",
+    "typescript": "^5"
+  }
+}
