@@ -1,0 +1,22 @@
+{
+  "name": "tripmind",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "api",
+    "shared"
+  ],
+  "scripts": {
+    "dev": "pnpm --filter frontend dev",
+    "dev:frontend": "pnpm --filter frontend dev",
+    "build": "pnpm --filter frontend build",
+    "build:frontend": "pnpm --filter frontend build",
+    "start": "pnpm --filter frontend start",
+    "lint": "pnpm --filter frontend lint",
+    "install:all": "pnpm install"
+  },
+  "devDependencies": {
+    "typescript": "^5"
+  }
+}
