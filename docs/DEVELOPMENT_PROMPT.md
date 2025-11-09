@@ -1,4 +1,4 @@
-# Tripmind Development Prompt (Idempotent)
+# Tripmind Development Prompt
 
 ## Task: Continue Tripmind Development
 
