@@ -31,48 +31,31 @@ The project now has:
 - All necessary dependencies installed
 - Proper project structure following the blueprint
 
-### 🎯 Next Recommended Task: **Phase 3 - Gantt Chart Visualization**
+### 🎯 Next Recommended Task: **Website Style Specification**
 
 #### What This Involves:
-**Goal**: Add visual timeline representation with Gantt chart for better trip planning
+**Goal**: Implement comprehensive visual design system for enhanced user experience
 
-**Implementation Steps**:
-1. **Gantt Chart Component**
-   - Timeline visualization showing activities across dates
-   - Visual representation of activity duration and overlaps
-   - Horizontal timeline with date axis
-   - Activity bars with colors based on type
+**Website Style Specification**:
 
-2. **Enhanced Activity Display**
-   - Show activities as horizontal bars on timeline
-   - Visual duration representation (start to end time)
-   - Color coding by activity type
-   - Interactive hover and selection
+1. **Overall Aesthetic**
+   - Minimalist, clean, and highly spacious layout
+   - Neutral color palette with dominant white, soft gray tones, and subtle shadows
+   - Modern, flat design with no heavy gradients or textures
+   - Strong emphasis on clarity, whitespace, and visual hierarchy
 
-3. **Timeline Navigation**
-   - Zoom in/out functionality for different date ranges
-   - Scroll through timeline dates
-   - Toggle between list view and Gantt view
-   - Responsive design for mobile/desktop
+2. **Layout**
+   - Two-column structure:
+     - Left: vertical navigation sidebar
+     - Right: large content canvas with centered Gantt chart
+   - Global elements aligned with wide margins, giving a "breathable" feel
+   - Content box uses light borders and extremely soft shading
 
-4. **Integration with Existing Components**
-   - Connect Gantt chart with right panel details
-   - Maintain activity selection state
-   - Sync with timeline day sections
-
-#### Expected Deliverables:
-- Working Gantt chart visualization
-- Toggle between list and Gantt view modes
-- Interactive timeline with activity selection
-- Visual representation of trip schedule
-- Enhanced user experience for trip planning
-- Foundation for future drag-and-drop functionality
-
-#### Why This Addition:
-- Provides visual overview of entire trip schedule
-- Helps identify scheduling conflicts and gaps
-- Better user experience for trip planning
-- Builds towards more advanced timeline features
+3. **Typography**
+   - Sans-serif, modern font (similar to Inter or Helvetica)
+   - Medium-weight headings, regular-weight body text
+   - Clean, readable, consistent line spacing
+   - Uppercase used sparingly (e.g., month headers)
 
 ### 📋 Development Plan Overview
 
