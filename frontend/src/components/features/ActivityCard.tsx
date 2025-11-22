@@ -7,12 +7,12 @@ interface ActivityCardProps {
 }
 
 const activityTypeConfig = {
-  flight: { emoji: '✈️', color: 'bg-blue-100 text-blue-700', name: 'Flight' },
-  hotel: { emoji: '🏨', color: 'bg-green-100 text-green-700', name: 'Hotel' },
-  event: { emoji: '🎯', color: 'bg-purple-100 text-purple-700', name: 'Event' },
-  transport: { emoji: '🚌', color: 'bg-yellow-100 text-yellow-700', name: 'Transport' },
-  note: { emoji: '📝', color: 'bg-gray-100 text-gray-700', name: 'Note' },
-  task: { emoji: '✅', color: 'bg-orange-100 text-orange-700', name: 'Task' }
+  flight: { dot: '#3B82F6', name: 'Flight' },
+  hotel: { dot: '#10B981', name: 'Hotel' },
+  event: { dot: '#8B5CF6', name: 'Event' },
+  transport: { dot: '#F59E0B', name: 'Transport' },
+  note: { dot: '#6B7280', name: 'Note' },
+  task: { dot: '#F97316', name: 'Task' }
 }
 
 export function ActivityCard({ activity, isSelected = false, onClick }: ActivityCardProps) {
@@ -34,35 +34,43 @@ export function ActivityCard({ activity, isSelected = false, onClick }: Activity
   return (
     <div 
       onClick={onClick}
-      className={`flex items-start gap-4 p-4 border rounded-lg hover:shadow-sm transition-all duration-200 cursor-pointer ${
+      className={`flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer ${
         isSelected 
-          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-400' 
-          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800'
+          ? 'bg-blue-50 dark:bg-blue-900/20' 
+          : 'hover:bg-gray-50 dark:hover:bg-gray-700/30'
       }`}
     >
-      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm ${config.color} dark:opacity-90`}>
-        {config.emoji}
-      </div>
+      {/* Colored dot indicator */}
+      <div 
+        className="w-3 h-3 rounded-full flex-shrink-0"
+        style={{ backgroundColor: config.dot }}
+      />
       
       <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between mb-1">
-          <h3 className="font-semibold text-gray-900 dark:text-white truncate pr-2">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium text-gray-900 dark:text-white truncate pr-2">
             {activity.title}
           </h3>
-          <span className={`text-xs px-2 py-1 rounded-full flex-shrink-0 ${config.color} font-medium`}>
-            {config.name}
-          </span>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              {timeDisplay}
+            </span>
+          </div>
         </div>
         
-        <p className="text-gray-600 dark:text-gray-300 text-sm font-medium mb-1">
-          {timeDisplay}
-        </p>
-        
-        {activity.city && (
-          <p className="text-gray-500 dark:text-gray-400 text-xs">
-            {activity.city}
-          </p>
-        )}
+        <div className="flex items-center gap-2 mt-1">
+          <span className="text-xs text-gray-500 dark:text-gray-400 capitalize">
+            {config.name}
+          </span>
+          {activity.city && (
+            <>
+              <span className="text-xs text-gray-400 dark:text-gray-500">•</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {activity.city}
+              </span>
+            </>
+          )}
+        </div>
       </div>
     </div>
   )

@@ -29,12 +29,12 @@ export function TimelineDay({ date, activities, selectedActivityId, onActivitySe
   })
 
   return (
-    <div className="mb-8">
-      {/* Sticky Day Header */}
-      <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 pb-3 mb-6 z-10">
+    <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden mb-6">
+      {/* Day Header */}
+      <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-lg font-medium text-gray-900 dark:text-white">
               {formatDate(date)}
             </h2>
             {cities.length > 0 && (
@@ -50,21 +50,24 @@ export function TimelineDay({ date, activities, selectedActivityId, onActivitySe
       </div>
       
       {/* Activities List */}
-      <div className="space-y-3 ml-6">
-        {sortedActivities.map((activity) => (
-          <ActivityCard
-            key={activity.id}
-            activity={activity}
-            isSelected={selectedActivityId === activity.id}
-            onClick={() => onActivitySelect?.(activity)}
-          />
-        ))}
+      <div className="p-6">
+        <div className="space-y-2">
+          {sortedActivities.map((activity, index) => (
+            <div key={activity.id} className={index % 2 === 0 ? 'bg-white dark:bg-gray-900' : 'bg-gray-50 dark:bg-gray-800/30'}>
+              <ActivityCard
+                activity={activity}
+                isSelected={selectedActivityId === activity.id}
+                onClick={() => onActivitySelect?.(activity)}
+              />
+            </div>
+          ))}
+        </div>
         
         {/* Add Activity Button */}
-        <button className="w-full p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-500 dark:text-gray-400 hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors group">
+        <button className="w-full mt-4 p-3 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-500 dark:text-gray-400 hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors group">
           <div className="flex items-center justify-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50 flex items-center justify-center transition-colors">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-5 h-5 rounded-full bg-gray-100 dark:bg-gray-700 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50 flex items-center justify-center transition-colors">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
             </div>

@@ -192,17 +192,7 @@ export function GanttChart({ activities, selectedActivityId, onActivitySelect }:
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-          Timeline Overview
-        </h3>
-        <div className="text-sm text-gray-500 dark:text-gray-400">
-          {activities.length} activities
-        </div>
-      </div>
-      
+    <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden">
       {/* Gantt Chart */}
       <div className="gantt-wrapper" style={{ minHeight: '400px', overflow: 'auto' }}>
           <Gantt
@@ -224,17 +214,17 @@ export function GanttChart({ activities, selectedActivityId, onActivitySelect }:
             todayColor="rgba(252, 248, 227, 0.5)"
             TaskListHeader={({ headerHeight }) => (
               <div 
-                className="flex items-center px-4 bg-gray-50 dark:bg-gray-700 border-r border-gray-200 dark:border-gray-600"
+                className="flex items-center px-4 bg-gray-100 dark:bg-gray-800 border-r border-gray-300 dark:border-gray-600"
                 style={{ height: headerHeight }}
               >
-                <span className="font-medium text-gray-900 dark:text-white text-sm">
+                <span className="font-semibold text-gray-800 dark:text-gray-200 text-sm">
                   Activities
                 </span>
               </div>
             )}
             TaskListTable={({ rowHeight, rowWidth, tasks, locale, onExpanderClick }) => (
               <div 
-                className="border-r border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800"
+                className="border-r border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900"
                 style={{ width: rowWidth }}
               >
                 {tasks.map((task, index) => {
@@ -253,13 +243,16 @@ export function GanttChart({ activities, selectedActivityId, onActivitySelect }:
                     }
                   }
                   
+                  // Alternating row backgrounds - more subtle
+                  const rowBg = index % 2 === 0 ? 'bg-white dark:bg-gray-900' : 'bg-gray-50/50 dark:bg-gray-800/20'
+                  
                   return (
                     <div
                       key={task.id}
-                      className={`flex items-center border-b border-gray-100 dark:border-gray-700 ${
+                      className={`flex items-center border-b border-gray-200 dark:border-gray-700 ${
                         isCategory 
-                          ? 'bg-gray-50 dark:bg-gray-700/50 px-3 font-medium' 
-                          : `px-6 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                          ? `${rowBg} px-4 font-semibold` 
+                          : `px-5 cursor-pointer hover:bg-gray-100/50 dark:hover:bg-gray-700/30 ${rowBg} ${
                               isSelected ? 'bg-blue-50 dark:bg-blue-900/20' : ''
                             }`
                       }`}
@@ -270,7 +263,7 @@ export function GanttChart({ activities, selectedActivityId, onActivitySelect }:
                         {/* Expander for categories */}
                         {hasExpander && (
                           <button
-                            className="w-4 h-4 flex-shrink-0 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
+                            className="w-4 h-4 flex-shrink-0 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
                             onClick={(e) => {
                               e.stopPropagation()
                               toggleCategory(categoryType)
@@ -287,31 +280,31 @@ export function GanttChart({ activities, selectedActivityId, onActivitySelect }:
                           </button>
                         )}
                         
-                        {/* Activity type indicator */}
+                        {/* Activity type indicator - smaller dots */}
                         {!isCategory && (
                           <div 
-                            className="w-3 h-3 rounded-full flex-shrink-0"
+                            className="w-2 h-2 rounded-full flex-shrink-0"
                             style={{ backgroundColor: activityTypeColors[activity?.type || 'task'] }}
                           />
                         )}
                         
-                        {/* Category icon for category rows */}
+                        {/* Category icon for category rows - smaller squares */}
                         {isCategory && (
                           <div 
-                            className="w-4 h-4 rounded flex-shrink-0"
+                            className="w-3 h-3 rounded-sm flex-shrink-0"
                             style={{ backgroundColor: activityTypeColors[task.id.replace('category-', '') as keyof typeof activityTypeColors] }}
                           />
                         )}
                         
                         {/* Task/Category details */}
                         <div className="flex-1 min-w-0">
-                          <div className={`text-sm text-gray-900 dark:text-white truncate ${
-                            isCategory ? 'font-medium' : 'font-normal'
+                          <div className={`text-sm text-gray-800 dark:text-gray-200 truncate ${
+                            isCategory ? 'font-semibold' : 'font-medium'
                           }`}>
                             {task.name}
                           </div>
                           {!isCategory && activity && (
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                            <div className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
                               {activity?.type && (
                                 <span className="capitalize">{activity.type}</span>
                               )}
@@ -321,7 +314,7 @@ export function GanttChart({ activities, selectedActivityId, onActivitySelect }:
                             </div>
                           )}
                           {isCategory && (
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                            <div className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
                               {activitiesByType.find(t => `category-${t.type}` === task.id)?.activities.length || 0} items
                             </div>
                           )}
