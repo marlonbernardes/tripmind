@@ -8,23 +8,27 @@ export default function TripsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">My Trips</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
-            Plan and organize your adventures
-          </p>
+    <div className="min-h-full bg-white dark:bg-gray-950">
+      <div className="max-w-6xl mx-auto px-12 py-12">
+        <div className="flex items-center justify-between mb-12">
+          <div>
+            <h1 className="text-4xl font-semibold text-gray-900 dark:text-white tracking-tight mb-3">Your Trips</h1>
+            <p className="text-gray-500 dark:text-gray-400 text-lg font-medium">
+              Plan and organize your travel adventures
+            </p>
+          </div>
+          <button 
+            onClick={() => setShowCreateModal(true)}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors font-medium shadow-sm"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            New Trip
+          </button>
         </div>
-        <button 
-          onClick={() => setShowCreateModal(true)}
-          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm"
-        >
-          Create Trip
-        </button>
-      </div>
-      
-      {mockTrips.length === 0 ? (
+        
+        {mockTrips.length === 0 ? (
         <div className="text-center py-12">
           <div className="w-16 h-16 mx-auto mb-4 text-gray-400">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -39,7 +43,7 @@ export default function TripsPage() {
           </p>
           <button 
             onClick={() => setShowCreateModal(true)}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-6 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
           >
             Create your first trip
           </button>
@@ -124,7 +128,7 @@ export default function TripsPage() {
                 </button>
                 <button 
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="flex-1 px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
                 >
                   Create Trip
                 </button>
@@ -133,6 +137,7 @@ export default function TripsPage() {
           </div>
         </div>
       )}
+      </div>
     </div>
   )
 }
