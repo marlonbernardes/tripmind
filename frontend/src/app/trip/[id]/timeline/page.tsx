@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { TimelineDay } from '@/components/features/TimelineDay'
+import { GanttChart } from '@/components/features/GanttChart'
 import { mockTrips, mockActivities, getActivitiesForTrip } from '@/lib/mock-data'
 import type { SimpleActivity } from '@/types/simple'
 
@@ -14,7 +15,7 @@ interface TimelinePageProps {
 
 export default function TimelinePage({ params }: TimelinePageProps) {
   const [selectedActivity, setSelectedActivity] = useState<SimpleActivity | null>(null)
-  const [currentView, setCurrentView] = useState<'timeline' | 'map'>('timeline')
+  const [currentView, setCurrentView] = useState<'timeline' | 'gantt' | 'map'>('timeline')
   
   // For now, we'll use the resolved params synchronously since we're in client mode
   // In a real app, you'd handle the Promise properly
@@ -85,7 +86,7 @@ export default function TimelinePage({ params }: TimelinePageProps) {
                 />
               </div>
               <p className="text-gray-600 dark:text-gray-400">
-                Timeline view • {activities.length} activities
+                {currentView === 'timeline' ? 'List view' : currentView === 'gantt' ? 'Gantt view' : 'Map view'} • {activities.length} activities
               </p>
             </div>
             
@@ -98,7 +99,17 @@ export default function TimelinePage({ params }: TimelinePageProps) {
                     : 'border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
                 }`}
               >
-                Timeline
+                List
+              </button>
+              <button 
+                onClick={() => setCurrentView('gantt')}
+                className={`px-4 py-2 text-sm rounded-lg transition-colors ${
+                  currentView === 'gantt'
+                    ? 'bg-blue-600 text-white'
+                    : 'border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                }`}
+              >
+                Gantt
               </button>
               <button 
                 onClick={() => setCurrentView('map')}
@@ -113,8 +124,8 @@ export default function TimelinePage({ params }: TimelinePageProps) {
             </div>
           </div>
           
-          {/* Timeline Content */}
-          {currentView === 'timeline' ? (
+          {/* Content based on current view */}
+          {currentView === 'timeline' && (
             <div className="space-y-2">
               {activitiesByDate.length === 0 ? (
                 <div className="text-center py-12">
@@ -142,7 +153,17 @@ export default function TimelinePage({ params }: TimelinePageProps) {
                 ))
               )}
             </div>
-          ) : (
+          )}
+
+          {currentView === 'gantt' && (
+            <GanttChart
+              activities={activities}
+              selectedActivityId={selectedActivity?.id}
+              onActivitySelect={setSelectedActivity}
+            />
+          )}
+
+          {currentView === 'map' && (
             <div className="flex items-center justify-center h-96 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
               <div className="text-center">
                 <div className="w-16 h-16 mx-auto mb-4 text-gray-400">
