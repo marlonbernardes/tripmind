@@ -46,12 +46,30 @@ export function ActivityCard({ activity, isSelected = false, onClick }: Activity
     return 'border-gray-200 dark:border-gray-700'
   }
 
+  // Get styling for planned activities
+  const getPlannedStyling = () => {
+    if (activity.status === 'planned') {
+      return {
+        borderLeft: 'border-l-4 border-l-amber-500',
+        opacity: 'opacity-85',
+        background: 'bg-amber-50/50 dark:bg-amber-950/20'
+      }
+    }
+    return {
+      borderLeft: '',
+      opacity: '',
+      background: getBackgroundColor()
+    }
+  }
+
+  const plannedStyling = getPlannedStyling()
+
   return (
     <div 
       onClick={onClick}
       className={`flex items-center gap-3 px-4 py-3 rounded-lg border transition-all cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm ${
-        getBackgroundColor()
-      } ${getBorderColor()}`}
+        plannedStyling.background
+      } ${getBorderColor()} ${plannedStyling.borderLeft} ${plannedStyling.opacity}`}
     >
       {/* Colored dot indicator */}
       <div 
@@ -65,6 +83,16 @@ export function ActivityCard({ activity, isSelected = false, onClick }: Activity
             {activity.title}
           </h3>
           <div className="flex items-center gap-2 flex-shrink-0">
+            {activity.status === 'planned' && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+                PLANNED
+              </span>
+            )}
+            {activity.status === 'booked' && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                BOOKED
+              </span>
+            )}
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
               {timeDisplay}
             </span>

@@ -1,5 +1,6 @@
 import type { SimpleActivity } from '@/types/simple'
 import { ActivityCard } from './ActivityCard'
+import { useTripContext } from '@/contexts/TripContext'
 
 interface TimelineDayProps {
   date: string
@@ -9,6 +10,12 @@ interface TimelineDayProps {
 }
 
 export function TimelineDay({ date, activities, selectedActivityId, onActivitySelect }: TimelineDayProps) {
+  const { setIsCreatingActivity } = useTripContext()
+
+  const handleAddActivityClick = () => {
+    setIsCreatingActivity(true)
+  }
+
   // Group activities by city for the day header
   const cities = [...new Set(activities.filter(a => a.city).map(a => a.city))]
   
@@ -60,7 +67,10 @@ export function TimelineDay({ date, activities, selectedActivityId, onActivitySe
         </div>
         
         {/* Add Activity Button */}
-        <button className="w-full mt-4 p-3 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-500 dark:text-gray-400 hover:border-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors group bg-white dark:bg-gray-900">
+        <button 
+          onClick={handleAddActivityClick}
+          className="w-full mt-4 p-3 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-500 dark:text-gray-400 hover:border-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors group bg-white dark:bg-gray-900"
+        >
           <div className="flex items-center justify-center gap-2">
             <div className="w-4 h-4 rounded-full bg-gray-200 dark:bg-gray-700 group-hover:bg-gray-300 dark:group-hover:bg-gray-600 flex items-center justify-center transition-colors">
               <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
