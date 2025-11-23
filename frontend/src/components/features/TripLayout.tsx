@@ -69,15 +69,12 @@ function TripLayoutContent({ children, tripId }: TripLayoutProps) {
       {/* Trip Header with Sub-Navigation */}
       <TripHeader trip={trip} activityCount={activities.length} />
 
-      {/* 2-Column Layout */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left Column - Content */}
-        <div className="flex-1 overflow-auto">
+      {/* Single Column Layout - Full Width */}
+      <div className="flex-1 overflow-hidden">
+        {/* Content Area - Full Width */}
+        <div className="h-full overflow-auto">
           {children}
         </div>
-        
-        {/* Right Column - Activity Details Panel */}
-        <ActivityDetailsPanel />
       </div>
     </div>
   )
@@ -89,6 +86,7 @@ export function TripLayout({ children, tripId }: TripLayoutProps) {
       <TripLayoutContent tripId={tripId}>
         {children}
       </TripLayoutContent>
+      <ActivityDetailsPanel />
     </TripProvider>
   )
 }
