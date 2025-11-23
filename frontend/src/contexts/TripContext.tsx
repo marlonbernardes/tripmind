@@ -7,10 +7,15 @@ import type { SimpleActivity, SimpleTrip } from '@/types/simple'
 interface TripContextType {
   selectedActivity: SimpleActivity | null
   setSelectedActivity: (activity: SimpleActivity | null) => void
+  isCreatingActivity: boolean
+  setIsCreatingActivity: (isCreating: boolean) => void
   trip: SimpleTrip | null
   setTrip: (trip: SimpleTrip | null) => void
   activities: SimpleActivity[]
   setActivities: (activities: SimpleActivity[]) => void
+  addActivity: (activity: Omit<SimpleActivity, 'id'>) => void
+  updateActivity: (id: string, updates: Partial<SimpleActivity>) => void
+  deleteActivity: (id: string) => void
 }
 
 const TripContext = createContext<TripContextType | undefined>(undefined)
@@ -29,6 +34,7 @@ interface TripProviderProps {
 
 export function TripProvider({ children }: TripProviderProps) {
   const [selectedActivity, setSelectedActivity] = useState<SimpleActivity | null>(null)
+  const [isCreatingActivity, setIsCreatingActivity] = useState(false)
   const [trip, setTrip] = useState<SimpleTrip | null>(null)
   const [activities, setActivities] = useState<SimpleActivity[]>([])
   const searchParams = useSearchParams()
@@ -61,15 +67,55 @@ export function TripProvider({ children }: TripProviderProps) {
     router.replace(newUrl, { scroll: false })
   }
 
+  // CRUD methods for activities
+  const addActivity = (activityData: Omit<SimpleActivity, 'id'>) => {
+    const newActivity: SimpleActivity = {
+      ...activityData,
+      id: `activity_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    }
+    setActivities(prevActivities => [...prevActivities, newActivity])
+  }
+
+  const updateActivity = (id: string, updates: Partial<SimpleActivity>) => {
+    setActivities(prevActivities => 
+      prevActivities.map(activity => 
+        activity.id === id 
+          ? { ...activity, ...updates }
+          : activity
+      )
+    )
+    
+    // Update selected activity if it's the one being edited
+    if (selectedActivity?.id === id) {
+      setSelectedActivity(prev => prev ? { ...prev, ...updates } : null)
+    }
+  }
+
+  const deleteActivity = (id: string) => {
+    setActivities(prevActivities => 
+      prevActivities.filter(activity => activity.id !== id)
+    )
+    
+    // Clear selected activity if it's the one being deleted
+    if (selectedActivity?.id === id) {
+      setSelectedActivity(null)
+    }
+  }
+
   return (
     <TripContext.Provider
       value={{
         selectedActivity,
         setSelectedActivity: handleActivitySelect,
+        isCreatingActivity,
+        setIsCreatingActivity,
         trip,
         setTrip,
         activities,
         setActivities,
+        addActivity,
+        updateActivity,
+        deleteActivity,
       }}
     >
       {children}

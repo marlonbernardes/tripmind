@@ -38,7 +38,14 @@ export const mockActivities: SimpleActivity[] = [
     title: 'Dublin (DUB) → Beijing (PEK) - HU752, Terminal 1',
     start: '2026-01-08T11:00:00',
     end: '2026-01-09T05:05:00',
-    city: 'Dublin Airport (DUB)'
+    city: 'Dublin Airport (DUB)',
+    status: 'booked',
+    metadata: {
+      from: 'Dublin',
+      to: 'Beijing',
+      flightNumberOutbound: 'HU752',
+      airline: 'Hainan Airlines'
+    }
   },
   {
     id: 'a2',
@@ -47,7 +54,8 @@ export const mockActivities: SimpleActivity[] = [
     title: 'Beijing (PEK) → Bangkok (BKK) - HU429, Terminal 2',
     start: '2026-01-09T09:40:00',
     end: '2026-01-09T14:10:00',
-    city: 'Bangkok'
+    city: 'Bangkok',
+    status: 'booked'
   },
   {
     id: 'a3',
@@ -56,7 +64,8 @@ export const mockActivities: SimpleActivity[] = [
     title: 'Bangkok (BKK) → Phuket (HKT) - VZ2304',
     start: '2026-01-09T17:30:00',
     end: '2026-01-09T19:00:00',
-    city: 'Bangkok'
+    city: 'Bangkok',
+    status: 'booked'
   },
   {
     id: 'a4',
@@ -65,7 +74,8 @@ export const mockActivities: SimpleActivity[] = [
     title: 'Bandaloo Boutique Hotel',
     start: '2026-01-09T20:30:00',
     end: '2026-01-10T12:00:00',
-    city: 'Phuket'
+    city: 'Phuket',
+    status: 'planned'
   },
   {
     id: 'a5',
@@ -73,7 +83,8 @@ export const mockActivities: SimpleActivity[] = [
     type: 'event',
     title: 'Phuket nightlife',
     start: '2026-01-09T20:30:00',
-    city: 'Phuket'
+    city: 'Phuket',
+    status: 'planned'
   },
   {
     id: 'a6',
@@ -82,7 +93,13 @@ export const mockActivities: SimpleActivity[] = [
     title: 'Phuket resort - All inclusive (3 days)',
     start: '2026-01-10T12:00:00',
     end: '2026-01-12T21:00:00',
-    city: 'Phuket'
+    city: 'Phuket',
+    status: 'booked',
+    metadata: {
+      hotelName: 'Phuket Paradise Resort',
+      hotelLink: 'https://phuketparadise.com',
+      roomType: 'Deluxe Ocean View'
+    }
   },
   {
     id: 'a7',
@@ -91,7 +108,8 @@ export const mockActivities: SimpleActivity[] = [
     title: 'Phuket (HKT) → Bangkok (BKK) - VZ309',
     start: '2026-01-12T21:25:00',
     end: '2026-01-12T22:55:00',
-    city: 'Phuket'
+    city: 'Phuket',
+    status: 'planned'
   },
   {
     id: 'a8',
@@ -100,7 +118,8 @@ export const mockActivities: SimpleActivity[] = [
     title: 'Bangkok (DMK) → Maldives (MLE) - FD175',
     start: '2026-01-13T09:15:00',
     end: '2026-01-13T11:30:00',
-    city: 'Bangkok'
+    city: 'Bangkok',
+    status: 'planned'
   },
   {
     id: 'a9',
@@ -109,7 +128,8 @@ export const mockActivities: SimpleActivity[] = [
     title: 'Maldives resort - Paradise vacation (4 days)',
     start: '2026-01-13T12:00:00',
     end: '2026-01-17T12:00:00',
-    city: 'Maldives'
+    city: 'Maldives',
+    status: 'planned'
   },
   {
     id: 'a10',
@@ -118,7 +138,8 @@ export const mockActivities: SimpleActivity[] = [
     title: 'Maldives (MLE) → Bangkok (DMK)',
     start: '2026-01-17T12:30:00',
     end: '2026-01-17T18:55:00',
-    city: 'Maldives'
+    city: 'Maldives',
+    status: 'planned'
   },
   {
     id: 'a11',
@@ -127,7 +148,8 @@ export const mockActivities: SimpleActivity[] = [
     title: 'Bangkok city hotel & exploration (4 days)',
     start: '2026-01-17T20:00:00',
     end: '2026-01-21T16:00:00',
-    city: 'Bangkok'
+    city: 'Bangkok',
+    status: 'planned'
   },
   {
     id: 'a12',
@@ -136,7 +158,8 @@ export const mockActivities: SimpleActivity[] = [
     title: 'Bangkok (BKK) → Beijing (PEK) - HU430',
     start: '2026-01-21T16:20:00',
     end: '2026-01-21T22:00:00',
-    city: 'Suvarnabhumi Airport (BKK)'
+    city: 'Suvarnabhumi Airport (BKK)',
+    status: 'booked'
   },
   {
     id: 'a13',
@@ -145,7 +168,8 @@ export const mockActivities: SimpleActivity[] = [
     title: 'Beijing (PEK) → Dublin (DUB) - HU751, Terminal 2',
     start: '2026-01-22T02:40:00',
     end: '2026-01-22T05:50:00',
-    city: 'Beijing'
+    city: 'Beijing',
+    status: 'booked'
   },
   
   // European Summer activities
@@ -155,7 +179,8 @@ export const mockActivities: SimpleActivity[] = [
     type: 'flight',
     title: 'Flight to London',
     start: '2025-06-10T08:15:00',
-    end: '2025-06-10T09:45:00'
+    end: '2025-06-10T09:45:00',
+    status: 'booked'
   },
   {
     id: 'b2',
@@ -163,7 +188,8 @@ export const mockActivities: SimpleActivity[] = [
     type: 'hotel',
     title: 'The Shard Hotel',
     start: '2025-06-10T15:00:00',
-    city: 'London Bridge'
+    city: 'London Bridge',
+    status: 'planned'
   },
   {
     id: 'b3',
@@ -172,7 +198,8 @@ export const mockActivities: SimpleActivity[] = [
     title: 'British Museum',
     start: '2025-06-11T10:00:00',
     end: '2025-06-11T16:00:00',
-    city: 'Bloomsbury'
+    city: 'Bloomsbury',
+    status: 'planned'
   },
   {
     id: 'b4',
@@ -180,7 +207,8 @@ export const mockActivities: SimpleActivity[] = [
     type: 'transport',
     title: 'Eurostar to Paris',
     start: '2025-06-15T12:31:00',
-    end: '2025-06-15T15:47:00'
+    end: '2025-06-15T15:47:00',
+    status: 'booked'
   },
   
   // Weekend in Paris activities
@@ -190,7 +218,8 @@ export const mockActivities: SimpleActivity[] = [
     type: 'flight',
     title: 'Flight to Paris',
     start: '2025-04-05T19:45:00',
-    end: '2025-04-05T22:10:00'
+    end: '2025-04-05T22:10:00',
+    status: 'booked'
   },
   {
     id: 'c2',
@@ -198,7 +227,8 @@ export const mockActivities: SimpleActivity[] = [
     type: 'hotel',
     title: 'Le Marais Boutique Hotel',
     start: '2025-04-05T15:00:00',
-    city: 'Le Marais'
+    city: 'Le Marais',
+    status: 'planned'
   },
   {
     id: 'c3',
@@ -207,7 +237,8 @@ export const mockActivities: SimpleActivity[] = [
     title: 'Eiffel Tower Visit',
     start: '2025-04-06T10:00:00',
     end: '2025-04-06T12:00:00',
-    city: 'Champ de Mars'
+    city: 'Champ de Mars',
+    status: 'booked'
   },
   {
     id: 'c4',
@@ -216,7 +247,8 @@ export const mockActivities: SimpleActivity[] = [
     title: 'Louvre Museum',
     start: '2025-04-06T14:00:00',
     end: '2025-04-06T17:00:00',
-    city: '1st Arrondissement'
+    city: '1st Arrondissement',
+    status: 'booked'
   },
   {
     id: 'c5',
@@ -224,7 +256,8 @@ export const mockActivities: SimpleActivity[] = [
     type: 'flight',
     title: 'Return Flight',
     start: '2025-04-07T14:20:00',
-    end: '2025-04-07T15:55:00'
+    end: '2025-04-07T15:55:00',
+    status: 'booked'
   }
 ]
 
