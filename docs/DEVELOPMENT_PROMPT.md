@@ -10,7 +10,7 @@ You are working on **Tripmind**, a responsive web application for planning trips
 First, read all documentation files to understand current state:
 - Read `docs/PROJECT_STATUS.md` for current status and next recommended task (if exists)
 - Read `docs/PLAN.md` for complete project specification and MVP requirements
-- Read `docs/CODING.md` for coding standards and practices to follow (if exists)
+- [IGNORE} Read `docs/CODING.md` for coding standards and practices to follow (if exists)
 - Review current codebase structure
 
 #### 2. **Confirm Task with User**
