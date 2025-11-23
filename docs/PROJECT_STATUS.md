@@ -31,141 +31,22 @@ The project now has:
 - All necessary dependencies installed
 - Proper project structure following the blueprint
 
-### 🎯 Next Recommended Task: **Website Style Specification**
+### 🎯 Next Recommended Task: support for adding/editing activities
 
-# Style Refactor Brief
+	there will be no form for creating a trip (i.e entering start/end date, name of trip): user will be able to edit name of the trip by clicking on its name on the view page.
+       the only way to create a new trip will be by describing it to AI (in a /plan page). AI will come up with plan full of placeholders and you agree (or chat with it till happy). For MVP simple AI text box (using https://www.prompt-kit.com/) will do.
 
-Goal: Restyle the **travel timeline (Image 1)** to have a **similar minimalist, neutral style** to the **Gantt view (Image 2)** while **keeping the colored dots and task bars** as category indicators.
+AI will output JSON with placeholders and most activities with state == planned (unless the user tells AI he has already booked it).
 
----
+Users will then be able to use the existing Overview (or Timeline page) to either modify the existign placeholders (by clicking on their event card)
+or click on the “Add new activity” (on the timeline page, under each day) or on by clicking on the corresponding row/column of the overview page.
 
-## 1. Overall Look & Feel
+This new ManageActivityForm (better name recommended) should show at the top the details about the activity for the user to enter (i.e start/end date, type, booked?, notes)  - below, when an activity is in planned state (or when a new one is being created), it should a “recommendations” section showing links to sources like flights.google.com or booking.com with the dates prepopulated		
+- when booked is selected this section would collapse as the user has already booked
 
-- Keep the layout and semantics of the travel timeline (flights, transports, hotels, events).
-- Adopt a **calm, neutral, productivity-tool style**:
-  - Lots of whitespace.
-  - Soft, light gray lines.
-  - Minimal borders and shadows.
-  - Clean typography with limited font sizes and weights.
 
----
+	UX suggestion: if an activity is in planned state, in the timeline section the card should show, somehow, an indicator or message that the activity needs to be confirmed (not sure if i want to use the state confirmed or booked for things that can’t be changed). Perhaps a left border wth the word “planned” displaye horizontally? Similarly, for the Overview page (where the Gantt chart is) we could show a “striped” background to indicate when something is only a draft/planned?
 
-## 2. Container / Card
-
-- Use a single **white card** wrapping the entire timeline.
-- Rounded corners: `10–14px`.
-- Soft shadow: `0 1px 4px rgba(0,0,0,0.06)` or similar.
-- Internal padding: `20–24px` on all sides.
-- No strong inner borders; rely mostly on whitespace and subtle lines.
-
----
-
-## 3. Typography
-
-- Use a **modern sans-serif** (system UI, Inter, SF Pro, etc.).
-- Text colors:
-  - Primary: near-black (`#202124` or similar).
-  - Secondary: medium gray (`#5F6368`).
-  - Muted/metadata: light gray (`#9AA0A6`).
-- Hierarchy:
-  - Page title (e.g., “Timeline Overview”): 18–20px, medium weight.
-  - Row group titles (“Flights”, “Transports”…): 14–16px, medium.
-  - Item titles (“Flight to Tokyo”): 13–14px, regular.
-  - Subtext (“Flight”, “Hotel · Shinjuku”): 12–13px, lighter color.
-
----
-
-## 4. Timeline Grid
-
-- Use a **very light, subtle grid**:
-  - Vertical and horizontal lines: `#F2F2F2` or lighter.
-  - Optional alternating row backgrounds:
-    - Row A: `#FFFFFF`
-    - Row B: `#FAFAFA` (very subtle).
-- Date headers:
-  - Month label (e.g., “March”) centered, small bold.
-  - Days in smaller font, medium gray, no bright highlight.
-- Avoid heavy borders around the grid; keep it feeling like a soft sheet of paper.
-
----
-
-## 5. Today Indicator (Optional but Recommended)
-
-- Add a **thin vertical “today” line** like in Image 2:
-  - Full height of the grid.
-  - Color: dark gray (`#444444`).
-- Optional small pill/badge at the top with the current date.
-- No bright color fill; it should stand out by contrast, not by saturation.
-
----
-
-## 6. Task Bars (Preserve Colors, Change Styling)
-
-Keep:  
-- Category colors (e.g., blue for flights, orange for transports, green for hotels, purple for events).  
-- Colored dots in the left-hand list.
-
-Change styling to be closer to Image 2:
-
-- Shape:
-  - Rounded corners: `6–8px`.
-  - Height: slightly slimmer, matching row height closely.
-- Border:
-  - Very subtle border: `1px solid rgba(0,0,0,0.07)` or darker version of the bar color.
-- Fill:
-  - Flat color or very soft gradient (if any).
-  - Avoid glossy or high-contrast gradients.
-- Shadow:
-  - None or extremely subtle (`0 1px 2px rgba(0,0,0,0.08)`).
-- Label:
-  - Single-line text centered vertically.
-  - Color chosen for contrast (e.g., white text on strong color, dark gray on lighter tints).
-- Overlaps:
-  - When overlapping bars exist, use slight transparency to keep the UI calm (e.g., non-focused bars at `opacity: 0.8`).
-
----
-
-## 7. Left Activities Column
-
-- Keep structure:
-  - Top-level groups (Flights, Transports, Hotels, Events).
-  - Nested items under each group.
-- Visual tweaks:
-  - Use **simple gray chevrons** (`▸` / `▾`) for expand/collapse.
-  - Colored dots remain as current category markers.
-  - Align dots vertically with the center of the row text.
-  - Reduce vertical padding so row height roughly matches bar height on the grid.
-- Text styling:
-  - Group labels: slightly larger, medium weight, primary color.
-  - Child items: regular weight, primary color.
-  - Sub-labels (e.g., “Flight”, “Hotel · Shinjuku”): smaller, lighter color.
-
----
-
-## 8. Header & Counters
-
-- Title (“Timeline Overview”) left-aligned at top.
-- Right side can still show “8 activities”, but:
-  - Use small text size.
-  - Use light gray color.
-  - Avoid badges or strong backgrounds; plain text is enough.
-- Optional subtle divider line under the header: `1px solid #EDEDED`, or just extra spacing.
-
----
-
-## 9. Interactions / Hover
-
-- Row hover:
-  - Background: very light tint (`#F7F7F7`).
-- Bar hover:
-  - Slight darkening of border and a very small shadow increase.
-- Do not change to dramatically different colors; keep transitions gentle and almost invisible unless you’re focusing.
-
----
-
-## 10. Summary Prompt (Short Version)
-
-> Take the current travel timeline UI and restyle it to a minimalist, neutral productivity-tool style similar to the Frappe Gantt example: use a white rounded card with soft shadow, a faint gray grid, calm neutral typography, subtle row striping, a thin dark “today” line, and pill-shaped task bars with soft borders and minimal shadow—while preserving the existing category colors and colored dots for flights, transports, hotels, and events.
 
 
 ### 🔧 Technical Debt & Notes
