@@ -13,7 +13,7 @@ interface GanttChartProps {
 
 const activityTypeColors = {
   flight: '#3B82F6',
-  hotel: '#10B981', 
+  hotel: '#10B981',
   event: '#8B5CF6',
   transport: '#F59E0B',
   note: '#6B7280',
@@ -26,23 +26,18 @@ export function GanttChart({ activities, selectedActivityId, onActivitySelect }:
     new Set(['flight', 'transport', 'hotel', 'event', 'task', 'note']) // All expanded by default
   )
 
-  // Helper function to safely parse date/time
-  const safeParseDateTime = (dateStr: string, timeStr: string): Date => {
+  // Helper function to safely parse datetime
+  const safeParseDatetime = (datetime: string): Date => {
     try {
-      // Remove timezone indicators from time string
-      const cleanTime = timeStr.split('+')[0].split('-')[0]
-      const dateTime = `${dateStr}T${cleanTime}`
-      const date = new Date(dateTime)
-      
+      const date = new Date(datetime)
       // Check if date is valid
       if (isNaN(date.getTime())) {
-        console.warn(`Invalid date/time: ${dateTime}`)
+        console.warn(`Invalid datetime: ${datetime}`)
         return new Date() // fallback to current date
       }
-      
       return date
     } catch (error) {
-      console.warn(`Error parsing date/time: ${dateStr}T${timeStr}`, error)
+      console.warn(`Error parsing datetime: ${datetime}`, error)
       return new Date() // fallback to current date
     }
   }
@@ -69,7 +64,7 @@ export function GanttChart({ activities, selectedActivityId, onActivitySelect }:
       acc[activity.type].push(activity)
       return acc
     }, {} as Record<string, SimpleActivity[]>)
-    
+
     // Sort by type priority and then by time within each type
     const typeOrder = ['flight', 'transport', 'hotel', 'event', 'task', 'note']
     return typeOrder
@@ -77,8 +72,8 @@ export function GanttChart({ activities, selectedActivityId, onActivitySelect }:
       .map(type => ({
         type,
         activities: grouped[type].sort((a, b) => {
-          const dateA = safeParseDateTime(a.date, a.startTime)
-          const dateB = safeParseDateTime(b.date, b.startTime)
+          const dateA = safeParseDatetime(a.start)
+          const dateB = safeParseDatetime(b.start)
           return dateA.getTime() - dateB.getTime()
         })
       }))
@@ -87,19 +82,19 @@ export function GanttChart({ activities, selectedActivityId, onActivitySelect }:
   // Convert activities to gantt-task-react format with project groups
   const ganttTasks = useMemo((): Task[] => {
     const tasks: Task[] = []
-    
+
     activitiesByType.forEach(({ type, activities: typeActivities }) => {
       // Add parent task for the category
-      const categoryStartTimes = typeActivities.map(a => safeParseDateTime(a.date, a.startTime).getTime())
+      const categoryStartTimes = typeActivities.map(a => safeParseDatetime(a.start).getTime())
       const categoryEndTimes = typeActivities.map(a => {
-        const endTime = a.endTime ? safeParseDateTime(a.date, a.endTime).getTime() : safeParseDateTime(a.date, a.startTime).getTime() + (60 * 60 * 1000)
+        const endTime = a.end ? safeParseDatetime(a.end).getTime() : safeParseDatetime(a.start).getTime() + (60 * 60 * 1000)
         return endTime
       })
-      
+
       const categoryStart = new Date(Math.min(...categoryStartTimes))
       const categoryEnd = new Date(Math.max(...categoryEndTimes))
       const isExpanded = expandedCategories.has(type)
-      
+
       tasks.push({
         start: categoryStart,
         end: categoryEnd,
@@ -116,19 +111,15 @@ export function GanttChart({ activities, selectedActivityId, onActivitySelect }:
           progressSelectedColor: activityTypeColors[type as keyof typeof activityTypeColors]
         }
       })
-      
+
       // Add child tasks for each activity in this category only if expanded
       if (isExpanded) {
         typeActivities.forEach((activity) => {
-          const startTime = safeParseDateTime(activity.date, activity.startTime)
+          const startTime = safeParseDatetime(activity.start)
           let endTime = startTime
-          
-          if (activity.endTime) {
-            endTime = safeParseDateTime(activity.date, activity.endTime)
-            // Handle next-day activities (like flights with +1)
-            if (activity.endTime.includes('+')) {
-              endTime = new Date(endTime.getTime() + 24 * 60 * 60 * 1000) // Add 24 hours
-            }
+
+          if (activity.end) {
+            endTime = safeParseDatetime(activity.end)
           } else {
             // Default 1 hour duration for activities without end time
             endTime = new Date(startTime.getTime() + 60 * 60 * 1000)
@@ -153,7 +144,7 @@ export function GanttChart({ activities, selectedActivityId, onActivitySelect }:
         })
       }
     })
-    
+
     return tasks
   }, [activitiesByType, expandedCategories])
 
@@ -194,7 +185,7 @@ export function GanttChart({ activities, selectedActivityId, onActivitySelect }:
   return (
     <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden">
       {/* Gantt Chart */}
-      <div className="gantt-wrapper" style={{ minHeight: '400px', overflow: 'auto' }}>
+      <div className="gantt-wrapper h-full" style={{ width: '100%' }}>
           <Gantt
             tasks={ganttTasks}
             viewMode={ViewMode.Day}
@@ -204,7 +195,6 @@ export function GanttChart({ activities, selectedActivityId, onActivitySelect }:
             onProgressChange={handleTaskChange}
             listCellWidth="200px"
             columnWidth={60}
-            ganttHeight={400}
             barCornerRadius={3}
             handleWidth={8}
             fontSize="14"
@@ -213,7 +203,7 @@ export function GanttChart({ activities, selectedActivityId, onActivitySelect }:
             arrowIndent={20}
             todayColor="rgba(252, 248, 227, 0.5)"
             TaskListHeader={({ headerHeight }) => (
-              <div 
+              <div
                 className="flex items-center px-4 bg-gray-100 dark:bg-gray-800 border-r border-gray-300 dark:border-gray-600"
                 style={{ height: headerHeight }}
               >
@@ -223,7 +213,7 @@ export function GanttChart({ activities, selectedActivityId, onActivitySelect }:
               </div>
             )}
             TaskListTable={({ rowHeight, rowWidth, tasks, locale, onExpanderClick }) => (
-              <div 
+              <div
                 className="border-r border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900"
                 style={{ width: rowWidth }}
               >
@@ -234,7 +224,7 @@ export function GanttChart({ activities, selectedActivityId, onActivitySelect }:
                   const hasExpander = task.type === 'project'
                   const categoryType = isCategory ? task.id.replace('category-', '') : ''
                   const isExpanded = expandedCategories.has(categoryType)
-                  
+
                   // Skip child tasks if their parent category is collapsed
                   if (!isCategory && task.project) {
                     const parentCategoryType = task.project.replace('category-', '')
@@ -242,16 +232,16 @@ export function GanttChart({ activities, selectedActivityId, onActivitySelect }:
                       return null
                     }
                   }
-                  
+
                   // Alternating row backgrounds - more subtle
                   const rowBg = index % 2 === 0 ? 'bg-white dark:bg-gray-900' : 'bg-gray-50/50 dark:bg-gray-800/20'
-                  
+
                   return (
                     <div
                       key={task.id}
                       className={`flex items-center border-b border-gray-200 dark:border-gray-700 ${
-                        isCategory 
-                          ? `${rowBg} px-4 font-semibold` 
+                        isCategory
+                          ? `${rowBg} px-4 font-semibold`
                           : `px-5 cursor-pointer hover:bg-gray-100/50 dark:hover:bg-gray-700/30 ${rowBg} ${
                               isSelected ? 'bg-blue-50 dark:bg-blue-900/20' : ''
                             }`
@@ -269,33 +259,33 @@ export function GanttChart({ activities, selectedActivityId, onActivitySelect }:
                               toggleCategory(categoryType)
                             }}
                           >
-                            <svg 
-                              className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-0' : '-rotate-90'}`} 
-                              fill="none" 
-                              stroke="currentColor" 
+                            <svg
+                              className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-0' : '-rotate-90'}`}
+                              fill="none"
+                              stroke="currentColor"
                               viewBox="0 0 24 24"
                             >
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                             </svg>
                           </button>
                         )}
-                        
+
                         {/* Activity type indicator - smaller dots */}
                         {!isCategory && (
-                          <div 
+                          <div
                             className="w-2 h-2 rounded-full flex-shrink-0"
                             style={{ backgroundColor: activityTypeColors[activity?.type || 'task'] }}
                           />
                         )}
-                        
+
                         {/* Category icon for category rows - smaller squares */}
                         {isCategory && (
-                          <div 
+                          <div
                             className="w-3 h-3 rounded-sm flex-shrink-0"
                             style={{ backgroundColor: activityTypeColors[task.id.replace('category-', '') as keyof typeof activityTypeColors] }}
                           />
                         )}
-                        
+
                         {/* Task/Category details */}
                         <div className="flex-1 min-w-0">
                           <div className={`text-sm text-gray-800 dark:text-gray-200 truncate ${
@@ -346,22 +336,22 @@ export function GanttChart({ activities, selectedActivityId, onActivitySelect }:
             }}
           />
       </div>
-      
+
       {/* Custom CSS for dark mode support */}
       <style jsx global>{`
         .dark .gantt-wrapper {
           filter: invert(1) hue-rotate(180deg);
         }
-        
+
         .dark .gantt-wrapper .gantt-tooltip {
           filter: invert(1) hue-rotate(180deg);
         }
-        
+
         /* Ensure text remains readable in dark mode */
         .dark .gantt-wrapper text {
           fill: white !important;
         }
-        
+
         /* Fix for selected activity highlighting */
         .gantt-wrapper [data-task-id="${selectedActivityId || ''}"] {
           opacity: 1;

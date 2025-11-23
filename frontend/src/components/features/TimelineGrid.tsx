@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import type { SimpleActivity } from '@/types/simple'
+import { getDateFromDateTime } from '@/lib/mock-data'
 
 interface TimelineGridProps {
   activities: SimpleActivity[]
@@ -36,7 +37,7 @@ export function TimelineGrid({ activities, selectedActivityId, onActivitySelect 
   const dateRange = useMemo(() => {
     if (activities.length === 0) return []
     
-    const dates = [...new Set(activities.map(a => a.date))].sort()
+    const dates = [...new Set(activities.map(a => getDateFromDateTime(a.start)))].sort()
     const startDate = new Date(dates[0])
     const endDate = new Date(dates[dates.length - 1])
     
@@ -67,9 +68,7 @@ export function TimelineGrid({ activities, selectedActivityId, onActivitySelect 
       .map(type => ({
         type,
         activities: grouped[type].sort((a, b) => {
-          const dateTimeA = new Date(`${a.date}T${a.startTime.split('+')[0]}`)
-          const dateTimeB = new Date(`${b.date}T${b.startTime.split('+')[0]}`)
-          return dateTimeA.getTime() - dateTimeB.getTime()
+          return new Date(a.start).getTime() - new Date(b.start).getTime()
         })
       }))
   }, [activities])
@@ -101,23 +100,17 @@ export function TimelineGrid({ activities, selectedActivityId, onActivitySelect 
   }
 
   const getActivityPosition = (activity: SimpleActivity, date: Date) => {
-    const activityDate = activity.date
+    const activityStartDate = getDateFromDateTime(activity.start)
     const dateStr = date.toISOString().split('T')[0]
     
-    if (activityDate === dateStr) {
+    if (activityStartDate === dateStr) {
       return { show: true, activity }
     }
     
-    // Handle multi-day activities or activities with end times
-    if (activity.endTime) {
-      const startDate = new Date(activity.date)
-      const endTime = activity.endTime
-      let endDate = new Date(activity.date)
-      
-      if (endTime.includes('+')) {
-        // Handle next-day indicator
-        endDate.setDate(endDate.getDate() + 1)
-      }
+    // Handle multi-day activities with end times
+    if (activity.end) {
+      const startDate = new Date(getDateFromDateTime(activity.start))
+      const endDate = new Date(getDateFromDateTime(activity.end))
       
       if (date >= startDate && date <= endDate) {
         return { show: true, activity, isSpanning: true }
@@ -285,7 +278,7 @@ export function TimelineGrid({ activities, selectedActivityId, onActivitySelect 
                               <div 
                                 className="h-6 rounded-md flex items-center justify-center text-xs font-medium text-white shadow-sm border border-black/10"
                                 style={{ backgroundColor: categoryColor }}
-                                title={`${activity.title} - ${activity.startTime}${activity.endTime ? ` to ${activity.endTime}` : ''}`}
+                                title={`${activity.title} - ${new Date(activity.start).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}${activity.end ? ` to ${new Date(activity.end).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}` : ''}`}
                               >
                                 <span className="truncate px-2">
                                   {activity.title}

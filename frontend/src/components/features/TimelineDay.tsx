@@ -22,10 +22,7 @@ export function TimelineDay({ date, activities, selectedActivityId, onActivitySe
 
   // Sort activities by start time
   const sortedActivities = [...activities].sort((a, b) => {
-    // Extract time for sorting (remove timezone indicators)
-    const timeA = a.startTime.split('+')[0]
-    const timeB = b.startTime.split('+')[0]
-    return timeA.localeCompare(timeB)
+    return new Date(a.start).getTime() - new Date(b.start).getTime()
   })
 
   return (
