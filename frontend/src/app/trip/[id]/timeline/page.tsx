@@ -16,16 +16,35 @@ interface TimelinePageProps {
 function TimelineContent() {
   const { activities, selectedActivity, setSelectedActivity } = useTripContext()
   
-  // Group activities by date
+  // Group activities by date, including multi-day activities on all relevant days
   const activitiesByDate = useMemo(() => {
-    const grouped = activities.reduce((acc, activity) => {
-      const date = getDateFromDateTime(activity.start)
-      if (!acc[date]) {
-        acc[date] = []
+    const grouped: Record<string, SimpleActivity[]> = {}
+    
+    activities.forEach(activity => {
+      const startDate = new Date(getDateFromDateTime(activity.start))
+      
+      if (activity.end) {
+        // Multi-day activity: add to all days it spans
+        const endDate = new Date(getDateFromDateTime(activity.end))
+        const currentDate = new Date(startDate)
+        
+        while (currentDate <= endDate) {
+          const dateKey = currentDate.toISOString().split('T')[0]
+          if (!grouped[dateKey]) {
+            grouped[dateKey] = []
+          }
+          grouped[dateKey].push(activity)
+          currentDate.setDate(currentDate.getDate() + 1)
+        }
+      } else {
+        // Single day activity: add only to start date
+        const dateKey = getDateFromDateTime(activity.start)
+        if (!grouped[dateKey]) {
+          grouped[dateKey] = []
+        }
+        grouped[dateKey].push(activity)
       }
-      acc[date].push(activity)
-      return acc
-    }, {} as Record<string, SimpleActivity[]>)
+    })
     
     // Sort dates
     return Object.keys(grouped)
