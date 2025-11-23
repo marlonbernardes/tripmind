@@ -31,21 +31,83 @@ The project now has:
 - All necessary dependencies installed
 - Proper project structure following the blueprint
 
-### 🎯 Next Recommended Task: AI Integration & Trip Planning
+### 🎯 Next Recommended Task: AI Trip Planning Interface
 
 **Enhanced Activity Management System is COMPLETE!** ✅
 
 The following features have been successfully implemented:
-- ✅ **Icon-based activity type selection** with beautiful grid UI
-- ✅ **Type-specific forms** (Flight, Hotel, Event) with smart field layouts
-- ✅ **Automatic title generation** ("Flight from NYC to LAX - AA123")
-- ✅ **Location inference** based on activity type
-- ✅ **Metadata storage** for type-specific data (flight numbers, hotel links, etc.)
-- ✅ **Enhanced side panel** with proper sizing (384px width)
-- ✅ **Seamless CRUD workflows** for all activity operations
-- ✅ **Status management** with visual indicators for planned vs booked
+- ✅ **Icon-based activity type selection** with beautiful 2x3 grid UI (✈️🏨🎫🚗📝✅)
+- ✅ **Type-specific smart forms** (Flight, Hotel, Event) with intelligent field layouts
+- ✅ **Automatic title generation** ("Flight from NYC to LAX - AA123", "Hotel: Marriott Downtown")
+- ✅ **Location inference** based on activity type and form data
+- ✅ **Enhanced metadata storage** for type-specific data (flight numbers, hotel details, etc.)
+- ✅ **Larger side panel** (384px width) for better UX and form readability
+- ✅ **Restored booking recommendations** with dynamic links (Google Flights, Booking.com, etc.)
+- ✅ **Seamless CRUD workflows** with two-step creation process and smooth editing
+- ✅ **Status management** with visual indicators for planned vs booked activities
 
-**Next Phase: AI Trip Planning System**
+**Next Phase: AI Trip Planning System - /plan Page Implementation**
+
+## 📋 AI Trip Planning Implementation Plan
+
+### **Task Overview**
+Create a `/plan` page with an AI chat interface where users can describe their travel plans and get a structured trip generated automatically.
+
+### **Key Requirements**
+
+#### **1. New /plan Page Setup**
+- Create `frontend/src/app/plan/page.tsx` with Next.js App Router
+- Update top navbar to include "Plan" link in navigation
+- Implement dedicated planning page layout with chat interface
+
+#### **2. Prompt-Kit Integration**
+- Install prompt-kit component: `npx shadcn@latest add prompt-kit/[component]`
+- Reference documentation: https://www.prompt-kit.com/
+- Implement AI chat interface for trip planning conversations
+- Handle message sending and display chat history with proper UX
+
+#### **3. Mock Trip Generation (No AI Integration Yet)**
+- Create fixed template trip that gets generated after sending messages
+- Generate trip with multiple activities using existing SimpleActivity interface
+- Most activities should have `status: 'planned'` (unless user specifies already booked)
+- Eventually will be replaced with AI-generated JSON output
+- Use existing metadata structure (FlightMetadata, HotelMetadata, EventMetadata)
+
+#### **4. Navigation & User Flow**
+- Add "Plan" to top navbar as primary entry point for new users
+- Implement trip creation logic triggered by chat message submission
+- Redirect to newly created trip Timeline/Overview after generation
+- Integrate with existing TripContext and trip management system
+
+### **Implementation Phases**
+
+#### **Phase 1: Page Setup & Navigation**
+1. Create `/plan` route and page component
+2. Update `top-navbar.tsx` to include Plan link
+3. Set up basic page structure and responsive layout
+
+#### **Phase 2: Chat Interface**
+1. Research and install appropriate prompt-kit component
+2. Implement chat UI with message history and input handling
+3. Add loading states and user feedback during trip generation
+
+#### **Phase 3: Mock Trip Generation**
+1. Create template trip data with realistic activities and metadata
+2. Implement trip creation logic using existing interfaces
+3. Ensure proper integration with TripContext and routing
+
+#### **Phase 4: Polish & Testing**
+1. Test complete workflow: chat → trip creation → navigation
+2. Ensure responsive design and accessibility
+3. Add proper loading states and error handling
+
+### **Future AI Integration Notes**
+- AI will eventually output structured JSON with trip activities
+- Activities will have appropriate metadata based on type
+- Status will default to 'planned' unless user specifies booking status
+- Chat context will inform activity recommendations and scheduling
+
+This implementation creates the foundation for AI-powered trip planning while leveraging the enhanced activity management system for rich, structured trip data.
 
 	there will be no form for creating a trip (i.e entering start/end date, name of trip): user will be able to edit name of the trip by clicking on its name on the view page.
        the only way to create a new trip will be by describing it to AI (in a /plan page). AI will come up with plan full of placeholders and you agree (or chat with it till happy). For MVP simple AI text box (using https://www.prompt-kit.com/) will do.
