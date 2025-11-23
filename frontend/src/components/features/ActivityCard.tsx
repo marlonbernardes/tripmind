@@ -28,17 +28,35 @@ export function ActivityCard({ activity, isSelected = false, onClick }: Activity
   }
 
   const timeDisplay = activity.endTime 
-    ? `${formatTime(activity.startTime)} - ${formatTime(activity.endTime)}`
+    ? `${formatTime(activity.startTime)} – ${formatTime(activity.endTime)}`
     : formatTime(activity.startTime)
+
+  // Get subtle background color based on activity type
+  const getBackgroundColor = () => {
+    const colors = {
+      flight: 'bg-blue-50 dark:bg-blue-950/30',
+      hotel: 'bg-green-50 dark:bg-green-950/30',
+      event: 'bg-purple-50 dark:bg-purple-950/30',
+      transport: 'bg-amber-50 dark:bg-amber-950/30',
+      note: 'bg-gray-50 dark:bg-gray-800/30',
+      task: 'bg-orange-50 dark:bg-orange-950/30'
+    }
+    return colors[activity.type] || colors.note
+  }
+
+  const getBorderColor = () => {
+    if (isSelected) {
+      return 'border-gray-300 dark:border-gray-600'
+    }
+    return 'border-gray-200 dark:border-gray-700'
+  }
 
   return (
     <div 
       onClick={onClick}
-      className={`flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer ${
-        isSelected 
-          ? 'bg-blue-50 dark:bg-blue-900/20' 
-          : 'hover:bg-gray-50 dark:hover:bg-gray-700/30'
-      }`}
+      className={`flex items-center gap-3 px-4 py-3 rounded-lg border transition-all cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm ${
+        getBackgroundColor()
+      } ${getBorderColor()}`}
     >
       {/* Colored dot indicator */}
       <div 
@@ -52,7 +70,7 @@ export function ActivityCard({ activity, isSelected = false, onClick }: Activity
             {activity.title}
           </h3>
           <div className="flex items-center gap-2 flex-shrink-0">
-            <span className="text-xs text-gray-500 dark:text-gray-400">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
               {timeDisplay}
             </span>
           </div>
