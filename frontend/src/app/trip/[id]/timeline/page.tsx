@@ -33,8 +33,8 @@ function TimelineContent() {
   }, [activities])
 
   return (
-    <div className="px-6 py-6">
-      <div className="max-w-4xl">
+    <div className="px-6 py-6 h-full">
+      <div className="w-full">
         {activities.length === 0 ? (
           <div className="text-center py-20">
             <div className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600">
