@@ -4,11 +4,11 @@ import type { SimpleTrip, SimpleActivity } from '@/types/simple'
 export const mockTrips: SimpleTrip[] = [
   {
     id: '1',
-    name: 'Tokyo Adventure',
-    startDate: '2025-03-15',
-    endDate: '2025-03-22',
+    name: 'Trip to Asia Jan 2026',
+    startDate: '2026-01-08',
+    endDate: '2026-01-22',
     color: '#3B82F6',
-    activitiesCount: 8
+    activitiesCount: 11
   },
   {
     id: '2',
@@ -30,80 +30,122 @@ export const mockTrips: SimpleTrip[] = [
 
 // Mock activities data
 export const mockActivities: SimpleActivity[] = [
-  // Tokyo Adventure activities
+  // Trip to Asia Jan 2026 activities
   {
     id: 'a1',
     tripId: '1',
     type: 'flight',
-    title: 'Flight to Tokyo',
-    startTime: '14:30',
-    endTime: '18:45+1',
-    date: '2025-03-15'
+    title: 'Dublin (DUB) → Beijing (PEK) - HU752, Terminal 1',
+    start: '2026-01-08T11:00:00',
+    end: '2026-01-09T05:05:00',
+    city: 'Dublin Airport (DUB)'
   },
   {
     id: 'a2',
     tripId: '1',
-    type: 'hotel',
-    title: 'Park Hyatt Tokyo',
-    startTime: '15:00',
-    city: 'Shinjuku',
-    date: '2025-03-16'
+    type: 'flight',
+    title: 'Beijing (PEK) → Bangkok (BKK) - HU429, Terminal 2',
+    start: '2026-01-09T09:40:00',
+    end: '2026-01-09T14:10:00',
+    city: 'Bangkok'
   },
   {
     id: 'a3',
     tripId: '1',
-    type: 'event',
-    title: 'Tsukiji Fish Market',
-    startTime: '06:00',
-    endTime: '09:00',
-    city: 'Tsukiji',
-    date: '2025-03-17'
+    type: 'flight',
+    title: 'Bangkok (BKK) → Phuket (HKT) - VZ2304',
+    start: '2026-01-09T17:30:00',
+    end: '2026-01-09T19:00:00',
+    city: 'Bangkok'
   },
   {
     id: 'a4',
     tripId: '1',
-    type: 'transport',
-    title: 'Train to Kyoto',
-    startTime: '10:30',
-    endTime: '13:15',
-    date: '2025-03-18'
+    type: 'hotel',
+    title: 'Bandaloo Boutique Hotel',
+    start: '2026-01-09T20:30:00',
+    end: '2026-01-10T12:00:00',
+    city: 'Phuket'
   },
   {
     id: 'a5',
     tripId: '1',
     type: 'event',
-    title: 'Fushimi Inari Shrine',
-    startTime: '09:00',
-    endTime: '12:00',
-    city: 'Kyoto',
-    date: '2025-03-19'
+    title: 'Phuket nightlife',
+    start: '2026-01-09T20:30:00',
+    city: 'Phuket'
   },
   {
     id: 'a6',
     tripId: '1',
-    type: 'note',
-    title: 'Try authentic ramen',
-    startTime: '19:00',
-    city: 'Shibuya',
-    date: '2025-03-20'
+    type: 'hotel',
+    title: 'Phuket resort - All inclusive (3 days)',
+    start: '2026-01-10T12:00:00',
+    end: '2026-01-12T21:00:00',
+    city: 'Phuket'
   },
   {
     id: 'a7',
     tripId: '1',
-    type: 'task',
-    title: 'Buy omiyage souvenirs',
-    startTime: '14:00',
-    city: 'Harajuku',
-    date: '2025-03-21'
+    type: 'flight',
+    title: 'Phuket (HKT) → Bangkok (BKK) - VZ309',
+    start: '2026-01-12T21:25:00',
+    end: '2026-01-12T22:55:00',
+    city: 'Phuket'
   },
   {
     id: 'a8',
     tripId: '1',
     type: 'flight',
-    title: 'Return Flight',
-    startTime: '11:20',
-    endTime: '15:30',
-    date: '2025-03-22'
+    title: 'Bangkok (DMK) → Maldives (MLE) - FD175',
+    start: '2026-01-13T09:15:00',
+    end: '2026-01-13T11:30:00',
+    city: 'Bangkok'
+  },
+  {
+    id: 'a9',
+    tripId: '1',
+    type: 'hotel',
+    title: 'Maldives resort - Paradise vacation (4 days)',
+    start: '2026-01-13T12:00:00',
+    end: '2026-01-17T12:00:00',
+    city: 'Maldives'
+  },
+  {
+    id: 'a10',
+    tripId: '1',
+    type: 'flight',
+    title: 'Maldives (MLE) → Bangkok (DMK)',
+    start: '2026-01-17T12:30:00',
+    end: '2026-01-17T18:55:00',
+    city: 'Maldives'
+  },
+  {
+    id: 'a11',
+    tripId: '1',
+    type: 'hotel',
+    title: 'Bangkok city hotel & exploration (4 days)',
+    start: '2026-01-17T20:00:00',
+    end: '2026-01-21T16:00:00',
+    city: 'Bangkok'
+  },
+  {
+    id: 'a12',
+    tripId: '1',
+    type: 'flight',
+    title: 'Bangkok (BKK) → Beijing (PEK) - HU430',
+    start: '2026-01-21T16:20:00',
+    end: '2026-01-21T22:00:00',
+    city: 'Suvarnabhumi Airport (BKK)'
+  },
+  {
+    id: 'a13',
+    tripId: '1',
+    type: 'flight',
+    title: 'Beijing (PEK) → Dublin (DUB) - HU751, Terminal 2',
+    start: '2026-01-22T02:40:00',
+    end: '2026-01-22T05:50:00',
+    city: 'Beijing'
   },
   
   // European Summer activities
@@ -112,37 +154,33 @@ export const mockActivities: SimpleActivity[] = [
     tripId: '2',
     type: 'flight',
     title: 'Flight to London',
-    startTime: '08:15',
-    endTime: '09:45',
-    date: '2025-06-10'
+    start: '2025-06-10T08:15:00',
+    end: '2025-06-10T09:45:00'
   },
   {
     id: 'b2',
     tripId: '2',
     type: 'hotel',
     title: 'The Shard Hotel',
-    startTime: '15:00',
-    city: 'London Bridge',
-    date: '2025-06-10'
+    start: '2025-06-10T15:00:00',
+    city: 'London Bridge'
   },
   {
     id: 'b3',
     tripId: '2',
     type: 'event',
     title: 'British Museum',
-    startTime: '10:00',
-    endTime: '16:00',
-    city: 'Bloomsbury',
-    date: '2025-06-11'
+    start: '2025-06-11T10:00:00',
+    end: '2025-06-11T16:00:00',
+    city: 'Bloomsbury'
   },
   {
     id: 'b4',
     tripId: '2',
     type: 'transport',
     title: 'Eurostar to Paris',
-    startTime: '12:31',
-    endTime: '15:47',
-    date: '2025-06-15'
+    start: '2025-06-15T12:31:00',
+    end: '2025-06-15T15:47:00'
   },
   
   // Weekend in Paris activities
@@ -151,53 +189,71 @@ export const mockActivities: SimpleActivity[] = [
     tripId: '3',
     type: 'flight',
     title: 'Flight to Paris',
-    startTime: '19:45',
-    endTime: '22:10',
-    date: '2025-04-05'
+    start: '2025-04-05T19:45:00',
+    end: '2025-04-05T22:10:00'
   },
   {
     id: 'c2',
     tripId: '3',
     type: 'hotel',
     title: 'Le Marais Boutique Hotel',
-    startTime: '15:00',
-    city: 'Le Marais',
-    date: '2025-04-05'
+    start: '2025-04-05T15:00:00',
+    city: 'Le Marais'
   },
   {
     id: 'c3',
     tripId: '3',
     type: 'event',
     title: 'Eiffel Tower Visit',
-    startTime: '10:00',
-    endTime: '12:00',
-    city: 'Champ de Mars',
-    date: '2025-04-06'
+    start: '2025-04-06T10:00:00',
+    end: '2025-04-06T12:00:00',
+    city: 'Champ de Mars'
   },
   {
     id: 'c4',
     tripId: '3',
     type: 'event',
     title: 'Louvre Museum',
-    startTime: '14:00',
-    endTime: '17:00',
-    city: '1st Arrondissement',
-    date: '2025-04-06'
+    start: '2025-04-06T14:00:00',
+    end: '2025-04-06T17:00:00',
+    city: '1st Arrondissement'
   },
   {
     id: 'c5',
     tripId: '3',
     type: 'flight',
     title: 'Return Flight',
-    startTime: '14:20',
-    endTime: '15:55',
-    date: '2025-04-07'
+    start: '2025-04-07T14:20:00',
+    end: '2025-04-07T15:55:00'
   }
 ]
 
 // Utility functions
 export function getActivitiesForTrip(tripId: string): SimpleActivity[] {
   return mockActivities.filter(activity => activity.tripId === tripId)
+}
+
+// Helper function to extract date from datetime string
+export function getDateFromDateTime(datetime: string): string {
+  return datetime.split('T')[0]
+}
+
+// Helper function to format time from datetime string
+export function getTimeFromDateTime(datetime: string): string {
+  const time = datetime.split('T')[1]
+  return time ? time.substring(0, 5) : ''
+}
+
+// Helper function to format datetime for display
+export function formatDateTime(datetime: string): string {
+  const date = new Date(datetime)
+  return date.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  })
 }
 
 export function formatDateRange(startDate: string, endDate: string): string {

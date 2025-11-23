@@ -13,8 +13,7 @@ export interface SimpleActivity {
   tripId: string
   type: 'flight' | 'hotel' | 'event' | 'transport' | 'note' | 'task'
   title: string
-  startTime: string
-  endTime?: string
+  start: string
+  end?: string
   city?: string
-  date: string
 }
