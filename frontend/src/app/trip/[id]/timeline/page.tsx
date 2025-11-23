@@ -5,6 +5,7 @@ import { TripLayout } from '@/components/features/TripLayout'
 import { TimelineDay } from '@/components/features/TimelineDay'
 import { useTripContext } from '@/contexts/TripContext'
 import type { SimpleActivity } from '@/types/simple'
+import { getDateFromDateTime } from '@/lib/mock-data'
 
 interface TimelinePageProps {
   params: Promise<{
@@ -18,7 +19,7 @@ function TimelineContent() {
   // Group activities by date
   const activitiesByDate = useMemo(() => {
     const grouped = activities.reduce((acc, activity) => {
-      const date = activity.date
+      const date = getDateFromDateTime(activity.start)
       if (!acc[date]) {
         acc[date] = []
       }
