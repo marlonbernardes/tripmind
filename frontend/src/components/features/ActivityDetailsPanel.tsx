@@ -1,6 +1,7 @@
 'use client'
 
 import { useTripContext } from '@/contexts/TripContext'
+import { getDateFromDateTime, getTimeFromDateTime } from '@/lib/mock-data'
 
 export function ActivityDetailsPanel() {
   const { selectedActivity, setSelectedActivity } = useTripContext()
@@ -48,7 +49,7 @@ export function ActivityDetailsPanel() {
                 <div>
                   <span className="text-gray-500 dark:text-gray-400">Date</span>
                   <div className="font-medium text-gray-900 dark:text-white mt-1">
-                    {new Date(selectedActivity.date).toLocaleDateString()}
+                    {new Date(getDateFromDateTime(selectedActivity.start)).toLocaleDateString()}
                   </div>
                 </div>
               </div>
@@ -56,8 +57,8 @@ export function ActivityDetailsPanel() {
               <div className="text-sm">
                 <span className="text-gray-500 dark:text-gray-400">Time</span>
                 <div className="font-medium text-gray-900 dark:text-white mt-1">
-                  {selectedActivity.startTime}
-                  {selectedActivity.endTime && ` – ${selectedActivity.endTime}`}
+                  {getTimeFromDateTime(selectedActivity.start)}
+                  {selectedActivity.end && ` – ${getTimeFromDateTime(selectedActivity.end)}`}
                 </div>
               </div>
               

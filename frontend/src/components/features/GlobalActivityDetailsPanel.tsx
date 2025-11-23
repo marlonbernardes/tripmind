@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import { useContext, createContext } from 'react'
+import { getDateFromDateTime, getTimeFromDateTime } from '@/lib/mock-data'
 
 // Import the TripContext directly instead of using the hook
 const TripContext = createContext<any>(undefined)
@@ -55,7 +56,7 @@ function ActivityDetailsPanel() {
                 <div>
                   <span className="text-gray-500 dark:text-gray-400">Date</span>
                   <div className="font-medium text-gray-900 dark:text-white mt-1">
-                    {new Date(selectedActivity.date).toLocaleDateString()}
+                    {new Date(getDateFromDateTime(selectedActivity.start)).toLocaleDateString()}
                   </div>
                 </div>
               </div>
@@ -63,8 +64,8 @@ function ActivityDetailsPanel() {
               <div className="text-sm">
                 <span className="text-gray-500 dark:text-gray-400">Time</span>
                 <div className="font-medium text-gray-900 dark:text-white mt-1">
-                  {selectedActivity.startTime}
-                  {selectedActivity.endTime && ` – ${selectedActivity.endTime}`}
+                  {getTimeFromDateTime(selectedActivity.start)}
+                  {selectedActivity.end && ` – ${getTimeFromDateTime(selectedActivity.end)}`}
                 </div>
               </div>
               

@@ -1,4 +1,5 @@
 import type { SimpleActivity } from '@/types/simple'
+import { getTimeFromDateTime } from '@/lib/mock-data'
 
 interface ActivityCardProps {
   activity: SimpleActivity
@@ -18,18 +19,12 @@ const activityTypeConfig = {
 export function ActivityCard({ activity, isSelected = false, onClick }: ActivityCardProps) {
   const config = activityTypeConfig[activity.type]
   
-  const formatTime = (time: string) => {
-    // Handle timezone indicators like "+1"
-    if (time.includes('+')) {
-      const [baseTime, offset] = time.split('+')
-      return `${baseTime} (+${offset})`
-    }
-    return time
-  }
-
-  const timeDisplay = activity.endTime 
-    ? `${formatTime(activity.startTime)} – ${formatTime(activity.endTime)}`
-    : formatTime(activity.startTime)
+  const startTime = getTimeFromDateTime(activity.start)
+  const endTime = activity.end ? getTimeFromDateTime(activity.end) : null
+  
+  const timeDisplay = endTime 
+    ? `${startTime} – ${endTime}`
+    : startTime
 
   // Get subtle background color based on activity type
   const getBackgroundColor = () => {
