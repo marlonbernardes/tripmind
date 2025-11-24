@@ -315,3 +315,16 @@ export function getDaysCount(startDate: string, endDate: string): number {
   const diffTime = Math.abs(end.getTime() - start.getTime())
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
 }
+
+// Trip creation functions (for MVP - later will be replaced with database calls)
+export function addNewTrip(trip: SimpleTrip): void {
+  mockTrips.push(trip)
+}
+
+export function addNewActivities(activities: SimpleActivity[]): void {
+  mockActivities.push(...activities)
+}
+
+export function getTripById(tripId: string): SimpleTrip | undefined {
+  return mockTrips.find(trip => trip.id === tripId)
+}

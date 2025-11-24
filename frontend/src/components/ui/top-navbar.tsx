@@ -17,6 +17,11 @@ const navigationItems: NavigationItem[] = [
     href: '/trips',
   },
   {
+    id: 'plan',
+    label: 'Plan',
+    href: '/plan',
+  },
+  {
     id: 'timeline',
     label: 'Timeline',
     href: '/trip/1/timeline', // For demo purposes
@@ -57,6 +62,7 @@ export function TopNavbar() {
           <div className="flex items-center gap-1">
             {navigationItems.map((item) => {
               const isActive = pathname === item.href || 
+                (item.id === 'plan' && pathname.includes('/plan')) ||
                 (item.id === 'timeline' && pathname.includes('/timeline')) ||
                 (item.id === 'wallet' && pathname.includes('/wallet'))
               
