@@ -52,80 +52,139 @@ The following features have been successfully implemented:
 
 **Next Phase: Prompt-Kit Integration & Quick Response Buttons**
 
-## 📋 Prompt-Kit Integration & Quick Response Buttons Plan
+## 📋 Prompt-Kit Research & Integration Plan
 
-### **Task Overview**
-Refactor the existing `/plan` page to use prompt-kit for a more professional chat interface and add quick-response buttons alongside the text input for faster user interaction.
+### **✅ RESEARCH COMPLETED - November 24, 2025**
 
-### **Current Implementation Status**
-The `/plan` page currently has:
-- Custom React state management for messages and planning flow
-- Manual chat UI with custom styling
-- 3-step sequential question logic (destination → duration → activities)
-- Custom input handling and message rendering
-- Working trip generation and integration with existing systems
+**Comprehensive exploration of prompt-kit.com completed with the following findings:**
 
-### **Enhancement Goals**
+#### **🔍 Prompt-Kit Overview**
+- **Built on shadcn/ui**: Same design principles as our existing UI framework
+- **AI-focused components**: Specifically designed for chat experiences and AI interfaces
+- **Open source**: Active development with GitHub repository
+- **Prerequisites**: Node.js 18+, React 19+ (we have React 18 - may need upgrade)
+- **Installation**: Uses shadcn CLI with URLs: `npx shadcn@latest add "https://prompt-kit.com/c/[COMPONENT].json"`
 
-#### **1. Prompt-Kit Integration**
-- **Install prompt-kit**: Research and install appropriate prompt-kit package (`@prompt-kit/react` or similar)
-- **Replace custom chat UI** with prompt-kit's professional chat components
-- **Migrate message state** to prompt-kit's expected format while preserving existing logic
-- **Maintain current 3-step question flow** within prompt-kit structure
-- **Preserve trip generation functionality** - only updating the UI layer
+#### **🧩 Key Components for Our Use Case**
 
-#### **2. Quick Response Buttons System**
-- **Add contextual quick-response buttons** that appear above text input based on current question
-- **Button options by question step:**
-  - **Destination**: `Tokyo` `Paris` `London` `New York` `Rome` `Custom...`
-  - **Duration**: `Weekend (2-3 days)` `1 Week` `2 Weeks` `Flexible` `Custom...`
-  - **Activities**: `Food & Culture` `Museums & History` `Adventure` `Nightlife` `Relaxation` `Custom...`
-- **Interaction logic:**
-  - Clicking button auto-fills response and submits (no additional click needed)
-  - Typing in text area dims/hides buttons (user choosing custom input)
-  - Smooth animations for button appearance/disappearance
-  - Mobile-friendly touch targets
+**1. Chat Infrastructure**
+- **ChatContainer**: Professional chat interface with intelligent auto-scrolling
+  - Uses `use-stick-to-bottom` library for sophisticated auto-scroll behavior
+  - Smart scrolling only when user is at bottom
+  - Content resizing detection with ResizeObserver
+  - Mobile touch support and performance optimized
+- **Message**: Message display with avatar support, markdown rendering, and actions
+- **ScrollButton**: Appears when user scrolls up, pairs with ChatContainer
 
-#### **3. Enhanced UX Features**
-- **Better accessibility** and keyboard navigation through prompt-kit
-- **Consistent chat patterns** that users expect from AI interfaces
-- **Enhanced visual feedback** and loading states
-- **Improved mobile responsiveness**
-- **Professional theming** that matches the rest of the application
+**2. Input & Interactions**
+- **PromptInput**: Professional AI input with loading states and actions
+  - Auto-resizing textarea with max height
+  - Built-in submit handling (Enter key)
+  - Action buttons with tooltips
+- **PromptSuggestion**: PERFECT for our quick response buttons!
+  - Two modes: Normal (pill buttons) and Highlight (search highlighting)
+  - Clickable suggestions that integrate with PromptInput
+  - Examples show exactly what we need: destination/duration/activity buttons
 
-### **Implementation Phases**
+**3. Loading & Feedback**
+- **Loader**: Multiple variants (circular, dots, typing, wave, etc.)
+  - Perfect replacement for our custom loading dots
+  - Text support for "thinking" states
+  - Multiple sizes and customizable
 
-#### **Phase 1: Research & Setup (1-2 hours)**
-1. **Research prompt-kit documentation** at https://www.prompt-kit.com/
-2. **Install dependencies** (`pnpm add @prompt-kit/react` or equivalent)
-3. **Identify mapping** between current features and prompt-kit components
-4. **Plan migration strategy** to minimize disruption to existing functionality
+**4. Advanced Features (Future Use)**
+- **Steps**: Collapsible step-by-step processes (useful for trip generation phases)
+- **ChainOfThought**: Reasoning display (could enhance trip planning logic)
+- **Tool**: Display tool calls (future AI integration)
 
-#### **Phase 2: Component Migration (2-3 hours)**
-1. **Replace chat interface** with prompt-kit components
-2. **Migrate message state** to prompt-kit's expected format
-3. **Preserve existing planning logic** while updating UI layer
-4. **Test existing trip generation** to ensure no regression
+#### **📦 Pre-built Blocks Available**
+- **Prompt input with suggestions**: Exactly what we need!
+- **Full conversation**: Complete chat interface example
+- **Conversation with prompt input**: Chat + input combination
 
-#### **Phase 3: Quick Response Buttons (2-3 hours)**
-1. **Create button component system** that integrates with prompt-kit
-2. **Implement contextual button logic** based on planning state
-3. **Add smooth animations** and visual feedback
-4. **Ensure mobile responsiveness** and accessibility
+#### **🛠 Integration Strategy**
 
-#### **Phase 4: Polish & Testing (1-2 hours)**
-1. **Test complete user flow** from planning to trip creation
-2. **Verify all edge cases** (custom responses, button interactions, etc.)
-3. **Ensure visual consistency** with rest of application
-4. **Mobile testing** and responsive behavior validation
+**Phase 1: Core Chat Interface Migration**
+```bash
+# Install core components
+npx shadcn@latest add "https://prompt-kit.com/c/chat-container.json"
+npx shadcn@latest add "https://prompt-kit.com/c/message.json"
+npx shadcn@latest add "https://prompt-kit.com/c/prompt-input.json"
+npx shadcn@latest add "https://prompt-kit.com/c/loader.json"
+```
 
-### **Key Benefits**
-- **Faster user interaction** through quick-response buttons
-- **Professional chat experience** with established UX patterns
-- **Better accessibility** and keyboard navigation
-- **Enhanced mobile experience** with large touch targets
-- **Maintained functionality** - all existing features preserved
-- **Future-ready foundation** for real AI integration
+**Phase 2: Quick Response System**
+```bash
+# Install suggestion components
+npx shadcn@latest add "https://prompt-kit.com/c/prompt-suggestion.json"
+```
+
+**Phase 3: Enhanced Features (Optional)**
+```bash
+# Future enhancements
+npx shadcn@latest add "https://prompt-kit.com/c/steps.json"
+npx shadcn@latest add "https://prompt-kit.com/c/scroll-button.json"
+```
+
+#### **🎯 Quick Response Button Implementation**
+Based on PromptSuggestion component research:
+
+**Contextual Button Groups by Step:**
+- **Destination Step**: `Tokyo`, `Paris`, `London`, `New York`, `Rome`, `Custom...`
+- **Duration Step**: `Weekend (2-3 days)`, `1 Week`, `2 Weeks`, `Flexible`
+- **Activities Step**: `Food & Culture`, `Museums & History`, `Adventure`, `Nightlife`, `Relaxation`
+
+**Button Behavior:**
+- Normal mode: Pill-shaped clickable buttons above input
+- Auto-submit on click (no additional Send click needed)
+- Fade out when user starts typing (choosing custom response)
+- Mobile-friendly touch targets
+- Smooth animations
+
+#### **🔧 Migration Approach**
+
+**Current Custom Implementation → Prompt-Kit Components:**
+- Custom message rendering → `Message` component with markdown support
+- Custom chat container → `ChatContainer` with auto-scroll
+- Custom textarea → `PromptInput` with auto-resize and actions
+- Custom loading dots → `Loader` component (multiple variants)
+- Manual button system → `PromptSuggestion` components
+
+**Preservation Requirements:**
+- ✅ Maintain 3-step sequential flow (destination → duration → activities)
+- ✅ Preserve trip generation logic and TripContext integration
+- ✅ Keep existing message state and planning state management
+- ✅ Maintain dark/light mode compatibility
+- ✅ Ensure mobile responsiveness
+
+#### **⚠️ Potential Issues & Solutions**
+1. **React Version**: Prompt-kit requires React 19+, we have React 18
+   - **Solution**: May need React upgrade or check compatibility
+2. **Styling Integration**: Ensure prompt-kit components match our theme
+   - **Solution**: Both use shadcn/ui, should be compatible
+3. **State Migration**: Current message format vs prompt-kit expectations
+   - **Solution**: Create adapter layer to maintain existing logic
+
+#### **📋 Implementation Checklist**
+- [ ] Check React version compatibility
+- [ ] Install core prompt-kit components
+- [ ] Create prompt-kit wrapper for existing message state
+- [ ] Replace ChatContainer with prompt-kit version  
+- [ ] Replace Message rendering with prompt-kit Message
+- [ ] Replace input with PromptInput component
+- [ ] Replace loading animation with Loader component
+- [ ] Implement PromptSuggestion buttons for each step
+- [ ] Add smooth animations and interactions
+- [ ] Test complete user flow
+- [ ] Ensure mobile responsiveness
+- [ ] Verify dark/light mode compatibility
+
+#### **🎉 Expected Benefits**
+- **Professional UI**: Industry-standard chat interface patterns
+- **Better UX**: Auto-scrolling, loading states, accessibility improvements
+- **Faster Interaction**: Quick response buttons reduce typing time
+- **Future-Ready**: Foundation for real AI integration
+- **Maintenance**: Less custom code to maintain, community-supported components
 
 ### **Technical Notes**
 - Current custom chat logic should be preserved during migration
