@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import { TripLayout } from '@/components/features/TripLayout'
 import { useTripContext } from '@/contexts/TripContext'
 
@@ -57,8 +58,7 @@ function MapContent() {
 }
 
 export default function MapPage({ params }: MapPageProps) {
-  // For now, we'll use a hardcoded trip ID - in a real app, you'd extract this from params
-  const tripId = '1'
+  const { id: tripId } = React.use(params)
   
   return (
     <TripLayout tripId={tripId}>

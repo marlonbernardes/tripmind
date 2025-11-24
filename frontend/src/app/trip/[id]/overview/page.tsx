@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
+import React from 'react'
 import { TripLayout } from '@/components/features/TripLayout'
 import { GanttChart } from '@/components/features/GanttChart'
 import { useTripContext } from '@/contexts/TripContext'
@@ -44,8 +45,7 @@ function OverviewContent() {
 }
 
 export default function OverviewPage({ params }: OverviewPageProps) {
-  // For now, we'll use a hardcoded trip ID - in a real app, you'd extract this from params
-  const tripId = '1'
+  const { id: tripId } = React.use(params)
   
   return (
     <TripLayout tripId={tripId}>
