@@ -1,11 +1,29 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
 import { generateMockTrip } from '@/lib/trip-generator'
 import { addNewTrip, addNewActivities } from '@/lib/mock-data'
+import { 
+  ChatContainerRoot, 
+  ChatContainerContent, 
+  ChatContainerScrollAnchor 
+} from '@/components/ui/chat-container'
+import { 
+  Message, 
+  MessageAvatar, 
+  MessageContent 
+} from '@/components/ui/message'
+import { 
+  PromptInput, 
+  PromptInputTextarea,
+  PromptInputActions 
+} from '@/components/ui/prompt-input'
+import { PromptSuggestion } from '@/components/ui/prompt-suggestion'
+import { Loader } from '@/components/ui/loader'
 
-interface Message {
+interface ChatMessage {
   id: string
   role: 'user' | 'assistant'
   content: string
@@ -18,79 +36,151 @@ interface PlanningState {
     destination?: string
     duration?: string
     activities?: string
+    tripId?: string
   }
 }
 
+// Quick response options for each step
+const DESTINATION_OPTIONS = [
+  'Tokyo, Japan',
+  'Paris, France', 
+  'London, England',
+  'New York, USA',
+  'Rome, Italy',
+  'Barcelona, Spain'
+]
+
+const DURATION_OPTIONS = [
+  'Weekend (2-3 days)',
+  '1 Week',
+  '10 Days',
+  '2 Weeks',
+  'Flexible'
+]
+
+const ACTIVITY_OPTIONS = [
+  'Food & Culture',
+  'Museums & History',
+  'Adventure & Outdoors',
+  'Nightlife & Entertainment',
+  'Shopping & Relaxation',
+  'Mix of Everything'
+]
+
 export default function PlanPage() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      role: 'assistant',
-      content: "Hi! I'm here to help you plan your perfect trip. Let's start with the basics - where would you like to go? (e.g., Tokyo, Paris, New York, Rome, etc.)",
-      timestamp: new Date()
-    }
-  ])
+  const [messages, setMessages] = useState<ChatMessage[]>([])
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [hasStarted, setHasStarted] = useState(false)
   const [planningState, setPlanningState] = useState<PlanningState>({
     step: 'initial',
     responses: {}
   })
   const router = useRouter()
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const handleSendMessage = async () => {
-    if (!inputValue.trim() || isLoading) return
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    const scrollToBottom = () => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+    }
+    
+    // Delay scroll to allow animations to start
+    const timeoutId = setTimeout(scrollToBottom, 100)
+    return () => clearTimeout(timeoutId)
+  }, [messages, isLoading])
 
-    const newMessage: Message = {
+  const getCurrentSuggestions = () => {
+    // Only show suggestions after conversation has started
+    if (!hasStarted) return []
+    
+    switch (planningState.step) {
+      case 'destination':
+        return DESTINATION_OPTIONS
+      case 'duration': 
+        return DURATION_OPTIONS
+      case 'activities':
+        return ACTIVITY_OPTIONS
+      default:
+        return []
+    }
+  }
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setInputValue(suggestion)
+    // Auto-submit the suggestion
+    setTimeout(() => handleSendMessage(suggestion), 100)
+  }
+
+  const handleSendMessage = async (messageContent?: string) => {
+    const content = messageContent || inputValue.trim()
+    if (!content || isLoading) return
+
+    // Mark conversation as started
+    if (!hasStarted) {
+      setHasStarted(true)
+    }
+
+    const newMessage: ChatMessage = {
       id: Date.now().toString(),
       role: 'user',
-      content: inputValue.trim(),
+      content: content,
       timestamp: new Date()
     }
 
     setMessages(prev => [...prev, newMessage])
-    const userResponse = inputValue.trim()
     setInputValue('')
     setIsLoading(true)
 
     // Simulate AI processing delay
     setTimeout(() => {
-      let assistantMessage: Message
+      let assistantMessage: ChatMessage
       let nextPlanningState = { ...planningState }
 
       switch (planningState.step) {
         case 'initial':
-          // Store destination and ask about duration
-          nextPlanningState.responses.destination = userResponse
+          // First message - ask about destination
           nextPlanningState.step = 'destination'
           assistantMessage = {
             id: (Date.now() + 1).toString(),
             role: 'assistant',
-            content: `Great choice! ${userResponse} sounds amazing! How long would you like to stay? (e.g., "3 days", "a week", "10 days", etc.)`,
+            content: `Hi! I'm here to help you plan your perfect trip. Let's start with the basics - where would you like to go?`,
             timestamp: new Date()
           }
           break
 
         case 'destination':
-          // Store duration and ask about activities
-          nextPlanningState.responses.duration = userResponse  
+          // Store destination and ask about duration
+          nextPlanningState.responses.destination = content
           nextPlanningState.step = 'duration'
           assistantMessage = {
             id: (Date.now() + 1).toString(),
             role: 'assistant',
-            content: `Perfect! ${userResponse} in ${nextPlanningState.responses.destination} will be wonderful! What kind of activities interest you most? (e.g., "food and culture", "museums and sightseeing", "nightlife and shopping", "outdoor adventures", etc.)`,
+            content: `Great choice! **${content}** sounds amazing! 🌟\n\nHow long would you like to stay?`,
             timestamp: new Date()
           }
           break
 
         case 'duration':
-          // Store activities and start trip generation
-          nextPlanningState.responses.activities = userResponse
+          // Store duration and ask about activities
+          nextPlanningState.responses.duration = content
           nextPlanningState.step = 'activities'
           assistantMessage = {
             id: (Date.now() + 1).toString(),
             role: 'assistant',
-            content: `Excellent! I now have everything I need to create your perfect trip:\n\n📍 **Destination:** ${nextPlanningState.responses.destination}\n⏰ **Duration:** ${nextPlanningState.responses.duration}\n🎯 **Interests:** ${userResponse}\n\nLet me create a personalized itinerary with flights, hotels, activities, and more. This will just take a moment...`,
+            content: `Perfect! **${content}** in ${nextPlanningState.responses.destination} will be wonderful! ✈️\n\nWhat kind of activities interest you most?`,
+            timestamp: new Date()
+          }
+          break
+
+        case 'activities':
+          // Store activities and start trip generation
+          nextPlanningState.responses.activities = content
+          nextPlanningState.step = 'generating'
+          assistantMessage = {
+            id: (Date.now() + 1).toString(),
+            role: 'assistant',
+            content: `Excellent! I now have everything I need to create your perfect trip:\n\n📍 **Destination:** ${nextPlanningState.responses.destination}\n⏰ **Duration:** ${nextPlanningState.responses.duration}\n🎯 **Interests:** ${content}\n\nLet me create a personalized itinerary with flights, hotels, activities, and more. This will just take a moment...`,
             timestamp: new Date()
           }
           
@@ -126,7 +216,7 @@ export default function PlanPage() {
       // Update trip name to be more personalized
       const personalizedTrip = {
         ...trip,
-        name: `${responses.destination} Adventure - ${responses.duration}`
+        name: `${responses.destination} Adventure`
       }
       
       // Add trip and activities to mock data
@@ -134,40 +224,37 @@ export default function PlanPage() {
       addNewActivities(activities)
       
       // Final success message
-      const successMessage: Message = {
+      const successMessage: ChatMessage = {
         id: (Date.now() + 2).toString(),
         role: 'assistant',
-        content: `🎉 **Trip Created Successfully!**\n\nI've created your "${personalizedTrip.name}" itinerary with ${activities.length} activities perfectly tailored to your interests. You'll be redirected to your trip timeline where you can:\n\n✈️ Review all planned activities\n📝 Customize any details\n💳 Book activities when you're ready\n\nMost activities are marked as "planned" so you have full control over your bookings!`,
+        content: `🎉 **Trip Created Successfully!**\n\nI've created your **"${personalizedTrip.name}"** itinerary with **${activities.length} activities** perfectly tailored to your interests!\n\n✅ **What's included:**\n• Flights and accommodations\n• Daily activities and experiences\n• Restaurant recommendations\n• Transportation between venues\n\n📋 **Next steps:**\n• Review all planned activities\n• Customize any details\n• Book activities when you're ready\n\nMost activities are marked as "planned" so you have full control over your bookings!\n\nClick the button below to view your trip timeline.`,
         timestamp: new Date()
       }
       
       setMessages(prev => [...prev, successMessage])
       
-      // Redirect to the new trip
-      setTimeout(() => {
-        router.push(`/trip/${personalizedTrip.id}/timeline`)
-      }, 2000)
+      // Store trip ID for the view button
+      setPlanningState(prev => ({ 
+        ...prev, 
+        responses: { 
+          ...prev.responses, 
+          tripId: personalizedTrip.id 
+        } 
+      }))
       
     } catch (error) {
       console.error('Error generating trip:', error)
       
-      const errorMessage: Message = {
+      const errorMessage: ChatMessage = {
         id: (Date.now() + 2).toString(),
         role: 'assistant',
-        content: "I encountered an issue creating your trip. Please refresh the page and try again.",
+        content: "❌ I encountered an issue creating your trip. Please refresh the page and try again.",
         timestamp: new Date()
       }
       
       setMessages(prev => [...prev, errorMessage])
     } finally {
       setIsLoading(false)
-    }
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSendMessage()
     }
   }
 
@@ -187,77 +274,225 @@ export default function PlanPage() {
         </div>
       </div>
 
-      {/* Chat Interface */}
+      {/* Enhanced Chat Interface */}
       <div className="max-w-4xl mx-auto px-6 py-6">
         <div className="bg-white dark:bg-gray-950 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 h-[600px] flex flex-col">
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-4">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[80%] rounded-lg p-4 ${
-                    message.role === 'user'
-                      ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900'
-                      : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white'
-                  }`}
+          
+          {/* Chat Messages with prompt-kit ChatContainer */}
+          <ChatContainerRoot className="flex-1 p-6">
+            <ChatContainerContent className="space-y-4">
+              {/* Empty state when no messages */}
+              {messages.length === 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6 }}
+                  className="flex flex-col items-center justify-center h-full text-center space-y-6"
                 >
-                  <div className="text-sm">{message.content}</div>
-                  <div className={`text-xs mt-2 opacity-70`}>
-                    {message.timestamp.toLocaleTimeString([], { 
-                      hour: '2-digit', 
-                      minute: '2-digit' 
-                    })}
+                  {/* Tripmind Logo */}
+                  <div className="flex items-center gap-3">
+                    <div className="w-16 h-16 bg-gray-900 dark:bg-gray-100 rounded-2xl flex items-center justify-center shadow-lg">
+                      <svg className="w-10 h-10 text-white dark:text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                      </svg>
+                    </div>
                   </div>
-                </div>
-              </div>
-            ))}
-            
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-4 max-w-[80%]">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="space-y-2">
+                    <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
+                      Ready to plan your adventure?
+                    </h2>
+                    <p className="text-gray-600 dark:text-gray-400 max-w-md">
+                      Tell me about your dream destination and I'll create a personalized itinerary for you
+                    </p>
                   </div>
-                </div>
-              </div>
-            )}
-          </div>
+                </motion.div>
+              )}
 
-          {/* Input */}
-          <div className="border-t border-gray-200 dark:border-gray-800 p-4">
-            <div className="flex gap-3">
-              <textarea
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={handleKeyDown}
+              {/* Messages with animations */}
+              <AnimatePresence mode="popLayout">
+                {messages.map((message, index) => (
+                  <motion.div
+                    key={message.id}
+                    layout
+                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ 
+                      duration: 0.3,
+                      layout: { duration: 0.2 }
+                    }}
+                  >
+                    <Message
+                      className={`${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                    >
+                      {message.role === 'assistant' && (
+                        <MessageAvatar
+                          src="/ai-avatar.png"
+                          alt="AI Assistant"
+                          fallback="AI"
+                          className="bg-blue-100 dark:bg-blue-900"
+                        />
+                      )}
+                      
+                      <div className={`max-w-[80%] ${message.role === 'user' ? 'order-first' : ''}`}>
+                        <MessageContent
+                          markdown={message.role === 'assistant'}
+                          className={`${
+                            message.role === 'user'
+                              ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 ml-auto'
+                              : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white'
+                          }`}
+                        >
+                          {message.content}
+                        </MessageContent>
+                        <div className={`text-xs mt-1 px-2 opacity-70 ${
+                          message.role === 'user' ? 'text-right' : 'text-left'
+                        }`}>
+                          {message.timestamp.toLocaleTimeString([], { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          })}
+                        </div>
+                      </div>
+
+                      {message.role === 'user' && (
+                        <MessageAvatar
+                          src="/user-avatar.png"
+                          alt="You"
+                          fallback="U"
+                          className="bg-gray-100 dark:bg-gray-800"
+                        />
+                      )}
+                    </Message>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+              
+              {/* Loading message with prompt-kit Loader */}
+              {isLoading && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <Message className="justify-start">
+                    <MessageAvatar
+                      src="/ai-avatar.png"
+                      alt="AI Assistant"
+                      fallback="AI"
+                      className="bg-blue-100 dark:bg-blue-900"
+                    />
+                    <MessageContent className="bg-gray-100 dark:bg-gray-800">
+                      <div className="flex items-center space-x-2">
+                        <Loader variant="dots" size="sm" />
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          Thinking...
+                        </span>
+                      </div>
+                    </MessageContent>
+                  </Message>
+                </motion.div>
+              )}
+              
+              {/* Scroll anchor */}
+              <div ref={messagesEndRef} />
+              <ChatContainerScrollAnchor />
+            </ChatContainerContent>
+          </ChatContainerRoot>
+
+          {/* Enhanced Input Section with Quick Response Buttons */}
+          <div className="border-t border-gray-200 dark:border-gray-800 p-4 space-y-4">
+            
+            {/* View Trip Button (shown after trip is created) */}
+            {planningState.step === 'generating' && planningState.responses.tripId && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex justify-center"
+              >
+                <button
+                  onClick={() => router.push(`/trip/${planningState.responses.tripId}/timeline`)}
+                  className="px-6 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors shadow-sm"
+                >
+                  View Your Trip Timeline →
+                </button>
+              </motion.div>
+            )}
+            
+            {/* Quick Response Buttons with stagger animation */}
+            <AnimatePresence>
+              {getCurrentSuggestions().length > 0 && !isLoading && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-2 overflow-hidden"
+                >
+                  <div className="text-xs text-gray-500 dark:text-gray-400 px-1">
+                    Quick responses:
+                  </div>
+                  <motion.div
+                    initial="hidden"
+                    animate="visible"
+                    variants={{
+                      visible: {
+                        transition: {
+                          staggerChildren: 0.05
+                        }
+                      }
+                    }}
+                    className="flex flex-wrap gap-2"
+                  >
+                    {getCurrentSuggestions().map((suggestion) => (
+                      <motion.div
+                        key={suggestion}
+                        variants={{
+                          hidden: { opacity: 0, scale: 0.8, y: 10 },
+                          visible: { opacity: 1, scale: 1, y: 0 }
+                        }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <PromptSuggestion
+                          onClick={() => handleSuggestionClick(suggestion)}
+                          className="text-sm"
+                          variant="outline"
+                          size="sm"
+                        >
+                          {suggestion}
+                        </PromptSuggestion>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Enhanced Prompt Input */}
+            <PromptInput
+              value={inputValue}
+              onValueChange={setInputValue}
+              onSubmit={() => handleSendMessage()}
+              disabled={isLoading}
+              className="min-h-[60px]"
+            >
+              <PromptInputTextarea
                 placeholder={
-                  planningState.step === 'initial' 
+                  !hasStarted
+                    ? "Describe your dream trip... (e.g., I want to visit Tokyo for a week)"
+                    : planningState.step === 'destination' 
                     ? "Where would you like to go? (e.g., Tokyo, Paris, New York...)"
-                    : planningState.step === 'destination'
-                    ? "How long would you like to stay? (e.g., 3 days, a week, 10 days...)"
                     : planningState.step === 'duration'
+                    ? "How long would you like to stay? (e.g., 3 days, a week, 10 days...)"
+                    : planningState.step === 'activities'
                     ? "What activities interest you? (e.g., food and culture, museums, nightlife...)"
                     : "Tell me about your travel preferences..."
                 }
-                className="flex-1 resize-none border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent"
-                rows={2}
-                disabled={isLoading}
               />
-              <button
-                onClick={handleSendMessage}
-                disabled={!inputValue.trim() || isLoading}
-                className="px-6 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                Send
-              </button>
-            </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              Press Enter to send, Shift+Enter for new line
+            </PromptInput>
+            
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              Press Enter to send, Shift+Enter for new line, or click a suggestion above
             </div>
           </div>
         </div>
