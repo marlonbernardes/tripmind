@@ -1,7 +1,8 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useEffect } from 'react'
 import React from 'react'
+import { useRouter } from 'next/navigation'
 import { TripLayout } from '@/components/features/TripLayout'
 import { GanttChart } from '@/components/features/GanttChart'
 import { useTripContext } from '@/contexts/TripContext'
@@ -46,6 +47,12 @@ function OverviewContent() {
 
 export default function OverviewPage({ params }: OverviewPageProps) {
   const { id: tripId } = React.use(params)
+  const router = useRouter()
+  
+  useEffect(() => {
+    // Redirect to overview2 (new custom Gantt implementation)
+    router.push(`/trip/${tripId}/overview2`)
+  }, [tripId, router])
   
   return (
     <TripLayout tripId={tripId}>
