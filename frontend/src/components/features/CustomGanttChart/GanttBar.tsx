@@ -11,7 +11,9 @@ export function GanttBar({
   viewModeConfig,
   ganttStart,
   isSelected,
-  onActivityUpdate
+  onActivityUpdate,
+  onHover,
+  onClick
 }: GanttBarProps) {
   const { isDragging, handleMouseDown, handleTouchStart } = useGanttDrag(
     activity,
@@ -81,6 +83,7 @@ export function GanttBar({
   
   return (
     <div
+      data-activity-bar
       className={cn(
         "absolute top-2 h-8 rounded px-2 flex items-center cursor-move transition-opacity select-none group border-2 bg-white dark:bg-gray-900",
         isDragging && "opacity-70 shadow-lg z-10",
@@ -95,6 +98,12 @@ export function GanttBar({
       }}
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
+      onMouseEnter={() => onHover?.(activity)}
+      onMouseLeave={() => onHover?.(null)}
+      onClick={(e) => {
+        e.stopPropagation()
+        onClick?.(activity)
+      }}
     >
       {/* Left resize handle */}
       <div

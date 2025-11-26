@@ -8,6 +8,7 @@ import { useGanttDates } from './hooks/useGanttDates'
 import { useGroupedActivities } from './hooks/useGroupedActivities'
 import { VIEW_MODES } from './utils/viewModeConfig'
 import type { CustomGanttChartProps, ViewModeName } from './types'
+import type { SimpleActivity } from '@/types/simple'
 
 export function CustomGanttChart({
   activities,
@@ -22,6 +23,8 @@ export function CustomGanttChart({
   )
   const [containerWidth, setContainerWidth] = useState(0)
   const [columnWidthMultiplier, setColumnWidthMultiplier] = useState(1)
+  const [activeActivity, setActiveActivity] = useState<SimpleActivity | null>(null)
+  const [activeEventLocked, setActiveEventLocked] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   
   // Measure container width on mount and resize
@@ -41,38 +44,37 @@ export function CustomGanttChart({
   
   const baseViewModeConfig = VIEW_MODES[viewMode]
   
-  // Adjust container width based on zoom to calculate correct number of columns
-  // If zoomed out (e.g., 0.5x), we need MORE columns to fill the same space
-  const adjustedContainerWidth = containerWidth > 0 
-    ? containerWidth / columnWidthMultiplier 
-    : 0
-  
   const { ganttStart, ganttEnd, columns, firstColumnDate } = useGanttDates(
     activities, 
     baseViewModeConfig,
-    adjustedContainerWidth
+    containerWidth
   )
   
-  // Apply column width multiplier to base config
+  // Calculate dynamic column width based on container and number of columns
   const viewModeConfig = useMemo(() => {
-    const adjustedColumnWidth = Math.round(baseViewModeConfig.columnWidth * columnWidthMultiplier)
-    
-    if (viewMode === 'Month' && columns.length > 0 && containerWidth > 0) {
-      // For month view, use dynamic width based on actual container width
-      const minColumnWidth = 100
-      const dynamicWidth = Math.max(minColumnWidth, Math.floor(containerWidth / columns.length))
-      
-      return {
-        ...baseViewModeConfig,
-        columnWidth: Math.round(dynamicWidth * columnWidthMultiplier)
-      }
+    if (columns.length === 0 || containerWidth === 0) {
+      return baseViewModeConfig
     }
+    
+    // Calculate base width to fit all columns in the container at 100% zoom
+    const baseWidth = Math.floor(containerWidth / columns.length)
+    
+    // Apply zoom multiplier
+    const adjustedWidth = Math.round(baseWidth * columnWidthMultiplier)
+    
+    // Set minimum widths based on view mode
+    const minWidth = viewMode === 'Month' ? 100 : 30
+    const finalWidth = Math.max(minWidth, adjustedWidth)
     
     return {
       ...baseViewModeConfig,
-      columnWidth: adjustedColumnWidth
+      columnWidth: finalWidth
     }
   }, [viewMode, baseViewModeConfig, columns.length, columnWidthMultiplier, containerWidth])
+  
+  // Calculate if we need additional columns to fill viewport when zoomed out
+  const totalWidth = columns.length * viewModeConfig.columnWidth
+  const needsMoreColumns = totalWidth < containerWidth
   
   // Zoom controls
   const handleZoomIn = () => {
@@ -80,7 +82,7 @@ export function CustomGanttChart({
   }
   
   const handleZoomOut = () => {
-    setColumnWidthMultiplier(prev => Math.max(prev - 0.25, 0.5)) // Min 0.5x
+    setColumnWidthMultiplier(prev => Math.max(prev - 0.25, 1)) // Min 1x (100%)
   }
   
   const handleResetZoom = () => {
@@ -100,6 +102,58 @@ export function CustomGanttChart({
       return newSet
     })
   }
+  
+  // Handle hover/click for active activity
+  const handleActivityHover = (activity: SimpleActivity | null) => {
+    if (!activeEventLocked) {
+      setActiveActivity(activity)
+    }
+  }
+  
+  const handleActivityClick = (activity: SimpleActivity) => {
+    if (activeEventLocked && activeActivity?.id === activity.id) {
+      // Unlock if clicking the same activity
+      setActiveEventLocked(false)
+      setActiveActivity(null)
+    } else {
+      // Lock to new activity
+      setActiveEventLocked(true)
+      setActiveActivity(activity)
+    }
+    
+    // Also trigger the activity details panel to open
+    onActivitySelect?.(activity)
+  }
+  
+  // Handle click outside to clear locked state
+  useEffect(() => {
+    if (!activeEventLocked) return
+    
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      // Check if click is outside any activity bar
+      if (!target.closest('[data-activity-bar]')) {
+        setActiveEventLocked(false)
+        setActiveActivity(null)
+      }
+    }
+    
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
+  }, [activeEventLocked])
+  
+  // Keyboard navigation: Escape to clear active activity
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && (activeActivity || activeEventLocked)) {
+        setActiveEventLocked(false)
+        setActiveActivity(null)
+      }
+    }
+    
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [activeActivity, activeEventLocked])
   
   if (activities.length === 0) {
     return (
@@ -147,7 +201,7 @@ export function CustomGanttChart({
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Zoom:</span>
           <button
             onClick={handleZoomOut}
-            disabled={columnWidthMultiplier <= 0.5}
+            disabled={columnWidthMultiplier <= 1}
             className="w-8 h-8 flex items-center justify-center rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
             title="Zoom out"
           >
@@ -190,11 +244,13 @@ export function CustomGanttChart({
           </div>
           
           {/* Date Headers */}
-          <div className="z-50">
+          <div className="z-50 relative">
             <GanttUnifiedHeader
               columns={columns}
               viewModeConfig={viewModeConfig}
               leftPanelWidth={0}
+              activeActivity={activeActivity}
+              ganttStart={firstColumnDate}
             />
           </div>
         </div>
@@ -227,6 +283,10 @@ export function CustomGanttChart({
               ganttStart={firstColumnDate}
               selectedActivityId={selectedActivityId}
               onActivityUpdate={onActivityUpdate}
+              onActivityHover={handleActivityHover}
+              onActivityClick={handleActivityClick}
+              activeActivity={activeActivity}
+              containerRef={containerRef.current}
             />
           </div>
         </div>

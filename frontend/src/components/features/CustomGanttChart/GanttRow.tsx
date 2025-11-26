@@ -11,7 +11,9 @@ export function GanttRow({
   rowIndex,
   isSelected,
   columns,
-  onActivityUpdate
+  onActivityUpdate,
+  onActivityHover,
+  onActivityClick
 }: GanttRowProps) {
   const activityStart = new Date(activity.start)
   const activityEnd = activity.end ? new Date(activity.end) : addHours(activityStart, 1)
@@ -46,6 +48,8 @@ export function GanttRow({
         ganttStart={ganttStart}
         isSelected={isSelected}
         onActivityUpdate={onActivityUpdate}
+        onHover={onActivityHover}
+        onClick={onActivityClick}
       />
     </div>
   )

@@ -25,6 +25,14 @@ export const mockTrips: SimpleTrip[] = [
     endDate: '2025-04-07',
     color: '#F59E0B',
     activitiesCount: 5
+  },
+  {
+    id: '4',
+    name: 'Edge Cases Test Trip',
+    startDate: '2026-01-01',
+    endDate: '2026-01-10',
+    color: '#8B5CF6',
+    activitiesCount: 10
   }
 ]
 
@@ -258,6 +266,107 @@ export const mockActivities: SimpleActivity[] = [
     start: '2025-04-07T14:20:00',
     end: '2025-04-07T15:55:00',
     status: 'booked'
+  },
+  
+  // Edge Cases Test Trip - Various time scenarios
+  {
+    id: 'd1',
+    tripId: '4',
+    type: 'event',
+    title: 'Midnight Start (00:00)',
+    start: '2026-01-01T00:00:00',
+    end: '2026-01-01T02:00:00',
+    city: 'Test City',
+    status: 'planned'
+  },
+  {
+    id: 'd2',
+    tripId: '4',
+    type: 'hotel',
+    title: 'Early Morning Check-in (3am-11am)',
+    start: '2026-01-02T03:00:00',
+    end: '2026-01-02T11:00:00',
+    city: 'Test City',
+    status: 'booked'
+  },
+  {
+    id: 'd3',
+    tripId: '4',
+    type: 'event',
+    title: 'Midday Event (12:00 PM)',
+    start: '2026-01-03T12:00:00',
+    end: '2026-01-03T14:30:00',
+    city: 'Test City',
+    status: 'planned'
+  },
+  {
+    id: 'd4',
+    tripId: '4',
+    type: 'flight',
+    title: 'Late Night Flight (11pm-2am next day)',
+    start: '2026-01-04T23:00:00',
+    end: '2026-01-05T02:00:00',
+    city: 'Test City',
+    status: 'booked'
+  },
+  {
+    id: 'd5',
+    tripId: '4',
+    type: 'transport',
+    title: 'Midnight Crossing (11:30pm-12:30am)',
+    start: '2026-01-05T23:30:00',
+    end: '2026-01-06T00:30:00',
+    city: 'Test City',
+    status: 'booked'
+  },
+  {
+    id: 'd6',
+    tripId: '4',
+    type: 'event',
+    title: 'Full Day Event (same day 00:00-23:59)',
+    start: '2026-01-06T00:00:00',
+    end: '2026-01-06T23:59:00',
+    city: 'Test City',
+    status: 'planned'
+  },
+  {
+    id: 'd7',
+    tripId: '4',
+    type: 'hotel',
+    title: 'Multi-day Hotel (3 days)',
+    start: '2026-01-07T14:00:00',
+    end: '2026-01-10T11:00:00',
+    city: 'Test City',
+    status: 'booked'
+  },
+  {
+    id: 'd8',
+    tripId: '4',
+    type: 'event',
+    title: 'One Hour Event (9am-10am)',
+    start: '2026-01-08T09:00:00',
+    end: '2026-01-08T10:00:00',
+    city: 'Test City',
+    status: 'planned'
+  },
+  {
+    id: 'd9',
+    tripId: '4',
+    type: 'task',
+    title: 'End of Day Task (11:45pm-11:59pm)',
+    start: '2026-01-09T23:45:00',
+    end: '2026-01-09T23:59:00',
+    city: 'Test City',
+    status: 'planned'
+  },
+  {
+    id: 'd10',
+    tripId: '4',
+    type: 'note',
+    title: 'Single Moment (no end time)',
+    start: '2026-01-10T15:30:00',
+    city: 'Test City',
+    status: 'planned'
   }
 ]
 

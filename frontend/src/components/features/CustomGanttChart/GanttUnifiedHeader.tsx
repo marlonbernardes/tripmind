@@ -1,19 +1,36 @@
 import { format } from 'date-fns'
 import type { ViewModeConfig } from './types'
+import type { SimpleActivity } from '@/types/simple'
+import { GanttDateRangePill } from './GanttDateRangePill'
 
 interface GanttUnifiedHeaderProps {
   columns: Date[]
   viewModeConfig: ViewModeConfig
   leftPanelWidth: number
+  activeActivity?: SimpleActivity | null
+  ganttStart?: Date
 }
 
 export function GanttUnifiedHeader({ 
   columns, 
   viewModeConfig,
-  leftPanelWidth
+  leftPanelWidth,
+  activeActivity,
+  ganttStart
 }: GanttUnifiedHeaderProps) {
   return (
-    <div className="flex-1 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+    <div className="flex-1 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 relative">
+      {/* Date Range Pill - shows when activity is active */}
+      {activeActivity && ganttStart && (
+        <div className="absolute top-0 left-0 right-0 pointer-events-none">
+          <GanttDateRangePill
+            activity={activeActivity}
+            ganttStart={ganttStart}
+            viewModeConfig={viewModeConfig}
+          />
+        </div>
+      )}
+      
       {/* Date Headers */}
       <div className="bg-gray-50 dark:bg-gray-800">
         {/* Upper Header Row (Month/Year) - no vertical dividers */}

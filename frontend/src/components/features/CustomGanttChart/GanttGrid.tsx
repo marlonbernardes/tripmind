@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { GanttRow } from './GanttRow'
 import { GanttBar } from './GanttBar'
+import { GanttTooltip } from './GanttTooltip'
 import { calculateBarPosition } from './utils/positionUtils'
 import type { GanttGridProps } from './types'
 
@@ -10,8 +11,25 @@ export function GanttGrid({
   viewModeConfig,
   ganttStart,
   selectedActivityId,
-  onActivityUpdate
+  onActivityUpdate,
+  onActivityHover,
+  onActivityClick,
+  activeActivity,
+  containerRef
 }: GanttGridProps) {
+  // Mobile detection - hide tooltip on mobile devices
+  const [isMobile, setIsMobile] = useState(false)
+  
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768) // md breakpoint
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+  
   // Calculate total rows to render vertical lines properly
   const totalRows = groupedActivities.reduce((sum, group) => {
     // Each group has 1 category row + number of activity rows (if expanded)
@@ -19,7 +37,51 @@ export function GanttGrid({
   }, 0)
   
   return (
-    <div>
+    <div className="relative overflow-visible">
+      {/* Tooltip - rendered at grid level for proper positioning, hidden on mobile */}
+      {!isMobile && activeActivity && containerRef && (() => {
+        const { x, width } = calculateBarPosition(
+          new Date(activeActivity.start),
+          activeActivity.end ? new Date(activeActivity.end) : new Date(activeActivity.start),
+          ganttStart,
+          viewModeConfig
+        )
+        
+        // Find the row index for this activity
+        let rowY = 0
+        let found = false
+        for (const group of groupedActivities) {
+          if (!found && group.activities.length === 0) {
+            // Collapsed category - check allActivities
+            if (group.allActivities.some(a => a.id === activeActivity.id)) {
+              found = true
+              break
+            }
+            rowY += 48 // category row height
+          } else {
+            rowY += 48 // category row height
+            for (const activity of group.activities) {
+              if (activity.id === activeActivity.id) {
+                found = true
+                break
+              }
+              rowY += 48 // activity row height
+            }
+            if (found) break
+          }
+        }
+        
+        return (
+          <GanttTooltip
+            activity={activeActivity}
+            barX={x}
+            barY={rowY}
+            barWidth={width}
+            containerRef={containerRef}
+          />
+        )
+      })()}
+      
       {/* Activity Rows with Bars */}
       <div>
         {groupedActivities.map((group, groupIdx) => (
@@ -55,6 +117,8 @@ export function GanttGrid({
                     ganttStart={ganttStart}
                     isSelected={selectedActivityId === activity.id}
                     onActivityUpdate={onActivityUpdate}
+                    onHover={onActivityHover}
+                    onClick={onActivityClick}
                   />
                 )
               })}
@@ -86,6 +150,8 @@ export function GanttGrid({
               isSelected={selectedActivityId === activity.id}
               columns={columns}
               onActivityUpdate={onActivityUpdate}
+              onActivityHover={onActivityHover}
+              onActivityClick={onActivityClick}
             />
             ))}
           </React.Fragment>

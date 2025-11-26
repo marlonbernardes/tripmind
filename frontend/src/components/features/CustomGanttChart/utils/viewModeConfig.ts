@@ -4,8 +4,8 @@ export const VIEW_MODES: Record<string, ViewModeConfig> = {
   Day: {
     name: 'Day',
     step: 86400000,          // 1 day in ms
-    columnWidth: 40,
-    padding: 3,
+    columnWidth: 45,
+    padding: 1,           // 1 day padding before (after padding might be larger as we need to fill the view)
     lowerFormat: 'd',        // 1-31
     upperFormat: 'MMMM',     // January
     snapInterval: 86400000,

@@ -64,34 +64,21 @@ export function useGanttDates(
     const earliest = min(dates)
     const latest = max(dates)
     
-    // Start 1 day before earliest (requirement)
+    // Start 1 day before earliest, end 1 day after latest (1 day padding on each side)
     const ganttStart = subDays(startOfDay(earliest), 1)
+    const ganttEnd = addDays(startOfDay(latest), 1)
     
-    // Add padding based on view mode
-    const paddedStart = subDays(ganttStart, viewModeConfig.padding)
-    let paddedEnd = addDays(latest, viewModeConfig.padding)
-    
-    // Calculate minimum columns needed to fill viewport
-    // Use actual container width if available, otherwise fallback to 1200px
-    // Add 20% extra columns to ensure smooth scrolling experience
-    const minViewportWidth = containerWidth > 0 ? containerWidth * 1.2 : 1200
-    const minColumns = Math.ceil(minViewportWidth / viewModeConfig.columnWidth)
-    
-    // Generate column dates
+    // Generate column dates based on the date range
     const columns: Date[] = []
-    let current = paddedStart
-    while (current <= paddedEnd || columns.length < minColumns) {
+    let current = ganttStart
+    while (current <= ganttEnd) {
       columns.push(current)
       current = new Date(current.getTime() + viewModeConfig.step)
     }
     
-    // Update paddedEnd to match actual end
-    const finalEnd = columns[columns.length - 1]
-    paddedEnd = new Date(finalEnd.getTime() + viewModeConfig.step)
-    
     return { 
       ganttStart, 
-      ganttEnd: paddedEnd, 
+      ganttEnd, 
       columns,
       firstColumnDate: columns[0]
     }

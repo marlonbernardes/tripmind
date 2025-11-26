@@ -54,6 +54,10 @@ export interface GanttGridProps {
   ganttStart: Date
   selectedActivityId?: string
   onActivityUpdate?: (activityId: string, newDates: { start: string; end?: string }) => void
+  onActivityHover?: (activity: SimpleActivity | null) => void
+  onActivityClick?: (activity: SimpleActivity) => void
+  activeActivity?: SimpleActivity | null
+  containerRef?: HTMLDivElement | null
 }
 
 export interface GanttRowProps {
@@ -64,6 +68,8 @@ export interface GanttRowProps {
   isSelected: boolean
   columns: Date[]
   onActivityUpdate?: (activityId: string, newDates: { start: string; end?: string }) => void
+  onActivityHover?: (activity: SimpleActivity | null) => void
+  onActivityClick?: (activity: SimpleActivity) => void
 }
 
 export interface GanttBarProps {
@@ -74,4 +80,6 @@ export interface GanttBarProps {
   ganttStart: Date
   isSelected: boolean
   onActivityUpdate?: (activityId: string, newDates: { start: string; end?: string }) => void
+  onHover?: (activity: SimpleActivity | null) => void
+  onClick?: (activity: SimpleActivity) => void
 }
