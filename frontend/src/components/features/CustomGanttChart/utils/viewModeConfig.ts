@@ -5,7 +5,7 @@ export const VIEW_MODES: Record<string, ViewModeConfig> = {
     name: 'Day',
     step: 86400000,          // 1 day in ms
     columnWidth: 40,
-    padding: 7,
+    padding: 3,
     lowerFormat: 'd',        // 1-31
     upperFormat: 'MMMM',     // January
     snapInterval: 86400000,

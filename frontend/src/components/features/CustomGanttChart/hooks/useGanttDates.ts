@@ -5,7 +5,8 @@ import type { ViewModeConfig, GanttDates } from '../types'
 
 export function useGanttDates(
   activities: SimpleActivity[],
-  viewModeConfig: ViewModeConfig
+  viewModeConfig: ViewModeConfig,
+  containerWidth: number = 0
 ): GanttDates {
   return useMemo(() => {
     if (activities.length === 0) {
@@ -64,23 +65,16 @@ export function useGanttDates(
     const latest = max(dates)
     
     // Start 1 day before earliest (requirement)
-    let ganttStart = subDays(startOfDay(earliest), 1)
-    
-    // Ensure we never start before the 25th of a month (to have buffer before month end) 
-    // (so that in Month view we have enough space to show the month properly)
-    if (ganttStart.getDate() < 25) {
-      // Move back to the 25th of the previous month
-      const prevMonth = new Date(ganttStart.getFullYear(), ganttStart.getMonth() - 1, 25)
-      ganttStart = prevMonth
-    }
+    const ganttStart = subDays(startOfDay(earliest), 1)
     
     // Add padding based on view mode
     const paddedStart = subDays(ganttStart, viewModeConfig.padding)
     let paddedEnd = addDays(latest, viewModeConfig.padding)
     
     // Calculate minimum columns needed to fill viewport
-    // Assume viewport is at least 1200px wide (minus 250px for left panel)
-    const minViewportWidth = 950
+    // Use actual container width if available, otherwise fallback to 1200px
+    // Add 20% extra columns to ensure smooth scrolling experience
+    const minViewportWidth = containerWidth > 0 ? containerWidth * 1.2 : 1200
     const minColumns = Math.ceil(minViewportWidth / viewModeConfig.columnWidth)
     
     // Generate column dates
@@ -101,5 +95,5 @@ export function useGanttDates(
       columns,
       firstColumnDate: columns[0]
     }
-  }, [activities, viewModeConfig])
+  }, [activities, viewModeConfig, containerWidth])
 }

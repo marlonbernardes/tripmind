@@ -86,12 +86,12 @@ export function TopNavbar() {
 
         {/* User Section */}
         <div className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900 rounded-lg px-3 py-2 transition-colors">
-          <div className="w-8 h-8 bg-gradient-to-br from-gray-600 to-gray-800 rounded-full flex items-center justify-center text-white text-sm font-medium">
-            M
-          </div>
           <div className="text-right">
             <div className="text-sm font-medium text-gray-900 dark:text-white">User</div>
             <div className="text-xs text-gray-500 dark:text-gray-400">user@example.com</div>
+          </div>
+          <div className="w-8 h-8 bg-gradient-to-br from-gray-600 to-gray-800 rounded-full flex items-center justify-center text-white text-sm font-medium">
+            M
           </div>
         </div>
       </div>

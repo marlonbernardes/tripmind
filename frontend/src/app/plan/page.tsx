@@ -260,23 +260,9 @@ export default function PlanPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <div className="bg-white dark:bg-gray-950 border-b border-gray-200 dark:border-gray-800">
-        <div className="max-w-4xl mx-auto px-6 py-8">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              Plan Your Perfect Trip
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 text-lg">
-              Describe your dream vacation and I'll create a detailed itinerary for you
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Enhanced Chat Interface */}
-      <div className="max-w-4xl mx-auto px-6 py-6">
-        <div className="bg-white dark:bg-gray-950 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 h-[600px] flex flex-col">
+      <div className="max-w-6xl mx-auto px-6 py-6">
+        <div className="bg-white dark:bg-gray-950 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 h-[calc(100vh-7rem)] flex flex-col">
           
           {/* Chat Messages with prompt-kit ChatContainer */}
           <ChatContainerRoot className="flex-1 p-6">
@@ -489,6 +475,7 @@ export default function PlanPage() {
                     : "Tell me about your travel preferences..."
                 }
               />
+              <PromptInputActions />
             </PromptInput>
             
             <div className="text-xs text-gray-500 dark:text-gray-400">
