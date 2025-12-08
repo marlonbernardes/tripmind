@@ -14,6 +14,12 @@ export interface GeoLocation {
   lng: number
 }
 
+// For flights/transport with start and end locations
+export interface GeoLocationRange {
+  start: GeoLocation
+  end: GeoLocation
+}
+
 // Activity types
 export type ActivityType = 'flight' | 'hotel' | 'event' | 'transport' | 'note' | 'task'
 
@@ -26,6 +32,7 @@ export interface SimpleActivity {
   end?: string
   city?: string
   location?: GeoLocation
+  locationRange?: GeoLocationRange // For flights/transport with start and end locations
   status: 'planned' | 'booked'
   notes?: string
   metadata?: Record<string, unknown>
