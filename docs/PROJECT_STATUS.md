@@ -48,14 +48,14 @@ The project has a working Gantt chart but needs visual and UX improvements based
 - [x] Redirect users to settings page when they click on their user info on the nav bar.
 
 **Overview page changes (Gantt chart) /overview**
-- [ ] Remove logic for dragging/moving events in Gantt chart.
-- [ ] Change default zoom to "225%" (this will be the equivalent of the new 100% today). Increase size of day col on mobile too. Ideally the same size on desktop should correspond to the size on mobile (i.e if 225% equal to 200px this would be the size on both mobile and dekstop.)
-- [ ] Remove the "Day" / "Month" switch from Gantt chart. Default it to "Day" as it is today.
-- [ ] Move events of type "flight" and "hotels" collapsed by default. This should live somewhere in 
+- [x] Remove logic for dragging/moving events in Gantt chart.
+- [x] Change default zoom to "225%" (this will be the equivalent of the new 100% today). Increase size of day col on mobile too. Ideally the same size on desktop should correspond to the size on mobile (i.e if 225% equal to 200px this would be the size on both mobile and dekstop.)
+- [x] Remove the "Day" / "Month" switch from Gantt chart. Default it to "Day" as it is today.
+- [x] Move events of type "flight" and "hotels" collapsed by default. This should live somewhere in 
 configuration (not the user configuration, but in the code configuration)
-- [ ] BUG: minimum size of events in Gantt chart is wrong. Boxes should be smaller. Perhaps we need to change the component to 
+- [ ] BUG: minimum size of events in Gantt chart is wrong. Boxes should be smaller. (Maybe it's working, need to test)
 - [ ] Add vertical line on top of gantt chart following mouse X position across the days of the week and automatically show tooltip of whatever is under it.
-- [ ] It should be possible to zoom to less than 100%.
+- [x] It should be possible to zoom to less than 100%. (Now supports 50% to 300%)
 
 **Planning tasks (output: plan doc)**
 - [ ] Revamp home page

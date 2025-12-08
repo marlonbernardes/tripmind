@@ -82,7 +82,7 @@ export function CustomGanttChart({
   }
   
   const handleZoomOut = () => {
-    setColumnWidthMultiplier(prev => Math.max(prev - 0.25, 1)) // Min 1x (100%)
+    setColumnWidthMultiplier(prev => Math.max(prev - 0.25, 0.5)) // Min 0.5x (50%)
   }
   
   const handleResetZoom = () => {
@@ -183,7 +183,7 @@ export function CustomGanttChart({
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Zoom:</span>
           <button
             onClick={handleZoomOut}
-            disabled={columnWidthMultiplier <= 1}
+            disabled={columnWidthMultiplier <= 0.5}
             className="w-8 h-8 flex items-center justify-center rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
             title="Zoom out"
           >
