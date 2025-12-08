@@ -10,9 +10,9 @@ export function calculateBarPosition(
   const startOffset = activityStart.getTime() - ganttStart.getTime()
   const duration = activityEnd.getTime() - activityStart.getTime()
   
-  // Convert to column units
+  // Convert to column units - no artificial minimum, let GanttBar handle display
   const startColumn = startOffset / viewModeConfig.step
-  const durationColumns = Math.max(0.5, duration / viewModeConfig.step)
+  const durationColumns = duration / viewModeConfig.step
   
   // Convert to pixels
   const x = startColumn * viewModeConfig.columnWidth

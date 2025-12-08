@@ -1,4 +1,3 @@
-import { addHours } from 'date-fns'
 import { cn } from '@/lib/utils'
 import { GanttBar } from './GanttBar'
 import { calculateBarPosition } from './utils/positionUtils'
@@ -16,7 +15,8 @@ export function GanttRow({
   onActivityClick
 }: GanttRowProps) {
   const activityStart = new Date(activity.start)
-  const activityEnd = activity.end ? new Date(activity.end) : addHours(activityStart, 1)
+  // Use actual end time, or same as start for point-in-time events (will show as dot)
+  const activityEnd = activity.end ? new Date(activity.end) : activityStart
   
   const { x, width } = calculateBarPosition(
     activityStart,

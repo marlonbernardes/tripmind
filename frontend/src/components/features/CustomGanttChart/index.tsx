@@ -198,6 +198,9 @@ export function CustomGanttChart({
   
   const hoveredTime = getTimeAtMousePosition()
   
+  // Configurable: Show activities that start within this window (in milliseconds)
+  const TOOLTIP_TIME_WINDOW = 30 * 60 * 1000 // 30 minutes
+  
   // Sort activities by priority for tooltip display
   const sortActivitiesByPriority = (activitiesToSort: SimpleActivity[], hoveredMs: number): SimpleActivity[] => {
     const typePriority: Record<string, number> = {
@@ -224,19 +227,25 @@ export function CustomGanttChart({
     })
   }
   
-  // Find activities that overlap with the hovered time
+  // Find activities that overlap with the hovered time OR start within the time window
   const getActivitiesAtTime = (): SimpleActivity[] => {
     if (!hoveredTime) return []
     
     const hoveredMs = hoveredTime.getTime()
+    const windowStart = hoveredMs - TOOLTIP_TIME_WINDOW
+    const windowEnd = hoveredMs + TOOLTIP_TIME_WINDOW
+    
     const overlapping = activities.filter(activity => {
       const start = new Date(activity.start).getTime()
-      // For activities without end time, use a small duration (1 hour) for point-in-time events
-      // But also check if hoveredMs is exactly at start for instant events
-      const end = activity.end ? new Date(activity.end).getTime() : start + 3600000
+      const end = activity.end ? new Date(activity.end).getTime() : start
       
-      // Activity overlaps if: start <= hoveredTime < end (or start == hoveredTime for instant events)
-      return start <= hoveredMs && hoveredMs < end
+      // Activity is relevant if:
+      // 1. It overlaps with the hovered time (start <= hovered < end), OR
+      // 2. It starts within the time window (for point events or nearby starts)
+      const overlapsHovered = end > start ? (start <= hoveredMs && hoveredMs < end) : false
+      const startsNearby = start >= windowStart && start <= windowEnd
+      
+      return overlapsHovered || startsNearby
     })
     
     return sortActivitiesByPriority(overlapping, hoveredMs)

@@ -56,9 +56,12 @@ export function GanttGrid({
                 ))}
               </div>
               {group.allActivities.map((activity) => {
+                const activityStart = new Date(activity.start)
+                // Use actual end time, or same as start for point-in-time events
+                const activityEnd = activity.end ? new Date(activity.end) : activityStart
                 const { x, width } = calculateBarPosition(
-                  new Date(activity.start),
-                  activity.end ? new Date(activity.end) : new Date(activity.start),
+                  activityStart,
+                  activityEnd,
                   ganttStart,
                   viewModeConfig
                 )
