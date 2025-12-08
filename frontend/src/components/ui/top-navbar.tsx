@@ -3,40 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-
-interface NavigationItem {
-  id: string
-  label: string
-  href: string
-}
-
-const navigationItems: NavigationItem[] = [
-  {
-    id: 'trips',
-    label: 'Trips',
-    href: '/trips',
-  },
-  {
-    id: 'plan',
-    label: 'Plan',
-    href: '/plan',
-  },
-  {
-    id: 'timeline',
-    label: 'Timeline',
-    href: '/trip/1/timeline', // For demo purposes
-  },
-  {
-    id: 'wallet',
-    label: 'Wallet',
-    href: '/trip/1/wallet', // For demo purposes
-  },
-  {
-    id: 'settings',
-    label: 'Settings',
-    href: '/settings',
-  }
-]
+import { navigationItems, isNavItemActive } from '@/lib/navigation'
 
 export function TopNavbar() {
   const pathname = usePathname()
@@ -61,10 +28,7 @@ export function TopNavbar() {
           {/* Navigation Items */}
           <div className="flex items-center gap-1">
             {navigationItems.map((item) => {
-              const isActive = pathname === item.href || 
-                (item.id === 'plan' && pathname.includes('/plan')) ||
-                (item.id === 'timeline' && pathname.includes('/timeline')) ||
-                (item.id === 'wallet' && pathname.includes('/wallet'))
+              const isActive = isNavItemActive(item, pathname)
               
               return (
                 <Link

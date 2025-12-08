@@ -10,7 +10,7 @@ You are working on **Tripmind**, a responsive web application for planning trips
 First, read all documentation files to understand current state:
 - Read `docs/PROJECT_STATUS.md` for current status and next recommended task (if exists)
 - Read `docs/PLAN.md` for complete project specification and MVP requirements
-- [IGNORE} Read `docs/CODING.md` for coding standards and practices to follow (if exists)
+- [IGNORE] Read `docs/CODING.md` for coding standards and practices to follow (if exists)
 - Review current codebase structure
 
 #### 2. **Confirm Task with User**
@@ -20,30 +20,31 @@ Use the `ask_followup_question` tool to confirm the development direction. Don't
 - Offer the option for the user to specify a different task or area of focus
 - Wait for user confirmation before proceeding
 
-#### 3. **Implement Next Task**
-Based on the current status in `docs/PROJECT_STATUS.md`:
-- Implement the next recommended feature/task
-- Follow the implementation plan outlined in the status document
-- Make incremental, working changes
-- Ensure code quality and TypeScript compliance
+#### 3. **Implement → Test → Commit Workflow (CRITICAL)**
+For each individual task/fix:
 
-#### 4. **Testing Requirement (CRITICAL)**
-**⚠️ NEVER assume changes work just because they compile!**
-- After making ANY functional changes, ask the user to test
-- DONT RUN THE DEV SERVER UNLESS EXPLICITLY ASKED
-- Provide clear testing instructions
-- Wait for user confirmation that changes work as expected
-- Only proceed to next steps after receiving "it works" confirmation
+**Step A: Implement**
+- Make the code changes for ONE task at a time
+- Ensure code quality and TypeScript compliance
+- Keep changes small and focused
+
+**Step B: Request Testing**
+- After implementing, ask the user to test the change
+- Provide clear testing instructions (what to check, where to look)
+- **DO NOT run the dev server** unless explicitly asked
+- Wait for user confirmation that it works
+
+**Step C: Request Commit**
+- After user confirms the change works, ask if they want to commit
+- Suggest a commit message
+- Wait for user to confirm the commit is done
+
+**Step D: Repeat**
+- Only after commit confirmation, move to the next task
 - If user reports issues, debug and fix before continuing
 
-#### 5. **Determine next task***
-After successful implementation and testing:
-- Propose what the next task should be.
-- Use the `ask_followup_question` tool to check if user wants to work on what you proposed or if he has different ideas.
-
-
-#### 6. **Update Project Status**
-After successful implementation and testing:
+#### 4. **Update Project Status**
+After completing a batch of tasks or at the end of a session:
 - Update `docs/PROJECT_STATUS.md` with:
   - What was completed in this session
   - Current working state
@@ -58,10 +59,11 @@ After successful implementation and testing:
 - **Repository:** `git@github.com:marlonbernardes/tripmind.git`
 
 ### Key Principles:
-- **Incremental Development:** Make small, testable changes
+- **One Task at a Time:** Complete implement → test → commit cycle before moving on
 - **User Testing Required:** Always verify functionality with user before proceeding
+- **Atomic Commits:** Each fix/feature should be its own commit
 - **Documentation First:** Read docs to understand current state
-- **Status Updates:** Keep PROJECT_STATUS.md current and accurate (if exists)
+- **Status Updates:** Keep PROJECT_STATUS.md current and accurate
 - **Quality Focus:** Ensure TypeScript compliance and code quality
 - **Offline-First:** Prioritize offline functionality with sync capabilities
 - **PWA Ready:** Build with Progressive Web App capabilities
