@@ -6,44 +6,7 @@ import 'mapbox-gl/dist/mapbox-gl.css'
 import { useTripContext } from '@/contexts/TripContext'
 import type { SimpleActivity } from '@/types/simple'
 import { cn } from '@/lib/utils'
-
-// Mock coordinates for cities (in production, use a geocoding API)
-const cityCoordinates: Record<string, [number, number]> = {
-  // Ireland
-  'Dublin': [-6.2603, 53.3498],
-  'Dublin Airport (DUB)': [-6.2499, 53.4264],
-  
-  // Asia
-  'Beijing': [116.4074, 39.9042],
-  'Bangkok': [100.5018, 13.7563],
-  'Suvarnabhumi Airport (BKK)': [100.7501, 13.6900],
-  'Phuket': [98.3923, 7.8804],
-  'Maldives': [73.2207, 3.2028],
-  
-  // UK
-  'London': [-0.1278, 51.5074],
-  'London Bridge': [-0.0863, 51.5055],
-  'Bloomsbury': [-0.1246, 51.5226],
-  
-  // France
-  'Paris': [2.3522, 48.8566],
-  'Le Marais': [2.3615, 48.8566],
-  'Champ de Mars': [2.2945, 48.8584],
-  '1st Arrondissement': [2.3387, 48.8606],
-  
-  // Test
-  'Test City': [-6.2603, 53.3498],
-}
-
-// Activity type colors
-const activityColors: Record<string, string> = {
-  flight: '#3B82F6',    // Blue
-  hotel: '#10B981',     // Green
-  event: '#F59E0B',     // Amber
-  transport: '#8B5CF6', // Purple
-  note: '#6B7280',      // Gray
-  task: '#EF4444',      // Red
-}
+import { getActivityColor, activityTypeConfig, allActivityTypes } from '@/lib/activity-config'
 
 interface TripMapProps {
   className?: string
@@ -69,21 +32,15 @@ export function TripMap({ className }: TripMapProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isMapLoaded, setIsMapLoaded] = useState(false)
   
-  // Get activities with valid coordinates, sorted by start time
+  // Get activities with valid location coordinates, sorted by start time
   const locatedActivities: LocationMarker[] = activities
-    .filter(a => {
-      const city = a.city || a.metadata?.from || a.metadata?.to
-      return city && cityCoordinates[city]
-    })
+    .filter(a => a.location?.lat && a.location?.lng)
     .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
-    .map((activity, index) => {
-      const city = activity.city || activity.metadata?.from || activity.metadata?.to
-      return {
-        activity,
-        coordinates: cityCoordinates[city!],
-        order: index
-      }
-    })
+    .map((activity, index) => ({
+      activity,
+      coordinates: [activity.location!.lng, activity.location!.lat] as [number, number],
+      order: index
+    }))
 
   // Initialize map
   useEffect(() => {
@@ -132,7 +89,7 @@ export function TripMap({ className }: TripMapProps) {
       el.style.cssText = `
         width: 28px;
         height: 28px;
-        background: ${activityColors[activity.type] || '#6B7280'};
+        background: ${getActivityColor(activity.type)};
         border: 3px solid white;
         border-radius: 50%;
         cursor: pointer;
@@ -394,13 +351,13 @@ export function TripMap({ className }: TripMapProps) {
       <div className="absolute top-4 left-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-3">
         <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Activity Types</div>
         <div className="space-y-1">
-          {Object.entries(activityColors).map(([type, color]) => (
+          {allActivityTypes.map(type => (
             <div key={type} className="flex items-center gap-2 text-sm">
               <div 
                 className="w-3 h-3 rounded-full" 
-                style={{ backgroundColor: color }}
+                style={{ backgroundColor: activityTypeConfig[type].color }}
               />
-              <span className="text-gray-700 dark:text-gray-300 capitalize">{type}</span>
+              <span className="text-gray-700 dark:text-gray-300">{activityTypeConfig[type].label}</span>
             </div>
           ))}
         </div>
@@ -411,7 +368,10 @@ export function TripMap({ className }: TripMapProps) {
         <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-xl">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 text-center shadow-lg">
             <p className="text-gray-600 dark:text-gray-300">
-              No activities with known locations found.
+              No activities with location data found.
+            </p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+              Add location coordinates to activities to see them on the map.
             </p>
           </div>
         </div>
