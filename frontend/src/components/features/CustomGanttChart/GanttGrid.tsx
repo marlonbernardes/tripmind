@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { GanttRow } from './GanttRow'
 import { GanttBar } from './GanttBar'
-import { GanttTooltip } from './GanttTooltip'
 import { calculateBarPosition } from './utils/positionUtils'
 import type { GanttGridProps } from './types'
 
@@ -38,50 +37,6 @@ export function GanttGrid({
   
   return (
     <div className="relative overflow-visible">
-      {/* Tooltip - rendered at grid level for proper positioning, hidden on mobile */}
-      {!isMobile && activeActivity && containerRef && (() => {
-        const { x, width } = calculateBarPosition(
-          new Date(activeActivity.start),
-          activeActivity.end ? new Date(activeActivity.end) : new Date(activeActivity.start),
-          ganttStart,
-          viewModeConfig
-        )
-        
-        // Find the row index for this activity
-        let rowY = 0
-        let found = false
-        for (const group of groupedActivities) {
-          if (!found && group.activities.length === 0) {
-            // Collapsed category - check allActivities
-            if (group.allActivities.some(a => a.id === activeActivity.id)) {
-              found = true
-              break
-            }
-            rowY += 48 // category row height
-          } else {
-            rowY += 48 // category row height
-            for (const activity of group.activities) {
-              if (activity.id === activeActivity.id) {
-                found = true
-                break
-              }
-              rowY += 48 // activity row height
-            }
-            if (found) break
-          }
-        }
-        
-        return (
-          <GanttTooltip
-            activity={activeActivity}
-            barX={x}
-            barY={rowY}
-            barWidth={width}
-            containerRef={containerRef}
-          />
-        )
-      })()}
-      
       {/* Activity Rows with Bars */}
       <div>
         {groupedActivities.map((group, groupIdx) => (
@@ -113,10 +68,7 @@ export function GanttGrid({
                     activity={activity}
                     x={x}
                     width={width}
-                    viewModeConfig={viewModeConfig}
-                    ganttStart={ganttStart}
                     isSelected={selectedActivityId === activity.id}
-                    onActivityUpdate={onActivityUpdate}
                     onHover={onActivityHover}
                     onClick={onActivityClick}
                   />

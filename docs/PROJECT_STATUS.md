@@ -53,8 +53,8 @@ The project has a working Gantt chart but needs visual and UX improvements based
 - [x] Remove the "Day" / "Month" switch from Gantt chart. Default it to "Day" as it is today.
 - [x] Move events of type "flight" and "hotels" collapsed by default. This should live somewhere in 
 configuration (not the user configuration, but in the code configuration)
-- [ ] BUG: minimum size of events in Gantt chart is wrong. Boxes should be smaller. (Maybe it's working, need to test)
-- [ ] Add vertical line on top of gantt chart following mouse X position across the days of the week and automatically show tooltip of whatever is under it.
+- [ ] BUG: minimum size of events in Gantt chart is wrong. Boxes should be smaller. (i.e sometimes an event ends at 2pm but the box expands till 4pm.). An idea: show events that start 30 min before/after the current point of the line. If event is too small (i.e no end date), show a box with a dot instead.
+- [x] Add vertical line on top of gantt chart following mouse X position across the days of the week and automatically show tooltip of whatever is under it.
 - [x] It should be possible to zoom to less than 100%. (Now supports 50% to 300%)
 
 **Planning tasks (output: plan doc)**
