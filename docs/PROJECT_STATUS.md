@@ -47,7 +47,7 @@ The project has a working Gantt chart but needs visual and UX improvements based
 - [x] Remove "display name" from settings page
 - [x] Redirect users to settings page when they click on their user info on the nav bar.
 - [x] Allow trip name to be edited inline (similar to editing a title of a PR in github)
-- [ ] Fix sub menu navigation on mobile (i.e "Timeline", "Overview" and "Map" buttons should show in one row)
+- [x] Fix sub menu navigation on mobile (i.e "Timeline", "Overview" and "Map" buttons should show in one row)
 
 **Overview page changes (Gantt chart) /overview**
 - [x] Remove logic for dragging/moving events in Gantt chart.

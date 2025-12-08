@@ -1,5 +1,8 @@
 import { ViewModeConfig } from '../types'
 
+// Re-export ACTIVITY_COLORS from central config for backward compatibility
+export { ACTIVITY_COLORS } from '@/lib/activity-config'
+
 export const VIEW_MODES: Record<string, ViewModeConfig> = {
   Day: {
     name: 'Day',
@@ -27,13 +30,4 @@ export const VIEW_MODES: Record<string, ViewModeConfig> = {
     showUpperWhen: (curr, prev) => 
       !prev || curr.getFullYear() !== prev.getFullYear()
   }
-}
-
-export const ACTIVITY_COLORS: Record<string, string> = {
-  flight: '#3B82F6',    // blue-500
-  hotel: '#10B981',     // green-500
-  event: '#8B5CF6',     // purple-500
-  transport: '#F59E0B', // amber-500
-  note: '#6B7280',      // gray-500
-  task: '#F97316'       // orange-500
 }

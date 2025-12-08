@@ -3,21 +3,13 @@
 import { useMemo, useState } from 'react'
 import { Gantt, Task, ViewMode } from 'gantt-task-react'
 import 'gantt-task-react/dist/index.css'
-import type { SimpleActivity } from '@/types/simple'
+import type { SimpleActivity, ActivityType } from '@/types/simple'
+import { ACTIVITY_COLORS, getActivityColor } from '@/lib/activity-config'
 
 interface GanttChartProps {
   activities: SimpleActivity[]
   selectedActivityId?: string
   onActivitySelect?: (activity: SimpleActivity) => void
-}
-
-const activityTypeColors = {
-  flight: '#3B82F6',
-  hotel: '#10B981',
-  event: '#8B5CF6',
-  transport: '#F59E0B',
-  note: '#6B7280',
-  task: '#F97316'
 }
 
 export function GanttChart({ activities, selectedActivityId, onActivitySelect }: GanttChartProps) {
@@ -104,12 +96,12 @@ export function GanttChart({ activities, selectedActivityId, onActivitySelect }:
         progress: 0,
         isDisabled: true,
         hideChildren: !isExpanded,
-        styles: {
-          backgroundColor: activityTypeColors[type as keyof typeof activityTypeColors],
-          backgroundSelectedColor: activityTypeColors[type as keyof typeof activityTypeColors],
-          progressColor: activityTypeColors[type as keyof typeof activityTypeColors],
-          progressSelectedColor: activityTypeColors[type as keyof typeof activityTypeColors]
-        }
+            styles: {
+              backgroundColor: getActivityColor(type as ActivityType),
+              backgroundSelectedColor: getActivityColor(type as ActivityType),
+              progressColor: getActivityColor(type as ActivityType),
+              progressSelectedColor: getActivityColor(type as ActivityType)
+            }
       })
 
       // Add child tasks for each activity in this category only if expanded
@@ -135,10 +127,10 @@ export function GanttChart({ activities, selectedActivityId, onActivitySelect }:
             isDisabled: false,
             project: `category-${type}`,
             styles: {
-              backgroundColor: activityTypeColors[activity.type],
-              backgroundSelectedColor: activityTypeColors[activity.type],
-              progressColor: activityTypeColors[activity.type],
-              progressSelectedColor: activityTypeColors[activity.type]
+              backgroundColor: getActivityColor(activity.type),
+              backgroundSelectedColor: getActivityColor(activity.type),
+              progressColor: getActivityColor(activity.type),
+              progressSelectedColor: getActivityColor(activity.type)
             }
           })
         })
@@ -274,7 +266,7 @@ export function GanttChart({ activities, selectedActivityId, onActivitySelect }:
                         {!isCategory && (
                           <div
                             className="w-2 h-2 rounded-full flex-shrink-0"
-                            style={{ backgroundColor: activityTypeColors[activity?.type || 'task'] }}
+                            style={{ backgroundColor: getActivityColor(activity?.type || 'task') }}
                           />
                         )}
 
@@ -282,7 +274,7 @@ export function GanttChart({ activities, selectedActivityId, onActivitySelect }:
                         {isCategory && (
                           <div
                             className="w-3 h-3 rounded-sm flex-shrink-0"
-                            style={{ backgroundColor: activityTypeColors[task.id.replace('category-', '') as keyof typeof activityTypeColors] }}
+                            style={{ backgroundColor: getActivityColor(task.id.replace('category-', '') as ActivityType) }}
                           />
                         )}
 

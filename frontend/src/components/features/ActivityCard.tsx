@@ -1,5 +1,6 @@
 import type { SimpleActivity } from '@/types/simple'
 import { getTimeFromDateTime } from '@/lib/mock-data'
+import { getActivityColor, getActivityLabel } from '@/lib/activity-config'
 
 interface ActivityCardProps {
   activity: SimpleActivity
@@ -7,17 +8,9 @@ interface ActivityCardProps {
   onClick?: () => void
 }
 
-const activityTypeConfig = {
-  flight: { dot: '#3B82F6', name: 'Flight' },
-  hotel: { dot: '#10B981', name: 'Hotel' },
-  event: { dot: '#8B5CF6', name: 'Event' },
-  transport: { dot: '#F59E0B', name: 'Transport' },
-  note: { dot: '#6B7280', name: 'Note' },
-  task: { dot: '#F97316', name: 'Task' }
-}
-
 export function ActivityCard({ activity, isSelected = false, onClick }: ActivityCardProps) {
-  const config = activityTypeConfig[activity.type]
+  const activityColor = getActivityColor(activity.type)
+  const activityLabel = getActivityLabel(activity.type)
   
   const startTime = getTimeFromDateTime(activity.start)
   const endTime = activity.end ? getTimeFromDateTime(activity.end) : null
@@ -74,7 +67,7 @@ export function ActivityCard({ activity, isSelected = false, onClick }: Activity
       {/* Colored dot indicator */}
       <div 
         className="w-3 h-3 rounded-full flex-shrink-0"
-        style={{ backgroundColor: config.dot }}
+        style={{ backgroundColor: activityColor }}
       />
       
       <div className="flex-1 min-w-0">
@@ -101,7 +94,7 @@ export function ActivityCard({ activity, isSelected = false, onClick }: Activity
         
         <div className="flex items-center gap-2 mt-1">
           <span className="text-xs text-gray-500 dark:text-gray-400 capitalize">
-            {config.name}
+            {activityLabel}
           </span>
           {activity.city && (
             <>

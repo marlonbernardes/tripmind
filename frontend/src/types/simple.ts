@@ -8,17 +8,27 @@ export interface SimpleTrip {
   activitiesCount: number
 }
 
+// Geographic location for map display
+export interface GeoLocation {
+  lat: number
+  lng: number
+}
+
+// Activity types
+export type ActivityType = 'flight' | 'hotel' | 'event' | 'transport' | 'note' | 'task'
+
 export interface SimpleActivity {
   id: string
   tripId: string
-  type: 'flight' | 'hotel' | 'event' | 'transport' | 'note' | 'task'
+  type: ActivityType
   title: string
   start: string
   end?: string
   city?: string
+  location?: GeoLocation
   status: 'planned' | 'booked'
   notes?: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 // Type-specific metadata interfaces

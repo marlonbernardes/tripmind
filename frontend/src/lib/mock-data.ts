@@ -40,144 +40,157 @@ export const mockTrips: SimpleTrip[] = [
 export const mockActivities: SimpleActivity[] = [
   // Trip to Asia Jan 2026 activities
   {
-    "id": "a1",
-    "tripId": "1",
-    "type": "flight",
-    "title": "Dublin (DUB) → Beijing (PEK) - HU752, Terminal 1",
-    "start": "2026-01-08T11:00:00",
-    "end": "2026-01-09T05:05:00",
-    "city": "Dublin Airport (DUB)",
-    "status": "booked",
-    "metadata": {
-      "from": "Dublin",
-      "to": "Beijing",
-      "flightNumberOutbound": "HU752",
-      "airline": "Hainan Airlines"
+    id: 'a1',
+    tripId: '1',
+    type: 'flight',
+    title: 'Dublin (DUB) → Beijing (PEK) - HU752, Terminal 1',
+    start: '2026-01-08T11:00:00',
+    end: '2026-01-09T05:05:00',
+    city: 'Dublin Airport',
+    location: { lat: 53.4264, lng: -6.2499 },
+    status: 'booked',
+    metadata: {
+      from: 'Dublin',
+      to: 'Beijing',
+      flightNumberOutbound: 'HU752',
+      airline: 'Hainan Airlines'
     }
   },
   {
-    "id": "a2",
-    "tripId": "1",
-    "type": "flight",
-    "title": "Beijing (PEK) → Bangkok (BKK) - HU429, Terminal 2",
-    "start": "2026-01-09T09:40:00",
-    "end": "2026-01-09T14:10:00",
-    "city": "Bangkok",
-    "status": "booked"
+    id: 'a2',
+    tripId: '1',
+    type: 'flight',
+    title: 'Beijing (PEK) → Bangkok (BKK) - HU429, Terminal 2',
+    start: '2026-01-09T09:40:00',
+    end: '2026-01-09T14:10:00',
+    city: 'Beijing',
+    location: { lat: 39.9042, lng: 116.4074 },
+    status: 'booked'
   },
   {
-    "id": "a3",
-    "tripId": "1",
-    "type": "flight",
-    "title": "Bangkok (BKK) → Phuket (HKT) - VZ2304",
-    "start": "2026-01-09T17:30:00",
-    "end": "2026-01-09T19:00:00",
-    "city": "Bangkok",
-    "status": "booked"
+    id: 'a3',
+    tripId: '1',
+    type: 'flight',
+    title: 'Bangkok (BKK) → Phuket (HKT) - VZ2304',
+    start: '2026-01-09T17:30:00',
+    end: '2026-01-09T19:00:00',
+    city: 'Bangkok',
+    location: { lat: 13.7563, lng: 100.5018 },
+    status: 'booked'
   },
   {
-    "id": "a4",
-    "tripId": "1",
-    "type": "hotel",
-    "title": "Bandaloo Boutique Hotel",
-    "start": "2026-01-09T20:30:00",
-    "end": "2026-01-10T12:00:00",
-    "city": "Phuket",
-    "status": "booked"
+    id: 'a4',
+    tripId: '1',
+    type: 'hotel',
+    title: 'Bandaloo Boutique Hotel',
+    start: '2026-01-09T20:30:00',
+    end: '2026-01-10T12:00:00',
+    city: 'Phuket',
+    location: { lat: 7.8804, lng: 98.3923 },
+    status: 'booked'
   },
   {
-    "id": "a5",
-    "tripId": "1",
-    "type": "event",
-    "title": "Phuket nightlife",
-    "start": "2026-01-09T20:30:00",
-    "city": "Phuket",
-    "status": "planned"
+    id: 'a5',
+    tripId: '1',
+    type: 'event',
+    title: 'Phuket nightlife',
+    start: '2026-01-09T20:30:00',
+    city: 'Phuket',
+    location: { lat: 7.8804, lng: 98.3923 },
+    status: 'planned'
   },
   {
-    "id": "a6",
-    "tripId": "1",
-    "type": "hotel",
-    "title": "Phuket resort - All inclusive (3 days)",
-    "start": "2026-01-10T12:00:00",
-    "end": "2026-01-12T00:00:00",
-    "city": "Phuket",
-    "status": "booked",
-    "metadata": {
-      "hotelName": "Phuket Paradise Resort",
-      "hotelLink": "https://phuketparadise.com",
-      "roomType": "Deluxe Ocean View"
+    id: 'a6',
+    tripId: '1',
+    type: 'hotel',
+    title: 'Phuket resort - All inclusive (3 days)',
+    start: '2026-01-10T12:00:00',
+    end: '2026-01-12T00:00:00',
+    city: 'Phuket',
+    location: { lat: 7.8804, lng: 98.3923 },
+    status: 'booked',
+    metadata: {
+      hotelName: 'Phuket Paradise Resort',
+      hotelLink: 'https://phuketparadise.com',
+      roomType: 'Deluxe Ocean View'
     }
   },
   {
-    "id": "a7",
-    "tripId": "1",
-    "type": "flight",
-    "title": "Phuket (HKT) → Bangkok (BKK) - VZ309",
-    "start": "2026-01-12T21:25:00",
-    "end": "2026-01-12T22:55:00",
-    "city": "Phuket",
-    "status": "booked"
+    id: 'a7',
+    tripId: '1',
+    type: 'flight',
+    title: 'Phuket (HKT) → Bangkok (BKK) - VZ309',
+    start: '2026-01-12T21:25:00',
+    end: '2026-01-12T22:55:00',
+    city: 'Phuket',
+    location: { lat: 7.8804, lng: 98.3923 },
+    status: 'booked'
   },
   {
-    "id": "a8",
-    "tripId": "1",
-    "type": "flight",
-    "title": "Bangkok (DMK) → Maldives (MLE) - FD175",
-    "start": "2026-01-13T09:15:00",
-    "end": "2026-01-13T11:30:00",
-    "city": "Bangkok",
-    "status": "booked"
+    id: 'a8',
+    tripId: '1',
+    type: 'flight',
+    title: 'Bangkok (DMK) → Maldives (MLE) - FD175',
+    start: '2026-01-13T09:15:00',
+    end: '2026-01-13T11:30:00',
+    city: 'Bangkok',
+    location: { lat: 13.7563, lng: 100.5018 },
+    status: 'booked'
   },
   {
-    "id": "a9",
-    "tripId": "1",
-    "type": "hotel",
-    "title": "Maldives resort - Paradise vacation (4 days)",
-    "start": "2026-01-13T12:00:00",
-    "end": "2026-01-17T12:00:00",
-    "city": "Maldives",
-    "status": "booked"
+    id: 'a9',
+    tripId: '1',
+    type: 'hotel',
+    title: 'Maldives resort - Paradise vacation (4 days)',
+    start: '2026-01-13T12:00:00',
+    end: '2026-01-17T12:00:00',
+    city: 'Maldives',
+    location: { lat: 3.2028, lng: 73.2207 },
+    status: 'booked'
   },
   {
-    "id": "a10",
-    "tripId": "1",
-    "type": "flight",
-    "title": "Maldives (MLE) → Bangkok (DMK)",
-    "start": "2026-01-17T12:30:00",
-    "end": "2026-01-17T18:55:00",
-    "city": "Maldives",
-    "status": "booked"
+    id: 'a10',
+    tripId: '1',
+    type: 'flight',
+    title: 'Maldives (MLE) → Bangkok (DMK)',
+    start: '2026-01-17T12:30:00',
+    end: '2026-01-17T18:55:00',
+    city: 'Maldives',
+    location: { lat: 3.2028, lng: 73.2207 },
+    status: 'booked'
   },
   {
-    "id": "a11",
-    "tripId": "1",
-    "type": "hotel",
-    "title": "Bangkok city hotel & exploration (4 days)",
-    "start": "2026-01-17T20:00:00",
-    "end": "2026-01-21T12:00:00",
-    "city": "Bangkok",
-    "status": "planned"
+    id: 'a11',
+    tripId: '1',
+    type: 'hotel',
+    title: 'Bangkok city hotel & exploration (4 days)',
+    start: '2026-01-17T20:00:00',
+    end: '2026-01-21T12:00:00',
+    city: 'Bangkok',
+    location: { lat: 13.7563, lng: 100.5018 },
+    status: 'planned'
   },
   {
-    "id": "a12",
-    "tripId": "1",
-    "type": "flight",
-    "title": "Bangkok (BKK) → Beijing (PEK) - HU430",
-    "start": "2026-01-21T16:20:00",
-    "end": "2026-01-21T22:00:00",
-    "city": "Suvarnabhumi Airport (BKK)",
-    "status": "booked"
+    id: 'a12',
+    tripId: '1',
+    type: 'flight',
+    title: 'Bangkok (BKK) → Beijing (PEK) - HU430',
+    start: '2026-01-21T16:20:00',
+    end: '2026-01-21T22:00:00',
+    city: 'Bangkok Airport',
+    location: { lat: 13.6900, lng: 100.7501 },
+    status: 'booked'
   },
   {
-    "id": "a13",
-    "tripId": "1",
-    "type": "flight",
-    "title": "Beijing (PEK) → Dublin (DUB) - HU751, Terminal 2",
-    "start": "2026-01-22T02:40:00",
-    "end": "2026-01-22T05:50:00",
-    "city": "Beijing",
-    "status": "booked"
+    id: 'a13',
+    tripId: '1',
+    type: 'flight',
+    title: 'Beijing (PEK) → Dublin (DUB) - HU751, Terminal 2',
+    start: '2026-01-22T02:40:00',
+    end: '2026-01-22T05:50:00',
+    city: 'Beijing',
+    location: { lat: 39.9042, lng: 116.4074 },
+    status: 'booked'
   },
   
   // European Summer activities
@@ -188,6 +201,8 @@ export const mockActivities: SimpleActivity[] = [
     title: 'Flight to London',
     start: '2025-06-10T08:15:00',
     end: '2025-06-10T09:45:00',
+    city: 'Dublin',
+    location: { lat: 53.4264, lng: -6.2499 },
     status: 'booked'
   },
   {
@@ -196,7 +211,8 @@ export const mockActivities: SimpleActivity[] = [
     type: 'hotel',
     title: 'The Shard Hotel',
     start: '2025-06-10T15:00:00',
-    city: 'London Bridge',
+    city: 'London',
+    location: { lat: 51.5055, lng: -0.0863 },
     status: 'planned'
   },
   {
@@ -206,7 +222,8 @@ export const mockActivities: SimpleActivity[] = [
     title: 'British Museum',
     start: '2025-06-11T10:00:00',
     end: '2025-06-11T16:00:00',
-    city: 'Bloomsbury',
+    city: 'London',
+    location: { lat: 51.5226, lng: -0.1246 },
     status: 'planned'
   },
   {
@@ -216,6 +233,8 @@ export const mockActivities: SimpleActivity[] = [
     title: 'Eurostar to Paris',
     start: '2025-06-15T12:31:00',
     end: '2025-06-15T15:47:00',
+    city: 'London',
+    location: { lat: 51.5305, lng: -0.1260 },
     status: 'booked'
   },
   
@@ -227,6 +246,8 @@ export const mockActivities: SimpleActivity[] = [
     title: 'Flight to Paris',
     start: '2025-04-05T19:45:00',
     end: '2025-04-05T22:10:00',
+    city: 'Dublin',
+    location: { lat: 53.4264, lng: -6.2499 },
     status: 'booked'
   },
   {
@@ -235,7 +256,8 @@ export const mockActivities: SimpleActivity[] = [
     type: 'hotel',
     title: 'Le Marais Boutique Hotel',
     start: '2025-04-05T15:00:00',
-    city: 'Le Marais',
+    city: 'Paris',
+    location: { lat: 48.8566, lng: 2.3615 },
     status: 'planned'
   },
   {
@@ -245,7 +267,8 @@ export const mockActivities: SimpleActivity[] = [
     title: 'Eiffel Tower Visit',
     start: '2025-04-06T10:00:00',
     end: '2025-04-06T12:00:00',
-    city: 'Champ de Mars',
+    city: 'Paris',
+    location: { lat: 48.8584, lng: 2.2945 },
     status: 'booked'
   },
   {
@@ -255,7 +278,8 @@ export const mockActivities: SimpleActivity[] = [
     title: 'Louvre Museum',
     start: '2025-04-06T14:00:00',
     end: '2025-04-06T17:00:00',
-    city: '1st Arrondissement',
+    city: 'Paris',
+    location: { lat: 48.8606, lng: 2.3376 },
     status: 'booked'
   },
   {
@@ -265,6 +289,8 @@ export const mockActivities: SimpleActivity[] = [
     title: 'Return Flight',
     start: '2025-04-07T14:20:00',
     end: '2025-04-07T15:55:00',
+    city: 'Paris',
+    location: { lat: 49.0097, lng: 2.5479 },
     status: 'booked'
   },
   

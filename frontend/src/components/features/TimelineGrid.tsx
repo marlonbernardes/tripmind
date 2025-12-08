@@ -1,31 +1,14 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import type { SimpleActivity } from '@/types/simple'
+import type { SimpleActivity, ActivityType } from '@/types/simple'
 import { getDateFromDateTime } from '@/lib/mock-data'
+import { getActivityColor, getActivityLabel } from '@/lib/activity-config'
 
 interface TimelineGridProps {
   activities: SimpleActivity[]
   selectedActivityId?: string
   onActivitySelect?: (activity: SimpleActivity) => void
-}
-
-const activityTypeColors = {
-  flight: '#3B82F6',
-  hotel: '#10B981', 
-  event: '#8B5CF6',
-  transport: '#F59E0B',
-  note: '#6B7280',
-  task: '#F97316'
-}
-
-const activityTypeLabels = {
-  flight: 'Flights',
-  hotel: 'Hotels', 
-  event: 'Events',
-  transport: 'Transports',
-  note: 'Notes',
-  task: 'Tasks'
 }
 
 export function TimelineGrid({ activities, selectedActivityId, onActivitySelect }: TimelineGridProps) {
@@ -189,7 +172,7 @@ export function TimelineGrid({ activities, selectedActivityId, onActivitySelect 
           {/* Activity Rows */}
           {activitiesByType.map(({ type, activities: typeActivities }, categoryIndex) => {
             const isExpanded = expandedCategories.has(type)
-            const categoryColor = activityTypeColors[type as keyof typeof activityTypeColors]
+            const categoryColor = getActivityColor(type as ActivityType)
             
             return (
               <div key={type}>
@@ -217,7 +200,7 @@ export function TimelineGrid({ activities, selectedActivityId, onActivitySelect 
                     />
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium text-gray-900 dark:text-white">
-                        {activityTypeLabels[type as keyof typeof activityTypeLabels]}
+                        {getActivityLabel(type as ActivityType)}s
                       </div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">
                         {typeActivities.length} items
