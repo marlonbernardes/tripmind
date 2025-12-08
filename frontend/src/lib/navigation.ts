@@ -25,11 +25,6 @@ export const navigationItems: Omit<NavigationItem, 'icon'>[] = [
     label: 'Timeline',
     href: '/trip/1/timeline', // For demo purposes
     activePattern: '/timeline',
-  },
-  {
-    id: 'settings',
-    label: 'Settings',
-    href: '/settings',
   }
 ]
 

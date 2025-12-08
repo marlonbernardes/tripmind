@@ -38,15 +38,14 @@ The project has a working Gantt chart but needs visual and UX improvements based
 
 **NOTE TO AI:** Tick checkboxes as soon as task has been implemented.
 
-**General fixex**
-- [ ] Remove the page /wallet from the navigation. Won't be part of MVP.
-- [ ] BUG: Need to click on close button twice on the activity panel for it to close. 
-- [ ] Remove "Offline-first • Auto-sync when online" badge from home page.
-- [ ] Remove "Delete account" from /settings page.
-- [ ] Remove settings button from home page
-- [ ] Remove "Offline sync" from settings page.
-- [ ] Remove "display name" from settings page
-- [ ] Redirect users to settings page when they click on their user info on the nav bar.
+**General fixes**
+- [x] Remove the page /wallet from the navigation. Won't be part of MVP.
+- [x] Remove "Offline-first • Auto-sync when online" badge from home page.
+- [x] Remove "Delete account" from /settings page.
+- [x] Remove settings button from home page
+- [x] Remove "Offline sync" from settings page.
+- [x] Remove "display name" from settings page
+- [x] Redirect users to settings page when they click on their user info on the nav bar.
 
 **Overview page changes (Gantt chart) /overview**
 - [ ] Remove logic for dragging/moving events in Gantt chart.
@@ -57,11 +56,11 @@ configuration (not the user configuration, but in the code configuration)
 - [ ] BUG: minimum size of events in Gantt chart is wrong. Boxes should be smaller. Perhaps we need to change the component to 
 - [ ] Add vertical line on top of gantt chart following mouse X position across the days of the week and automatically show tooltip of whatever is under it.
 
-
-
 **Planning tasks (output: plan doc)**
 - [ ] Revamp home page
 - [ ] Map page
 - [ ] Add support for dark mode. There's a toggle in the /settings page which can't be clicked.
 - [ ] Add "tasks" section to /trip pages. Vertically split on desktop, horizontally split on mobile. As example of tasks: book flights, book hotels.
+- [ ] BUG: Need to click on close button twice on the activity panel for it to close. 
+
 ---
