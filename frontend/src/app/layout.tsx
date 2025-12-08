@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { TopNavbar } from "@/components/ui/top-navbar";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -19,14 +20,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
       <body className="font-sans antialiased bg-white dark:bg-gray-950">
-        <div className="flex flex-col h-screen overflow-hidden">
-          <TopNavbar />
-          <main className="flex-1 overflow-auto bg-white dark:bg-gray-950">
-            {children}
-          </main>
-        </div>
+        <ThemeProvider>
+          <div className="flex flex-col h-screen overflow-hidden">
+            <TopNavbar />
+            <main className="flex-1 overflow-auto bg-white dark:bg-gray-950">
+              {children}
+            </main>
+          </div>
+        </ThemeProvider>
       </body>
     </html>
   );

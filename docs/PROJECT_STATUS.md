@@ -53,14 +53,14 @@ The project has a working Gantt chart but needs visual and UX improvements based
 - [x] Remove the "Day" / "Month" switch from Gantt chart. Default it to "Day" as it is today.
 - [x] Move events of type "flight" and "hotels" collapsed by default. This should live somewhere in 
 configuration (not the user configuration, but in the code configuration)
-- [ ] BUG: minimum size of events in Gantt chart is wrong. Boxes should be smaller. (i.e sometimes an event ends at 2pm but the box expands till 4pm.). An idea: show events that start 30 min before/after the current point of the line. If event is too small (i.e no end date), show a box with a dot instead.
+- [x] BUG: minimum size of events in Gantt chart is wrong. (Fixed: events now show actual duration, point events show as diamond markers, tooltip shows activities within 30min window)
 - [x] Add vertical line on top of gantt chart following mouse X position across the days of the week and automatically show tooltip of whatever is under it.
 - [x] It should be possible to zoom to less than 100%. (Now supports 50% to 300%)
 
 **Planning tasks (output: plan doc)**
 - [ ] Revamp home page
 - [ ] Map page
-- [ ] Add support for dark mode. There's a toggle in the /settings page which can't be clicked.
+- [x] Add support for dark mode. (Fixed: Created ThemeContext, toggle works and persists preference)
 - [ ] Add "tasks" section to /trip pages. Vertically split on desktop, horizontally split on mobile. As example of tasks: book flights, book hotels.
 - [ ] BUG: Need to click on close button twice on the activity panel for it to close. 
 
