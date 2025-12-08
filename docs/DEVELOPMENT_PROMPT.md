@@ -35,12 +35,11 @@ For each individual task/fix:
 - Wait for user confirmation that it works
 
 **Step C: Request Commit**
-- After user confirms the change works, ask if they want to commit
-- Suggest a commit message
+- After user confirms the change works, ask if they want to: commit, have already commited or if there's an issue.
 - Wait for user to confirm the commit is done
 
 **Step D: Repeat**
-- Only after commit confirmation, move to the next task
+- Only after the prev confirmation, move to the next task
 - If user reports issues, debug and fix before continuing
 
 #### 4. **Update Project Status**
