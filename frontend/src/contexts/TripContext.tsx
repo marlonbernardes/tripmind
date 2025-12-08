@@ -11,6 +11,7 @@ interface TripContextType {
   setIsCreatingActivity: (isCreating: boolean) => void
   trip: SimpleTrip | null
   setTrip: (trip: SimpleTrip | null) => void
+  updateTripName: (name: string) => void
   activities: SimpleActivity[]
   setActivities: (activities: SimpleActivity[]) => void
   addActivity: (activity: Omit<SimpleActivity, 'id'>) => void
@@ -102,6 +103,12 @@ export function TripProvider({ children }: TripProviderProps) {
     }
   }
 
+  const updateTripName = (name: string) => {
+    if (trip) {
+      setTrip({ ...trip, name })
+    }
+  }
+
   return (
     <TripContext.Provider
       value={{
@@ -111,6 +118,7 @@ export function TripProvider({ children }: TripProviderProps) {
         setIsCreatingActivity,
         trip,
         setTrip,
+        updateTripName,
         activities,
         setActivities,
         addActivity,
