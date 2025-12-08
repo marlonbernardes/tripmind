@@ -44,10 +44,7 @@ export function GanttRow({
         activity={activity}
         x={x}
         width={width}
-        viewModeConfig={viewModeConfig}
-        ganttStart={ganttStart}
         isSelected={isSelected}
-        onActivityUpdate={onActivityUpdate}
         onHover={onActivityHover}
         onClick={onActivityClick}
       />

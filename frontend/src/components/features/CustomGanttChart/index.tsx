@@ -17,12 +17,12 @@ export function CustomGanttChart({
   onActivityUpdate,
   leftPanelWidth = 250
 }: CustomGanttChartProps) {
-  const [viewMode, setViewMode] = useState<ViewModeName>('Day')
+  const [viewMode] = useState<ViewModeName>('Day')
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
-    new Set(['flight', 'hotel', 'event', 'transport', 'note', 'task'])
+    new Set(['event', 'transport', 'note', 'task']) // flight and hotel collapsed by default
   )
   const [containerWidth, setContainerWidth] = useState(0)
-  const [columnWidthMultiplier, setColumnWidthMultiplier] = useState(1)
+  const [columnWidthMultiplier, setColumnWidthMultiplier] = useState(1) // 100% zoom (base width is already scaled 2.25x)
   const [activeActivity, setActiveActivity] = useState<SimpleActivity | null>(null)
   const [activeEventLocked, setActiveEventLocked] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -56,8 +56,8 @@ export function CustomGanttChart({
       return baseViewModeConfig
     }
     
-    // Calculate base width to fit all columns in the container at 100% zoom
-    const baseWidth = Math.floor(containerWidth / columns.length)
+    // Calculate base width - scaled 2.25x from the original fit-to-container calculation
+    const baseWidth = Math.floor((containerWidth / columns.length) * 2.25)
     
     // Apply zoom multiplier
     const adjustedWidth = Math.round(baseWidth * columnWidthMultiplier)
@@ -177,26 +177,8 @@ export function CustomGanttChart({
       ref={containerRef}
       className="flex flex-col bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 w-full md:h-full"
     >
-      {/* View Mode Selector and Zoom Controls */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">View:</span>
-          {(['Day', 'Month'] as ViewModeName[]).map((mode) => (
-            <button
-              key={mode}
-              onClick={() => setViewMode(mode)}
-              className={`px-3 py-1 text-sm rounded transition-colors ${
-                viewMode === mode
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-              }`}
-            >
-              {mode}
-            </button>
-          ))}
-        </div>
-        
-        {/* Zoom Controls */}
+      {/* Zoom Controls */}
+      <div className="flex items-center justify-end px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Zoom:</span>
           <button

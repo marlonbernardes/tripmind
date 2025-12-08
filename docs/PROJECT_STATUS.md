@@ -55,6 +55,7 @@ The project has a working Gantt chart but needs visual and UX improvements based
 configuration (not the user configuration, but in the code configuration)
 - [ ] BUG: minimum size of events in Gantt chart is wrong. Boxes should be smaller. Perhaps we need to change the component to 
 - [ ] Add vertical line on top of gantt chart following mouse X position across the days of the week and automatically show tooltip of whatever is under it.
+- [ ] It should be possible to zoom to less than 100%.
 
 **Planning tasks (output: plan doc)**
 - [ ] Revamp home page

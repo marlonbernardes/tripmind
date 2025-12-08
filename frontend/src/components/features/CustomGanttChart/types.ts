@@ -76,10 +76,7 @@ export interface GanttBarProps {
   activity: SimpleActivity
   x: number
   width: number
-  viewModeConfig: ViewModeConfig
-  ganttStart: Date
   isSelected: boolean
-  onActivityUpdate?: (activityId: string, newDates: { start: string; end?: string }) => void
   onHover?: (activity: SimpleActivity | null) => void
   onClick?: (activity: SimpleActivity) => void
 }
