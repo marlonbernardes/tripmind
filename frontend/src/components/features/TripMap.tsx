@@ -225,7 +225,13 @@ export function TripMap({ className }: TripMapProps) {
     return visible
   }, [currentPoint, mapPoints])
 
-  // Initialize map
+  // Detect dark mode from document class (set by ThemeProvider)
+  const isDarkMode = typeof document !== 'undefined' && document.documentElement.classList.contains('dark')
+  const mapStyle = isDarkMode
+    ? 'mapbox://styles/mapbox/dark-v11' 
+    : 'mapbox://styles/mapbox/light-v11'
+
+  // Initialize map (component remounts on theme change via key prop in parent)
   useEffect(() => {
     if (!mapContainer.current || map.current) return
     
@@ -236,7 +242,7 @@ export function TripMap({ className }: TripMapProps) {
     
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
+      style: mapStyle,
       center: [0, 20],
       zoom: 1.5,
     })
@@ -248,7 +254,7 @@ export function TripMap({ className }: TripMapProps) {
       map.current?.remove()
       map.current = null
     }
-  }, [])
+  }, [mapStyle])
 
   // Focus map on current point
   // For range activities, calculate zoom based on distance but center on current point
@@ -564,14 +570,6 @@ export function TripMap({ className }: TripMapProps) {
           {/* MapPoint info card - inline */}
           {currentPoint ? (
             <div className="flex-1 flex items-center gap-3 min-w-0">
-              {/* Sequential number badge */}
-              <div 
-                className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white"
-                style={{ backgroundColor: getActivityColor(currentPoint.activity.type) }}
-              >
-                {currentPoint.index}
-              </div>
-              
               {/* Activity type indicator */}
               <div 
                 className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-base"
@@ -584,6 +582,12 @@ export function TripMap({ className }: TripMapProps) {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="font-medium text-gray-900 dark:text-white truncate">
+                    <span 
+                      className="text-sm font-bold mr-1.5"
+                      style={{ color: getActivityColor(currentPoint.activity.type) }}
+                    >
+                      {currentPoint.index}.
+                    </span>
                     {currentPoint.activity.title}
                   </h3>
                   {/* Flag pills */}

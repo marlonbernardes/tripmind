@@ -4,6 +4,7 @@ import React from 'react'
 import { TripLayout } from '@/components/features/TripLayout'
 import { TripMap } from '@/components/features/TripMap'
 import { useTripContext } from '@/contexts/TripContext'
+import { useTheme } from '@/contexts/ThemeContext'
 
 interface MapPageProps {
   params: Promise<{
@@ -13,6 +14,7 @@ interface MapPageProps {
 
 function MapContent() {
   const { activities } = useTripContext()
+  const { theme } = useTheme()
 
   // Check if there are any activities with locations
   const hasLocationActivities = activities.some(a => a.location || a.locationRange)
@@ -37,7 +39,8 @@ function MapContent() {
     )
   }
 
-  return <TripMap className="h-full" />
+  // Key by theme to remount the map when theme changes (ensures correct map style)
+  return <TripMap key={theme} className="h-full" />
 }
 
 export default function MapPage({ params }: MapPageProps) {
