@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { useTripContext } from '@/contexts/TripContext'
@@ -12,14 +13,44 @@ interface TripMapProps {
   className?: string
 }
 
+// MapPoint flag definitions (bit flags)
+const MapPointFlags = {
+  DEPARTURE: 1,      // 0b000001 - Departure point of a range
+  ARRIVAL: 2,        // 0b000010 - Arrival point of a range
+  OVERNIGHT: 4,      // 0b000100 - Overnight stay
+  TRANSFER: 8,       // 0b001000 - Transfer point
+  BOOKED: 16,        // 0b010000 - Activity is booked
+  HIGHLIGHT: 32,     // 0b100000 - Special highlight
+} as const
+
+// Flag display configuration
+const flagConfig: Record<number, { label: string; color: string; bgColor: string }> = {
+  [MapPointFlags.DEPARTURE]: { label: 'Departure', color: '#0284c7', bgColor: '#e0f2fe' },
+  [MapPointFlags.ARRIVAL]: { label: 'Arrival', color: '#059669', bgColor: '#d1fae5' },
+  [MapPointFlags.OVERNIGHT]: { label: 'Overnight', color: '#7c3aed', bgColor: '#ede9fe' },
+  [MapPointFlags.TRANSFER]: { label: 'Transfer', color: '#ea580c', bgColor: '#ffedd5' },
+  [MapPointFlags.BOOKED]: { label: 'Booked', color: '#16a34a', bgColor: '#dcfce7' },
+  [MapPointFlags.HIGHLIGHT]: { label: 'Highlight', color: '#dc2626', bgColor: '#fee2e2' },
+}
+
+// Helper to decode flags into array of active flag values
+function decodeFlags(flags: number): number[] {
+  const activeFlags: number[] = []
+  Object.values(MapPointFlags).forEach(flag => {
+    if (flags & flag) activeFlags.push(flag)
+  })
+  return activeFlags
+}
+
 // A map point represents a single location on the map
 // Activities with locationRange generate 2 points (start + end)
 interface MapPoint {
   index: number           // 1-based sequential number
+  activityId: string      // Activity ID for URL sync
   activity: SimpleActivity
   coord: [number, number]
-  isRangeStart?: boolean  // For locationRange: start point
-  isRangeEnd?: boolean    // For locationRange: end point
+  time: string            // The specific time for this point
+  flags: number           // Bit flags for features (DEPARTURE, ARRIVAL, BOOKED, etc.)
   pairedIndex?: number    // Index of paired point (for ranges)
   rangeTotal?: number     // Total points in range (1 or 2)
   rangePosition?: number  // Position in range (1 or 2)
@@ -43,8 +74,14 @@ export function TripMap({ className }: TripMapProps) {
   const map = useRef<mapboxgl.Map | null>(null)
   const markersRef = useRef<Map<number, mapboxgl.Marker>>(new Map())
   const routeLayerId = 'route-line'
+  const nextRouteLayerId = 'next-route-line'
+  const initializedFromUrl = useRef(false)
   
-  const { activities, setSelectedActivity } = useTripContext()
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  
+  const { activities, setSelectedActivity, setIsCreatingActivity } = useTripContext()
   
   const [isMapLoaded, setIsMapLoaded] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -59,26 +96,35 @@ export function TripMap({ className }: TripMapProps) {
     let pointIndex = 1
     
     sortedActivities.forEach(activity => {
+      // Calculate base flags
+      const baseFlags = activity.status === 'booked' ? MapPointFlags.BOOKED : 0
+      
       if (activity.locationRange) {
         // Activity with range: create 2 points
         const startIdx = pointIndex
         const endIdx = pointIndex + 1
         
+        // Departure point
         points.push({
           index: startIdx,
+          activityId: activity.id,
           activity,
           coord: [activity.locationRange.start.lng, activity.locationRange.start.lat],
-          isRangeStart: true,
+          time: activity.start,
+          flags: baseFlags | MapPointFlags.DEPARTURE,
           pairedIndex: endIdx,
           rangeTotal: 2,
           rangePosition: 1
         })
         
+        // Arrival point
         points.push({
           index: endIdx,
+          activityId: activity.id,
           activity,
           coord: [activity.locationRange.end.lng, activity.locationRange.end.lat],
-          isRangeEnd: true,
+          time: activity.end || activity.start,
+          flags: baseFlags | MapPointFlags.ARRIVAL,
           pairedIndex: startIdx,
           rangeTotal: 2,
           rangePosition: 2
@@ -89,8 +135,11 @@ export function TripMap({ className }: TripMapProps) {
         // Single location activity
         points.push({
           index: pointIndex,
+          activityId: activity.id,
           activity,
           coord: [activity.location.lng, activity.location.lat],
+          time: activity.start,
+          flags: baseFlags,
           rangeTotal: 1,
           rangePosition: 1
         })
@@ -105,21 +154,68 @@ export function TripMap({ className }: TripMapProps) {
   const canGoPrev = currentIndex > 0
   const canGoNext = currentIndex < mapPoints.length - 1
 
+  // Initialize from URL params on first load
+  useEffect(() => {
+    if (initializedFromUrl.current || mapPoints.length === 0) return
+    
+    const urlActivityId = searchParams.get('a')
+    const urlDeparture = searchParams.get('d')
+    
+    if (urlActivityId) {
+      // Find map point matching activityId and departure flag
+      const targetIndex = mapPoints.findIndex(point => {
+        if (point.activityId !== urlActivityId) return false
+        
+        // If d=1 in URL, look for DEPARTURE point; otherwise any matching point
+        if (urlDeparture === '1') {
+          return (point.flags & MapPointFlags.DEPARTURE) !== 0
+        }
+        // For non-departure or d not specified, prefer first match (could be single point or arrival)
+        return true
+      })
+      
+      if (targetIndex !== -1) {
+        setCurrentIndex(targetIndex)
+      }
+    }
+    
+    initializedFromUrl.current = true
+  }, [mapPoints, searchParams])
+
+  // Update URL when currentIndex changes
+  useEffect(() => {
+    if (!initializedFromUrl.current || !currentPoint) return
+    
+    const isDeparture = (currentPoint.flags & MapPointFlags.DEPARTURE) !== 0
+    const params = new URLSearchParams()
+    params.set('a', currentPoint.activityId)
+    if (isDeparture) {
+      params.set('d', '1')
+    }
+    
+    // Update URL without navigation (shallow)
+    const newUrl = `${pathname}?${params.toString()}`
+    router.replace(newUrl, { scroll: false })
+  }, [currentIndex, currentPoint, pathname, router])
+
   // Determine which points should be visible based on current point
+  // Note: Paired points are NOT shown - they're only used for zoom calculation
   const visiblePointIndices = useMemo(() => {
     if (!currentPoint) return new Set<number>()
     
     const visible = new Set<number>()
     visible.add(currentPoint.index)
     
-    // Add paired point if part of a range
-    if (currentPoint.pairedIndex !== undefined) {
-      visible.add(currentPoint.pairedIndex)
+    // For DEPARTURE points (flights/transport), only show current marker - no nearby points
+    const isDeparture = (currentPoint.flags & MapPointFlags.DEPARTURE) !== 0
+    if (isDeparture) {
+      return visible
     }
     
-    // Add points within 50km
+    // For other points: add markers within 50km (but NOT the paired point)
     mapPoints.forEach(point => {
       if (point.index === currentPoint.index) return
+      if (point.index === currentPoint.pairedIndex) return // Skip paired point
       const distance = getDistanceKm(currentPoint.coord, point.coord)
       if (distance <= 50) {
         visible.add(point.index)
@@ -155,25 +251,40 @@ export function TripMap({ className }: TripMapProps) {
   }, [])
 
   // Focus map on current point
+  // For range activities, calculate zoom based on distance but center on current point
   const focusOnPoint = useCallback((pointIdx: number) => {
     if (!map.current) return
     
     const point = mapPoints[pointIdx]
     if (!point) return
     
-    // If this point has a paired point (part of range), show both
+    // If this point has a paired point (part of range), calculate appropriate zoom
     if (point.pairedIndex !== undefined) {
       const pairedPoint = mapPoints.find(p => p.index === point.pairedIndex)
       if (pairedPoint) {
-        const bounds = new mapboxgl.LngLatBounds()
-        bounds.extend(point.coord)
-        bounds.extend(pairedPoint.coord)
-        map.current.fitBounds(bounds, { padding: 100, duration: 800 })
+        // Calculate distance between the two points
+        const distance = getDistanceKm(point.coord, pairedPoint.coord)
+        
+        // Calculate zoom based on distance (more zoomed in than showing both)
+        // These are approximate values - adjust as needed
+        let zoom: number
+        if (distance > 5000) zoom = 3        // Intercontinental
+        else if (distance > 2000) zoom = 4   // Continental
+        else if (distance > 1000) zoom = 5   // Large country
+        else if (distance > 500) zoom = 6    // Medium distance
+        else if (distance > 200) zoom = 7    // Regional
+        else if (distance > 100) zoom = 8    // ~100-200km
+        else if (distance > 50) zoom = 9     // ~50-100km
+        else if (distance > 20) zoom = 10    // ~20-50km
+        else zoom = 12                       // Close range
+        
+        // Center on current point with calculated zoom
+        map.current.easeTo({ center: point.coord, zoom, duration: 800 })
         return
       }
     }
     
-    // Single point: zoom in
+    // Single point: zoom in more
     map.current.easeTo({ center: point.coord, zoom: 14, duration: 800 })
   }, [mapPoints])
 
@@ -230,43 +341,82 @@ export function TripMap({ className }: TripMapProps) {
     focusOnPoint(currentIndex)
   }, [mapPoints, isMapLoaded, visiblePointIndices, currentIndex, setSelectedActivity, focusOnPoint])
 
-  // Update route line for current point (only if part of a range)
+  // Update route lines: current route (for ranges) and next route (preview)
   useEffect(() => {
     if (!map.current || !isMapLoaded) return
     
-    // Remove existing route
+    // Remove existing routes
     if (map.current.getLayer(routeLayerId)) map.current.removeLayer(routeLayerId)
     if (map.current.getSource(routeLayerId)) map.current.removeSource(routeLayerId)
+    if (map.current.getLayer(nextRouteLayerId)) map.current.removeLayer(nextRouteLayerId)
+    if (map.current.getSource(nextRouteLayerId)) map.current.removeSource(nextRouteLayerId)
     
     const point = mapPoints[currentIndex]
-    if (!point || point.pairedIndex === undefined) return
+    if (!point) return
     
-    const pairedPoint = mapPoints.find(p => p.index === point.pairedIndex)
-    if (!pairedPoint) return
-    
-    // Draw route between paired points
-    const startCoord = point.isRangeStart ? point.coord : pairedPoint.coord
-    const endCoord = point.isRangeEnd ? point.coord : pairedPoint.coord
-    
-    map.current.addSource(routeLayerId, {
-      type: 'geojson',
-      data: { 
-        type: 'Feature', 
-        properties: {}, 
-        geometry: { 
-          type: 'LineString', 
-          coordinates: [startCoord, endCoord] 
-        } 
+    // Draw current route (for range activities - between paired points)
+    if (point.pairedIndex !== undefined) {
+      const pairedPoint = mapPoints.find(p => p.index === point.pairedIndex)
+      if (pairedPoint) {
+        const isDeparture = (point.flags & MapPointFlags.DEPARTURE) !== 0
+        const startCoord = isDeparture ? point.coord : pairedPoint.coord
+        const endCoord = isDeparture ? pairedPoint.coord : point.coord
+        
+        map.current.addSource(routeLayerId, {
+          type: 'geojson',
+          data: { 
+            type: 'Feature', 
+            properties: {}, 
+            geometry: { 
+              type: 'LineString', 
+              coordinates: [startCoord, endCoord] 
+            } 
+          }
+        })
+        
+        map.current.addLayer({
+          id: routeLayerId,
+          type: 'line',
+          source: routeLayerId,
+          layout: { 'line-join': 'round', 'line-cap': 'round' },
+          paint: { 
+            'line-color': getActivityColor(point.activity.type), 
+            'line-width': 3, 
+            'line-opacity': 0.7, 
+            'line-dasharray': [2, 2] 
+          }
+        })
       }
-    })
+    }
     
-    map.current.addLayer({
-      id: routeLayerId,
-      type: 'line',
-      source: routeLayerId,
-      layout: { 'line-join': 'round', 'line-cap': 'round' },
-      paint: { 'line-color': getActivityColor(point.activity.type), 'line-width': 3, 'line-opacity': 0.7, 'line-dasharray': [2, 2] }
-    })
+    // Draw next route (preview to next point)
+    const nextPoint = mapPoints[currentIndex + 1]
+    if (nextPoint) {
+      map.current.addSource(nextRouteLayerId, {
+        type: 'geojson',
+        data: { 
+          type: 'Feature', 
+          properties: {}, 
+          geometry: { 
+            type: 'LineString', 
+            coordinates: [point.coord, nextPoint.coord] 
+          } 
+        }
+      })
+      
+      map.current.addLayer({
+        id: nextRouteLayerId,
+        type: 'line',
+        source: nextRouteLayerId,
+        layout: { 'line-join': 'round', 'line-cap': 'round' },
+        paint: { 
+          'line-color': '#9ca3af',  // Gray color for preview
+          'line-width': 2, 
+          'line-opacity': 0.5, 
+          'line-dasharray': [4, 4]  // More spaced out dashes
+        }
+      })
+    }
   }, [currentIndex, mapPoints, isMapLoaded])
 
   const handlePrev = () => {
@@ -303,13 +453,24 @@ export function TripMap({ className }: TripMapProps) {
     }
   }
 
-  // Get position label for range activities
-  const getPositionLabel = (point: MapPoint | undefined) => {
-    if (!point) return ''
-    if (point.rangeTotal === 2) {
-      return point.isRangeStart ? 'Departure' : 'Arrival'
-    }
-    return ''
+  // Get active flag pills for a point
+  const getFlagPills = (point: MapPoint | undefined) => {
+    if (!point) return []
+    return decodeFlags(point.flags)
+      .filter(flag => flagConfig[flag])
+      .map(flag => flagConfig[flag])
+  }
+
+  // Format time from MapPoint
+  const formatPointTime = (point: MapPoint) => {
+    const d = new Date(point.time)
+    return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
+  }
+
+  // Format date from MapPoint
+  const formatPointDate = (point: MapPoint) => {
+    const d = new Date(point.time)
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   }
 
   if (!process.env.NEXT_PUBLIC_MAPBOX_TOKEN) {
@@ -400,9 +561,17 @@ export function TripMap({ className }: TripMapProps) {
             </button>
           </div>
           
-          {/* Activity info card - inline */}
+          {/* MapPoint info card - inline */}
           {currentPoint ? (
             <div className="flex-1 flex items-center gap-3 min-w-0">
+              {/* Sequential number badge */}
+              <div 
+                className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white"
+                style={{ backgroundColor: getActivityColor(currentPoint.activity.type) }}
+              >
+                {currentPoint.index}
+              </div>
+              
               {/* Activity type indicator */}
               <div 
                 className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-base"
@@ -411,17 +580,25 @@ export function TripMap({ className }: TripMapProps) {
                 {getActivityIcon(currentPoint.activity.type)}
               </div>
               
-              {/* Activity details */}
+              {/* Point details */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="font-medium text-gray-900 dark:text-white truncate">
                     {currentPoint.activity.title}
                   </h3>
-                  {currentPoint.rangeTotal === 2 && (
-                    <span className="flex-shrink-0 text-xs px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
-                      {getPositionLabel(currentPoint)}
+                  {/* Flag pills */}
+                  {getFlagPills(currentPoint).map((flagInfo, idx) => (
+                    <span 
+                      key={idx}
+                      className="flex-shrink-0 text-xs px-1.5 py-0.5 rounded font-medium"
+                      style={{ 
+                        backgroundColor: flagInfo.bgColor,
+                        color: flagInfo.color
+                      }}
+                    >
+                      {flagInfo.label}
                     </span>
-                  )}
+                  ))}
                   <span 
                     className="flex-shrink-0 text-xs px-1.5 py-0.5 rounded"
                     style={{ 
@@ -433,15 +610,9 @@ export function TripMap({ className }: TripMapProps) {
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                  <span>{formatDate(currentPoint.activity.start)}</span>
+                  <span>{formatPointDate(currentPoint)}</span>
                   <span>•</span>
-                  <span>{formatTime(currentPoint.activity.start)}</span>
-                  {currentPoint.activity.end && (
-                    <>
-                      <span>→</span>
-                      <span>{formatTime(currentPoint.activity.end)}</span>
-                    </>
-                  )}
+                  <span className="font-medium text-gray-700 dark:text-gray-300">{formatPointTime(currentPoint)}</span>
                   {currentPoint.activity.city && (
                     <>
                       <span>•</span>
@@ -457,9 +628,10 @@ export function TripMap({ className }: TripMapProps) {
             </div>
           )}
           
-          {/* Quick action buttons */}
+          {/* Quick action buttons - trigger activity creation */}
           <div className="flex-shrink-0 flex items-center gap-1">
             <button
+              onClick={() => setIsCreatingActivity(true)}
               className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
               title="Add hotel"
             >
@@ -467,6 +639,7 @@ export function TripMap({ className }: TripMapProps) {
               <span className="hidden sm:inline">Hotel</span>
             </button>
             <button
+              onClick={() => setIsCreatingActivity(true)}
               className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors"
               title="Add event"
             >
@@ -474,6 +647,7 @@ export function TripMap({ className }: TripMapProps) {
               <span className="hidden sm:inline">Event</span>
             </button>
             <button
+              onClick={() => setIsCreatingActivity(true)}
               className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors"
               title="Add transport"
             >

@@ -77,3 +77,154 @@ After completing a batch of tasks or at the end of a session:
 - **File Storage:** Supabase Storage for trip documents and files
 
 **Start by reading the documentation files to understand what needs to be done next.**
+
+---
+
+## Map View Architecture
+
+The Map view (`/trip/[id]/map`) displays trip activities as sequential map points with navigation controls.
+
+### MapPoint Interface
+
+```typescript
+interface MapPoint {
+  index: number           // 1-based sequential number
+  activityId: string      // Activity ID for URL sync
+  activity: SimpleActivity
+  coord: [number, number] // [lng, lat]
+  time: string            // Specific time for this point
+  flags: number           // Bit flags for features
+  pairedIndex?: number    // Index of paired point (for ranges)
+  rangeTotal?: number     // Total points in range (1 or 2)
+  rangePosition?: number  // Position in range (1 or 2)
+}
+```
+
+### MapPoint Flags (Bit Flags)
+
+```typescript
+const MapPointFlags = {
+  DEPARTURE: 1,      // Departure point of a range (flight/transport)
+  ARRIVAL: 2,        // Arrival point of a range
+  OVERNIGHT: 4,      // Overnight stay
+  TRANSFER: 8,       // Transfer point
+  BOOKED: 16,        // Activity is booked
+  HIGHLIGHT: 32,     // Special highlight
+}
+```
+
+Flags are combined using bitwise OR and checked using bitwise AND:
+```typescript
+// Setting flags
+flags = baseFlags | MapPointFlags.DEPARTURE
+
+// Checking flags
+const isDeparture = (point.flags & MapPointFlags.DEPARTURE) !== 0
+```
+
+### Activity → MapPoint Conversion
+
+**Single Location Activities** (hotels, events, etc.):
+- Create 1 MapPoint
+- `time` = `activity.start`
+- `flags` = base flags only (e.g., `BOOKED` if applicable)
+
+**Range Activities** (flights, transport):
+- Create 2 MapPoints (Departure + Arrival)
+- Point 1: `time` = `activity.start`, `flags` = `DEPARTURE`
+- Point 2: `time` = `activity.end`, `flags` = `ARRIVAL`
+- Both points reference each other via `pairedIndex`
+
+### Marker Visibility Rules
+
+1. **Current marker** - Always visible
+2. **Nearby markers (50km)** - Shown ONLY if current point is NOT a DEPARTURE
+3. **Paired markers** - Never shown (used for zoom calculation only)
+
+Logic:
+```typescript
+// For DEPARTURE points: only show current marker
+if (currentPoint.flags & MapPointFlags.DEPARTURE) {
+  return Set([currentPoint.index])
+}
+
+// For other points: show current + nearby (within 50km)
+```
+
+### Zoom Behavior
+
+**Single location points**: Zoom to level 14
+
+**Range activities**: Calculate zoom based on distance between departure/arrival:
+- `>5000km`: zoom 3 (Intercontinental)
+- `2000-5000km`: zoom 4 (Continental)
+- `1000-2000km`: zoom 5 (Large country)
+- `500-1000km`: zoom 6 (Medium distance)
+- `200-500km`: zoom 7 (Regional)
+- `100-200km`: zoom 8
+- `50-100km`: zoom 9
+- `20-50km`: zoom 10
+- `<20km`: zoom 12
+
+Always center on current point, not midpoint between points.
+
+### Route Lines
+
+**Current Route** (for range activities):
+- Color: Activity type color
+- Style: Dashed `[2, 2]`
+- Width: 3px, Opacity: 70%
+- Drawn between departure and arrival coordinates
+
+**Next Route Preview**:
+- Color: Gray (`#9ca3af`)
+- Style: Dashed `[4, 4]` (more spaced)
+- Width: 2px, Opacity: 50%
+- Drawn from current point to next sequential point
+
+### Controls Bar
+
+Located at bottom of map view:
+- **Prev/Next buttons**: Navigate through map points sequentially
+- **Point info**: Title, flag pills, activity type, date, time, city
+- **Quick action buttons**: Add Hotel, Event, Transport
+
+### Flag Pills Display
+
+Flag pills appear in the controls bar info section:
+- `DEPARTURE`: Blue pill (#0284c7)
+- `ARRIVAL`: Green pill (#059669)
+- `BOOKED`: Green pill (#16a34a)
+- Multiple flags can be shown simultaneously
+
+### URL Sync (Deep Linking)
+
+The map supports deep linking via URL parameters:
+
+**URL Format:**
+```
+/trip/[id]/map?a=<activityId>&d=1
+```
+
+**Parameters:**
+- `a` = Activity ID (required for deep link)
+- `d` = Departure flag (`1` if point is DEPARTURE, omitted otherwise)
+
+**On Page Load:**
+1. Read `a` (activityId) and `d` (departure) from URL
+2. Find matching MapPoint where:
+   - `point.activityId === urlActivityId`
+   - AND if `d=1`, point has `DEPARTURE` flag
+3. Set `currentIndex` to that point's array index
+
+**On Navigation:**
+- URL is updated (shallow) when user navigates to different points
+- This allows sharing/bookmarking specific map locations
+
+### Controls Bar Layout
+
+The info bar shows (left to right):
+1. **Sequential number badge** - Colored circle with point index
+2. **Activity icon** - Emoji based on activity type
+3. **Point details** - Title, flag pills, type badge, date, time, city
+4. **Quick action buttons** - Add Hotel, Event, Transport
