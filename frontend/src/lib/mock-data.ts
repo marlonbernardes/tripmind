@@ -47,7 +47,10 @@ export const mockActivities: SimpleActivity[] = [
     start: '2026-01-08T11:00:00',
     end: '2026-01-09T05:05:00',
     city: 'Dublin Airport',
-    location: { lat: 53.4264, lng: -6.2499 },
+    locationRange: {
+      start: { lat: 53.4264, lng: -6.2499 },
+      end: { lat: 39.9042, lng: 116.4074 }
+    },
     status: 'booked',
     metadata: {
       from: 'Dublin',
@@ -64,7 +67,10 @@ export const mockActivities: SimpleActivity[] = [
     start: '2026-01-09T09:40:00',
     end: '2026-01-09T14:10:00',
     city: 'Beijing',
-    location: { lat: 39.9042, lng: 116.4074 },
+    locationRange: {
+      start: { lat: 39.9042, lng: 116.4074 },
+      end: { lat: 13.7563, lng: 100.5018 }
+    },
     status: 'booked'
   },
   {
@@ -75,7 +81,10 @@ export const mockActivities: SimpleActivity[] = [
     start: '2026-01-09T17:30:00',
     end: '2026-01-09T19:00:00',
     city: 'Bangkok',
-    location: { lat: 13.7563, lng: 100.5018 },
+    locationRange: {
+      start: { lat: 13.7563, lng: 100.5018 },
+      end: { lat: 7.8804, lng: 98.3923 }
+    },
     status: 'booked'
   },
   {
@@ -116,6 +125,17 @@ export const mockActivities: SimpleActivity[] = [
     }
   },
   {
+    id: 'a6b',
+    tripId: '1',
+    type: 'hotel',
+    title: 'Outrigger Surin Beach Resort',
+    start: '2026-01-10T12:00:00',
+    end: '2026-01-12T00:00:00',
+    city: 'Phuket',
+    location: { lat: 7.8804, lng: 98.3923 },
+    status: 'booked'
+  },
+  {
     id: 'a7',
     tripId: '1',
     type: 'flight',
@@ -123,7 +143,10 @@ export const mockActivities: SimpleActivity[] = [
     start: '2026-01-12T21:25:00',
     end: '2026-01-12T22:55:00',
     city: 'Phuket',
-    location: { lat: 7.8804, lng: 98.3923 },
+    locationRange: {
+      start: { lat: 8.1053402, lng: 98.3005581 },
+      end: { lat: 13.7563, lng: 100.5018 }
+    },
     status: 'booked'
   },
   {
@@ -132,20 +155,23 @@ export const mockActivities: SimpleActivity[] = [
     type: 'flight',
     title: 'Bangkok (DMK) → Maldives (MLE) - FD175',
     start: '2026-01-13T09:15:00',
-    end: '2026-01-13T11:30:00',
+    end: '2026-01-13T18:30:00',
     city: 'Bangkok',
-    location: { lat: 13.7563, lng: 100.5018 },
+    locationRange: {
+      start: { lat: 13.9150135, lng: 100.6029074 },
+      end: { lat: 4.1887763, lng: 73.5248302 }
+    },
     status: 'booked'
   },
   {
     id: 'a9',
     tripId: '1',
     type: 'hotel',
-    title: 'Maldives resort - Paradise vacation (4 days)',
+    title: 'Maldives - Hard Rock Hotel',
     start: '2026-01-13T12:00:00',
     end: '2026-01-17T12:00:00',
     city: 'Maldives',
-    location: { lat: 3.2028, lng: 73.2207 },
+    location: { lat: 4.1238366, lng: 73.4700359 },
     status: 'booked'
   },
   {
@@ -154,22 +180,25 @@ export const mockActivities: SimpleActivity[] = [
     type: 'flight',
     title: 'Maldives (MLE) → Bangkok (DMK)',
     start: '2026-01-17T12:30:00',
-    end: '2026-01-17T18:55:00',
+    end: '2026-01-17T20:55:00',
     city: 'Maldives',
-    location: { lat: 3.2028, lng: 73.2207 },
+    locationRange: {
+      start: { lat: 3.2028, lng: 73.2207 },
+      end: { lat: 13.7563, lng: 100.5018 }
+    },
     status: 'booked'
   },
   {
-    id: 'a11',
-    tripId: '1',
-    type: 'hotel',
-    title: 'Bangkok city hotel & exploration (4 days)',
-    start: '2026-01-17T20:00:00',
-    end: '2026-01-21T12:00:00',
-    city: 'Bangkok',
-    location: { lat: 13.7563, lng: 100.5018 },
-    status: 'planned'
-  },
+  id: 'a11',
+  tripId: '1',
+  type: 'hotel',
+  title: 'Bangkok - Eastin Grand Hotel Phayathai',
+  start: '2026-01-17T20:00:00',
+  end: '2026-01-21T12:00:00',
+  city: 'Bangkok',
+  location: { lat: 13.7563, lng: 100.5018 },
+  status: 'booked'
+},
   {
     id: 'a12',
     tripId: '1',
@@ -178,7 +207,10 @@ export const mockActivities: SimpleActivity[] = [
     start: '2026-01-21T16:20:00',
     end: '2026-01-21T22:00:00',
     city: 'Bangkok Airport',
-    location: { lat: 13.6900, lng: 100.7501 },
+    locationRange: {
+      start: { lat: 13.6900, lng: 100.7501 },
+      end: { lat: 39.9042, lng: 116.4074 }
+    },
     status: 'booked'
   },
   {
@@ -189,7 +221,10 @@ export const mockActivities: SimpleActivity[] = [
     start: '2026-01-22T02:40:00',
     end: '2026-01-22T05:50:00',
     city: 'Beijing',
-    location: { lat: 39.9042, lng: 116.4074 },
+    locationRange: {
+      start: { lat: 39.9042, lng: 116.4074 },
+      end: { lat: 53.4264, lng: -6.2499 }
+    },
     status: 'booked'
   },
   
