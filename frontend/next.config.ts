@@ -10,6 +10,9 @@ const withPWA = require("next-pwa")({
 const nextConfig: NextConfig = {
   turbopack: {},
   /* config options here */
+  devIndicators: {
+    position: "top-right", // top-right, bottom-right, top-left, bottom-left
+  },
 };
 
 export default withPWA(nextConfig);

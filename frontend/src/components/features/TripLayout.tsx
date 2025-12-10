@@ -70,9 +70,9 @@ function TripLayoutContent({ children, tripId }: TripLayoutProps) {
       <TripHeader trip={trip} activityCount={activities.length} />
 
       {/* Single Column Layout - Full Width */}
-      <div className="flex-1 overflow-hidden">
-        {/* Content Area - Full Width */}
-        <div className="h-full overflow-auto">
+      <div className="flex-1 overflow-hidden flex flex-col">
+        {/* Content Area - Full Width, fills remaining space */}
+        <div className="flex-1 min-h-0">
           {children}
         </div>
       </div>
