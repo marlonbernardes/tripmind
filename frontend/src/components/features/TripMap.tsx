@@ -495,9 +495,9 @@ export function TripMap({ className }: TripMapProps) {
   }
 
   return (
-    <div className={cn("flex flex-col", className)}>
-      {/* Map - fills available space */}
-      <div className="relative flex-1 min-h-0">
+    <div className={cn("grid grid-rows-[1fr_auto] overflow-hidden", className)}>
+      {/* Map - fills available space (1fr) */}
+      <div className="relative overflow-hidden">
         <div ref={mapContainer} className="w-full h-full" />
         
         {/* Point counter badge */}
@@ -530,17 +530,17 @@ export function TripMap({ className }: TripMapProps) {
         )}
       </div>
       
-      {/* Controls Bar - Fixed at bottom */}
-      <div className="flex-shrink-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+      {/* Controls Bar - auto height, pinned at bottom */}
+      <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
         
         {/* Mobile Layout (< md) - Two rows */}
         <div className="md:hidden">
-          {/* Row 1: Activity Info - separate background */}
+          {/* Row 1: Activity Info - separate background, fixed structure */}
           <div className="bg-gray-50 dark:bg-gray-900 px-3 py-2 border-b border-gray-200 dark:border-gray-700">
             {currentPoint ? (
-              <div className="flex items-center gap-2">
+              <div className="grid grid-cols-[auto_auto_1fr_auto] items-center gap-2">
                 <div 
-                  className="flex-shrink-0 w-6 h-6 rounded flex items-center justify-center text-sm"
+                  className="w-6 h-6 rounded flex items-center justify-center text-sm"
                   style={{ backgroundColor: `${getActivityColor(currentPoint.activity.type)}20` }}
                 >
                   {getActivityIcon(currentPoint.activity.type)}
@@ -551,7 +551,7 @@ export function TripMap({ className }: TripMapProps) {
                 >
                   {currentPoint.index}.
                 </span>
-                <span className="text-sm font-medium text-gray-900 dark:text-white truncate flex-1">
+                <span className="text-sm font-medium text-gray-900 dark:text-white truncate min-w-0 flex-1">
                   {currentPoint.activity.title}
                 </span>
                 <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
@@ -610,9 +610,9 @@ export function TripMap({ className }: TripMapProps) {
           </div>
         </div>
         
-        {/* Desktop Layout (>= md) - Single row */}
+        {/* Desktop Layout (>= md) - Single row, full width with internal padding */}
         <div className="hidden md:block">
-          <div className="w-[80%] mx-auto py-3">
+          <div className="px-4 py-3">
             <div className="flex h-12 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
               {/* Navigation buttons */}
               <button

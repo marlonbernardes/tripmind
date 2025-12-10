@@ -23,9 +23,9 @@ export default function RootLayout({
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <body className="font-sans antialiased bg-white dark:bg-gray-950">
         <ThemeProvider>
-          <div className="flex flex-col h-screen overflow-hidden">
+          <div className="grid grid-rows-[auto_1fr] h-dvh overflow-hidden">
             <TopNavbar />
-            <main className="flex-1 overflow-auto bg-white dark:bg-gray-950">
+            <main className="overflow-hidden bg-white dark:bg-gray-950">
               {children}
             </main>
           </div>

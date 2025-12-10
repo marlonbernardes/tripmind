@@ -65,16 +65,13 @@ function TripLayoutContent({ children, tripId }: TripLayoutProps) {
   }
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-950">
-      {/* Trip Header with Sub-Navigation */}
+    <div className="grid grid-rows-[auto_1fr] h-full bg-white dark:bg-gray-950">
+      {/* Trip Header with Sub-Navigation - auto height */}
       <TripHeader trip={trip} activityCount={activities.length} />
 
-      {/* Single Column Layout - Full Width */}
-      <div className="flex-1 overflow-hidden flex flex-col">
-        {/* Content Area - Full Width, fills remaining space */}
-        <div className="flex-1 min-h-0">
-          {children}
-        </div>
+      {/* Content Area - fills remaining space (1fr) */}
+      <div className="overflow-hidden">
+        {children}
       </div>
     </div>
   )

@@ -74,9 +74,11 @@ export function TripHeader({ trip, activityCount }: TripHeaderProps) {
   }
   
   return (
-    <div className="flex-shrink-0 px-3 sm:px-4 py-2 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 min-w-0">
+    <div className="flex-shrink-0 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 w-full max-w-full overflow-hidden">
+      {/* Mobile Layout - 2 rows */}
+      <div className="md:hidden">
+        {/* Row 1: Centered Trip Name */}
+        <div className="flex items-center justify-center gap-2 px-3 py-2">
           <div 
             className="w-2 h-2 rounded-full flex-shrink-0"
             style={{ backgroundColor: trip.color }}
@@ -89,12 +91,12 @@ export function TripHeader({ trip, activityCount }: TripHeaderProps) {
               onChange={(e) => setEditValue(e.target.value)}
               onBlur={handleSave}
               onKeyDown={handleKeyDown}
-              className="text-base font-semibold text-gray-900 dark:text-white bg-transparent border-b-2 border-blue-500 outline-none px-0 py-0 min-w-0 w-full sm:min-w-[180px]"
+              className="text-sm font-semibold text-gray-900 dark:text-white bg-transparent border-b-2 border-blue-500 outline-none px-0 py-0 text-center max-w-[200px]"
             />
           ) : (
             <h1 
               onClick={handleStartEdit}
-              className="text-base font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded transition-colors truncate"
+              className="text-sm font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 px-1.5 py-0.5 rounded transition-colors truncate max-w-[200px]"
               title="Click to edit trip name"
             >
               {trip.name}
@@ -102,8 +104,8 @@ export function TripHeader({ trip, activityCount }: TripHeaderProps) {
           )}
         </div>
         
-        {/* Trip Sub-Navigation */}
-        <nav className="flex flex-shrink-0 gap-0.5 bg-gray-100 dark:bg-gray-800 p-0.5 rounded-md">
+        {/* Row 2: Full-width Navigation */}
+        <nav className="flex w-full bg-gray-100 dark:bg-gray-800">
           {tripViews.map((view) => {
             const isActive = currentView === view.id
             return (
@@ -111,9 +113,9 @@ export function TripHeader({ trip, activityCount }: TripHeaderProps) {
                 key={view.id}
                 href={`/trip/${trip.id}/${view.path}`}
                 className={cn(
-                  'px-2.5 py-1 text-xs font-medium rounded transition-all whitespace-nowrap',
+                  'flex-1 text-center py-2 text-xs font-medium transition-all',
                   isActive
-                    ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                    ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white'
                     : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                 )}
               >
@@ -122,6 +124,58 @@ export function TripHeader({ trip, activityCount }: TripHeaderProps) {
             )
           })}
         </nav>
+      </div>
+      
+      {/* Desktop Layout - Single row */}
+      <div className="hidden md:block px-4 py-2">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2 min-w-0">
+            <div 
+              className="w-2 h-2 rounded-full flex-shrink-0"
+              style={{ backgroundColor: trip.color }}
+            />
+            {isEditing ? (
+              <input
+                ref={inputRef}
+                type="text"
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                onBlur={handleSave}
+                onKeyDown={handleKeyDown}
+                className="text-base font-semibold text-gray-900 dark:text-white bg-transparent border-b-2 border-blue-500 outline-none px-0 py-0 min-w-[180px]"
+              />
+            ) : (
+              <h1 
+                onClick={handleStartEdit}
+                className="text-base font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded transition-colors truncate"
+                title="Click to edit trip name"
+              >
+                {trip.name}
+              </h1>
+            )}
+          </div>
+          
+          {/* Trip Sub-Navigation */}
+          <nav className="flex flex-shrink-0 gap-0.5 bg-gray-100 dark:bg-gray-800 p-0.5 rounded-md">
+            {tripViews.map((view) => {
+              const isActive = currentView === view.id
+              return (
+                <Link
+                  key={view.id}
+                  href={`/trip/${trip.id}/${view.path}`}
+                  className={cn(
+                    'px-2.5 py-1 text-xs font-medium rounded transition-all whitespace-nowrap',
+                    isActive
+                      ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  )}
+                >
+                  {view.label}
+                </Link>
+              )
+            })}
+          </nav>
+        </div>
       </div>
     </div>
   )
