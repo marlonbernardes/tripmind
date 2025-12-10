@@ -531,17 +531,18 @@ export function TripMap({ className }: TripMapProps) {
       </div>
       
       {/* Controls Bar - Fixed at bottom */}
-      <div className="flex-shrink-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-3">
-        <div className="flex items-center gap-3">
-          {/* Navigation buttons */}
-          <div className="flex items-center gap-1">
+      <div className="flex-shrink-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 pt-3 pb-4">
+        {/* Centered container - 80% width */}
+        <div className="w-[80%] mx-auto">
+          <div className="flex h-12 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+            {/* Navigation buttons - full height with border */}
             <button
               onClick={handlePrev}
               disabled={!canGoPrev}
               className={cn(
-                "flex items-center justify-center w-9 h-9 rounded-lg transition-colors",
+                "flex items-center justify-center w-12 border-r border-gray-200 dark:border-gray-700 transition-colors",
                 canGoPrev
-                  ? "bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200"
+                  ? "bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200"
                   : "bg-gray-50 dark:bg-gray-800 text-gray-300 dark:text-gray-600 cursor-not-allowed"
               )}
               title="Previous point"
@@ -554,9 +555,9 @@ export function TripMap({ className }: TripMapProps) {
               onClick={handleNext}
               disabled={!canGoNext}
               className={cn(
-                "flex items-center justify-center w-9 h-9 rounded-lg transition-colors",
+                "flex items-center justify-center w-12 border-r border-gray-200 dark:border-gray-700 transition-colors",
                 canGoNext
-                  ? "bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200"
+                  ? "bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200"
                   : "bg-gray-50 dark:bg-gray-800 text-gray-300 dark:text-gray-600 cursor-not-allowed"
               )}
               title="Next point"
@@ -565,78 +566,78 @@ export function TripMap({ className }: TripMapProps) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
-          </div>
-          
-          {/* MapPoint info card - inline */}
-          {currentPoint ? (
-            <div className="flex-1 flex items-center gap-3 min-w-0">
-              {/* Activity type indicator */}
-              <div 
-                className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-base"
-                style={{ backgroundColor: `${getActivityColor(currentPoint.activity.type)}20` }}
-              >
-                {getActivityIcon(currentPoint.activity.type)}
-              </div>
-              
-              {/* Point details */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="font-medium text-gray-900 dark:text-white truncate">
-                    <span 
-                      className="text-sm font-bold mr-1.5"
-                      style={{ color: getActivityColor(currentPoint.activity.type) }}
-                    >
-                      {currentPoint.index}.
-                    </span>
-                    {currentPoint.activity.title}
-                  </h3>
-                  {/* Flag pills */}
-                  {getFlagPills(currentPoint).map((flagInfo, idx) => (
-                    <span 
-                      key={idx}
-                      className="flex-shrink-0 text-xs px-1.5 py-0.5 rounded font-medium"
-                      style={{ 
-                        backgroundColor: flagInfo.bgColor,
-                        color: flagInfo.color
-                      }}
-                    >
-                      {flagInfo.label}
-                    </span>
-                  ))}
-                  <span 
-                    className="flex-shrink-0 text-xs px-1.5 py-0.5 rounded"
-                    style={{ 
-                      backgroundColor: `${getActivityColor(currentPoint.activity.type)}20`,
-                      color: getActivityColor(currentPoint.activity.type)
-                    }}
+            
+            {/* Activity Info - center, fills available space */}
+            <div className="flex-1 flex items-center px-4 min-w-0 bg-white dark:bg-gray-800">
+              {currentPoint ? (
+                <div className="flex items-center gap-3 min-w-0 w-full">
+                  {/* Activity type indicator */}
+                  <div 
+                    className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-base"
+                    style={{ backgroundColor: `${getActivityColor(currentPoint.activity.type)}20` }}
                   >
-                    {activityTypeConfig[currentPoint.activity.type]?.label || currentPoint.activity.type}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                  <span>{formatPointDate(currentPoint)}</span>
-                  <span>•</span>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">{formatPointTime(currentPoint)}</span>
-                  {currentPoint.activity.city && (
-                    <>
+                    {getActivityIcon(currentPoint.activity.type)}
+                  </div>
+                  
+                  {/* Point details */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-medium text-gray-900 dark:text-white truncate">
+                        <span 
+                          className="text-sm font-bold mr-1.5"
+                          style={{ color: getActivityColor(currentPoint.activity.type) }}
+                        >
+                          {currentPoint.index}.
+                        </span>
+                        {currentPoint.activity.title}
+                      </h3>
+                      {/* Flag pills */}
+                      {getFlagPills(currentPoint).map((flagInfo, idx) => (
+                        <span 
+                          key={idx}
+                          className="flex-shrink-0 text-xs px-1.5 py-0.5 rounded font-medium"
+                          style={{ 
+                            backgroundColor: flagInfo.bgColor,
+                            color: flagInfo.color
+                          }}
+                        >
+                          {flagInfo.label}
+                        </span>
+                      ))}
+                      <span 
+                        className="flex-shrink-0 text-xs px-1.5 py-0.5 rounded"
+                        style={{ 
+                          backgroundColor: `${getActivityColor(currentPoint.activity.type)}20`,
+                          color: getActivityColor(currentPoint.activity.type)
+                        }}
+                      >
+                        {activityTypeConfig[currentPoint.activity.type]?.label || currentPoint.activity.type}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                      <span>{formatPointDate(currentPoint)}</span>
                       <span>•</span>
-                      <span className="truncate">{currentPoint.activity.city}</span>
-                    </>
-                  )}
+                      <span className="font-medium text-gray-700 dark:text-gray-300">{formatPointTime(currentPoint)}</span>
+                      {currentPoint.activity.city && (
+                        <>
+                          <span>•</span>
+                          <span className="truncate">{currentPoint.activity.city}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="text-sm text-gray-500 dark:text-gray-400">
+                  {mapPoints.length === 0 ? 'No activities with locations' : 'Select an activity'}
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="flex-1 text-sm text-gray-500 dark:text-gray-400">
-              {mapPoints.length === 0 ? 'No activities with locations' : 'Select an activity'}
-            </div>
-          )}
-          
-          {/* Quick action buttons - trigger activity creation */}
-          <div className="flex-shrink-0 flex items-center gap-1">
+            
+            {/* Quick action buttons - full height with borders */}
             <button
               onClick={() => setIsCreatingActivity(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+              className="flex items-center gap-1.5 px-4 border-l border-gray-200 dark:border-gray-700 text-sm font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
               title="Add hotel"
             >
               <span>🏨</span>
@@ -644,7 +645,7 @@ export function TripMap({ className }: TripMapProps) {
             </button>
             <button
               onClick={() => setIsCreatingActivity(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors"
+              className="flex items-center gap-1.5 px-4 border-l border-gray-200 dark:border-gray-700 text-sm font-medium bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors"
               title="Add event"
             >
               <span>🎫</span>
@@ -652,7 +653,7 @@ export function TripMap({ className }: TripMapProps) {
             </button>
             <button
               onClick={() => setIsCreatingActivity(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors"
+              className="flex items-center gap-1.5 px-4 border-l border-gray-200 dark:border-gray-700 text-sm font-medium bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors"
               title="Add transport"
             >
               <span>🚗</span>
