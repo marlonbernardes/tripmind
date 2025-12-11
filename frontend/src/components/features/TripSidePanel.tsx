@@ -9,7 +9,7 @@ import { TripAIChat } from './TripAIChat'
 
 type TabType = 'details' | 'recommend'
 
-export function TimelineRightPanel() {
+export function TripSidePanel() {
   const { selectedActivity, setSelectedActivity, isCreatingActivity, setIsCreatingActivity } = useTripContext()
   const [activeTab, setActiveTab] = useState<TabType>('details')
   const [isEditing, setIsEditing] = useState(false)
