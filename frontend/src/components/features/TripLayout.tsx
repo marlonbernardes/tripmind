@@ -6,14 +6,14 @@ import { TripProvider, useTripContext } from '@/contexts/TripContext'
 import { TripHeader } from './TripHeader'
 import { ActivityDetailsPanel } from './ActivityDetailsPanel'
 import { mockTrips, getActivitiesForTrip } from '@/lib/mock-data'
-import type { SimpleTrip } from '@/types/simple'
 
 interface TripLayoutProps {
   children: ReactNode
   tripId: string
+  hideSidePanel?: boolean
 }
 
-function TripLayoutContent({ children, tripId }: TripLayoutProps) {
+function TripLayoutContent({ children, tripId }: { children: ReactNode; tripId: string }) {
   const { trip, setTrip, activities, setActivities } = useTripContext()
 
   // Load trip and activities data
@@ -77,13 +77,13 @@ function TripLayoutContent({ children, tripId }: TripLayoutProps) {
   )
 }
 
-export function TripLayout({ children, tripId }: TripLayoutProps) {
+export function TripLayout({ children, tripId, hideSidePanel = false }: TripLayoutProps) {
   return (
     <TripProvider>
       <TripLayoutContent tripId={tripId}>
         {children}
       </TripLayoutContent>
-      <ActivityDetailsPanel />
+      {!hideSidePanel && <ActivityDetailsPanel />}
     </TripProvider>
   )
 }
