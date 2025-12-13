@@ -2,13 +2,14 @@
 
 import { useMemo, useState } from 'react'
 import React from 'react'
-import { ChevronDown, ChevronRight, Calendar, Layers, ChevronsUpDown, Plus } from 'lucide-react'
+import { ChevronDown, ChevronRight, Calendar, Layers, ChevronsUpDown, Plus, List } from 'lucide-react'
 import { TripLayout } from '@/components/features/TripLayout'
 import { TripSidePanel } from '@/components/features/TripSidePanel'
 import { useTripContext } from '@/contexts/TripContext'
 import type { SimpleActivity, ActivityType } from '@/types/simple'
 import { getDateFromDateTime, getTimeFromDateTime } from '@/lib/mock-data'
-import { getActivityColor, getActivityLabel, activityTypeConfig, allActivityTypes } from '@/lib/activity-config'
+import { getActivityColor, getActivityLabel, allActivityTypes } from '@/lib/activity-config'
+import { expandActivitiesToDays, groupActivitiesByDate, formatShortDate, formatDayOfWeek, type ExpandedActivity } from '@/lib/timeline-utils'
 
 interface TimelinePageProps {
   params: Promise<{
@@ -16,34 +17,38 @@ interface TimelinePageProps {
   }>;
 }
 
-type GroupByMode = 'date' | 'type'
+type GroupByMode = 'date' | 'type' | 'none'
 
 // Condensed Activity Row Component
 function CompactActivityRow({ 
   activity, 
+  displayDate,
+  dayInfo,
   isSelected, 
   onClick,
-  showDate = false
+  showDate = false,
+  showEndDate = false
 }: { 
   activity: SimpleActivity
+  displayDate?: string // For expanded activities, the specific date to show
+  dayInfo?: { dayNumber: number; totalDays: number } // For multi-day indicators
   isSelected: boolean
   onClick: () => void
   showDate?: boolean
+  showEndDate?: boolean // Show end date/time column (for Type grouping)
 }) {
   const activityColor = getActivityColor(activity.type)
   const startTime = getTimeFromDateTime(activity.start)
-  const startDate = getDateFromDateTime(activity.start)
+  const startDate = displayDate || getDateFromDateTime(activity.start)
+  const endDate = activity.end ? getDateFromDateTime(activity.end) : null
+  const endTime = activity.end ? getTimeFromDateTime(activity.end) : null
   
-  // Format date for type grouping view
-  const formatShortDate = (dateStr: string) => {
-    const d = new Date(dateStr)
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-  }
-  
-  // Format day of week (3 letters)
-  const formatDayOfWeek = (dateStr: string) => {
-    const d = new Date(dateStr)
-    return d.toLocaleDateString('en-US', { weekday: 'short' })
+  // For multi-day activities in All/Date mode: show time only on first/last day
+  const getDisplayTime = () => {
+    if (!dayInfo) return startTime // Single-day activity, show time
+    if (dayInfo.dayNumber === 1) return startTime // First day: show start time
+    if (dayInfo.dayNumber === dayInfo.totalDays) return endTime || '–' // Last day: show end time
+    return '–' // Middle days: show dash
   }
   
   return (
@@ -61,7 +66,7 @@ function CompactActivityRow({
         style={{ backgroundColor: activityColor }}
       />
       
-      {/* Day of week and Date (only when grouped by type) */}
+      {/* Day of week and Date */}
       {showDate && (
         <>
           <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500 w-7 flex-shrink-0">
@@ -73,14 +78,35 @@ function CompactActivityRow({
         </>
       )}
       
-      {/* Time */}
+      {/* Time (context-aware for multi-day activities) */}
       <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 w-10 flex-shrink-0">
-        {startTime}
+        {getDisplayTime()}
       </span>
       
-      {/* Title */}
+      {/* End Date/Time (for Type grouping) */}
+      {showEndDate && endDate && (
+        <>
+          <span className="text-[10px] text-gray-400 dark:text-gray-500 flex-shrink-0">→</span>
+          <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500 w-7 flex-shrink-0">
+            {formatDayOfWeek(endDate)}
+          </span>
+          <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 w-12 flex-shrink-0">
+            {formatShortDate(endDate)}
+          </span>
+          <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 w-10 flex-shrink-0">
+            {endTime}
+          </span>
+        </>
+      )}
+      
+      {/* Title with day indicator for multi-day activities */}
       <span className="text-xs text-gray-900 dark:text-white truncate flex-1">
         {activity.title}
+        {dayInfo && (
+          <span className="text-[9px] text-gray-400 dark:text-gray-500 ml-1">
+            (Day {dayInfo.dayNumber}/{dayInfo.totalDays})
+          </span>
+        )}
       </span>
       
       {/* Status badge */}
@@ -112,7 +138,8 @@ function CollapsibleSection({
   onToggleCollapse,
   onAddActivity,
   color,
-  showDateInRows = false
+  showDateInRows = false,
+  showEndDateInRows = false
 }: { 
   groupKey: string
   title: string
@@ -125,6 +152,7 @@ function CollapsibleSection({
   onAddActivity: () => void
   color?: string
   showDateInRows?: boolean
+  showEndDateInRows?: boolean
 }) {
   // Sort activities by start time
   const sortedActivities = [...activities].sort((a, b) => {
@@ -202,6 +230,7 @@ function CollapsibleSection({
                 isSelected={selectedActivityId === activity.id}
                 onClick={() => onActivitySelect(activity)}
                 showDate={showDateInRows}
+                showEndDate={showEndDateInRows}
               />
             </div>
           ))}
@@ -228,6 +257,17 @@ function TimelineToolbar({
       <div className="flex items-center gap-1">
         <span className="text-[10px] text-gray-500 dark:text-gray-400 mr-1">Group:</span>
         <button
+          onClick={() => onGroupByChange('none')}
+          className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-colors ${
+            groupBy === 'none'
+              ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900'
+              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+          }`}
+        >
+          <List className="w-3 h-3" />
+          All
+        </button>
+        <button
           onClick={() => onGroupByChange('date')}
           className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-colors ${
             groupBy === 'date'
@@ -251,13 +291,15 @@ function TimelineToolbar({
         </button>
       </div>
       
-      <button
-        onClick={onToggleAll}
-        className="flex items-center gap-1 px-2 py-1 text-[10px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
-      >
-        <ChevronsUpDown className="w-3 h-3" />
-        {allCollapsed ? 'Expand' : 'Collapse'}
-      </button>
+      {groupBy !== 'none' && (
+        <button
+          onClick={onToggleAll}
+          className="flex items-center gap-1 px-2 py-1 text-[10px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
+        >
+          <ChevronsUpDown className="w-3 h-3" />
+          {allCollapsed ? 'Expand' : 'Collapse'}
+        </button>
+      )}
     </div>
   )
 }
@@ -343,8 +385,13 @@ function TimelineContent() {
       }))
   }, [activities])
   
+  // All activities expanded and sorted chronologically (for 'none' mode)
+  const activitiesFlat = useMemo(() => {
+    return expandActivitiesToDays(activities)
+  }, [activities])
+  
   // Get current groups based on groupBy mode
-  const currentGroups = groupBy === 'date' ? activitiesByDate : activitiesByType
+  const currentGroups = groupBy === 'date' ? activitiesByDate : groupBy === 'type' ? activitiesByType : []
   
   // Check if all groups are collapsed
   const allCollapsed = currentGroups.length > 0 && 
@@ -419,7 +466,26 @@ function TimelineContent() {
             </div>
           ) : (
             <div>
-              {groupBy === 'date' ? (
+              {groupBy === 'none' ? (
+                // Flat list - no grouping (with multi-day expansion)
+                <div className="px-1 py-1">
+                  {activitiesFlat.map((expandedActivity, index) => (
+                    <div key={`${expandedActivity.id}-${expandedActivity.displayDate}`}>
+                      {index > 0 && (
+                        <div className="h-px bg-gray-200/50 dark:bg-gray-700/50 mx-2" />
+                      )}
+                      <CompactActivityRow
+                        activity={expandedActivity}
+                        displayDate={expandedActivity.displayDate}
+                        dayInfo={expandedActivity.dayNumber ? { dayNumber: expandedActivity.dayNumber, totalDays: expandedActivity.totalDays! } : undefined}
+                        isSelected={selectedActivity?.id === expandedActivity.id}
+                        onClick={() => setSelectedActivity(expandedActivity)}
+                        showDate
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : groupBy === 'date' ? (
                 // Group by Date
                 activitiesByDate.map((group) => (
                   <CollapsibleSection
@@ -450,6 +516,7 @@ function TimelineContent() {
                     onAddActivity={handleAddActivity}
                     color={group.color}
                     showDateInRows
+                    showEndDateInRows
                   />
                 ))
               )}

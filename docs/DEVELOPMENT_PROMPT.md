@@ -80,6 +80,18 @@ After completing a batch of tasks or at the end of a session:
 
 ---
 
+## Timeline Utilities
+
+The timeline uses shared utility functions in `frontend/src/lib/timeline-utils.ts`:
+
+- **`expandActivitiesToDays(activities)`** - Expands multi-day activities into individual day entries for flat list display
+- **`groupActivitiesByDate(activities)`** - Groups activities by date, with multi-day activities appearing in each spanned day
+- **`formatShortDate(dateStr)`** / **`formatDayOfWeek(dateStr)`** - Date formatting helpers
+
+Used by the Timeline page (`/trip/[id]/timeline`) for All/Date/Type grouping modes.
+
+---
+
 ## Map View Architecture
 
 The Map view (`/trip/[id]/map`) displays trip activities as sequential map points with navigation controls.

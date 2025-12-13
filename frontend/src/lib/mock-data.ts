@@ -112,22 +112,6 @@ export const mockActivities: SimpleActivity[] = [
     id: 'a6',
     tripId: '1',
     type: 'hotel',
-    title: 'Phuket resort - All inclusive (3 days)',
-    start: '2026-01-10T12:00:00',
-    end: '2026-01-12T00:00:00',
-    city: 'Phuket',
-    location: { lat: 7.8804, lng: 98.3923 },
-    status: 'booked',
-    metadata: {
-      hotelName: 'Phuket Paradise Resort',
-      hotelLink: 'https://phuketparadise.com',
-      roomType: 'Deluxe Ocean View'
-    }
-  },
-  {
-    id: 'a6b',
-    tripId: '1',
-    type: 'hotel',
     title: 'Outrigger Surin Beach Resort',
     start: '2026-01-10T12:00:00',
     end: '2026-01-12T00:00:00',
