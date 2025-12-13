@@ -1,13 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { FileText, Lightbulb, Plus } from 'lucide-react'
+import { FileText, Lightbulb, MessageSquare, Plus } from 'lucide-react'
 import { useTripContext } from '@/contexts/TripContext'
 import { ManageActivityForm } from './ManageActivityForm'
 import { RecommendationsSection } from './RecommendationsSection'
 import { TripAIChat } from './TripAIChat'
 
-type TabType = 'details' | 'recommend'
+type TabType = 'details' | 'recommend' | 'ai'
 
 export function TripSidePanel() {
   const { selectedActivity, setSelectedActivity, isCreatingActivity, setIsCreatingActivity } = useTripContext()
@@ -42,7 +42,7 @@ export function TripSidePanel() {
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800">
-      {/* Top Panel - Tabs and Content */}
+      {/* Tabs and Content */}
       <div className="flex-1 flex flex-col min-h-0">
         {/* Tab Navigation */}
         <div className="flex items-center justify-between px-2 py-1.5 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
@@ -68,6 +68,17 @@ export function TripSidePanel() {
             >
               <Lightbulb className="w-3 h-3" />
               Recommend
+            </button>
+            <button
+              onClick={() => setActiveTab('ai')}
+              className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                activeTab === 'ai'
+                  ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+              }`}
+            >
+              <MessageSquare className="w-3 h-3" />
+              AI
             </button>
           </div>
           
@@ -154,12 +165,13 @@ export function TripSidePanel() {
               )}
             </div>
           )}
-        </div>
-      </div>
 
-      {/* Bottom Panel - AI Chat (always visible) */}
-      <div className="h-[45%] min-h-[200px]">
-        <TripAIChat />
+          {activeTab === 'ai' && (
+            <div className="h-full">
+              <TripAIChat />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

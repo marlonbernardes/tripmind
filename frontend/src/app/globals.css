@@ -119,4 +119,15 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* Increase base font size on desktop for better readability */
+  @media (min-width: 768px) {
+    html {
+      font-size: 17px;
+    }
+  }
+  @media (min-width: 1024px) {
+    html {
+      font-size: 18px;
+    }
+  }
 }

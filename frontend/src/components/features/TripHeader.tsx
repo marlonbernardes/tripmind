@@ -19,7 +19,6 @@ interface TripHeaderProps {
 
 const tripViews = [
   { id: 'timeline', label: 'Timeline', path: 'timeline' },
-  { id: 'overview', label: 'Overview', path: 'overview' },
   { id: 'map', label: 'Map', path: 'map' }
 ]
 
