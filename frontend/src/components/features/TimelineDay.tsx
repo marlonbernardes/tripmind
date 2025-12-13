@@ -55,14 +55,18 @@ export function TimelineDay({ date, activities, selectedActivityId, onActivitySe
       
       {/* Activities List */}
       <div className="p-4">
-        <div className="space-y-2">
-          {sortedActivities.map((activity) => (
-            <ActivityCard
-              key={activity.id}
-              activity={activity}
-              isSelected={selectedActivityId === activity.id}
-              onClick={() => onActivitySelect?.(activity)}
-            />
+        <div className="space-y-0">
+          {sortedActivities.map((activity, index) => (
+            <div key={activity.id}>
+              {index > 0 && (
+                <div className="h-px bg-gray-200 dark:bg-gray-700 my-2" />
+              )}
+              <ActivityCard
+                activity={activity}
+                isSelected={selectedActivityId === activity.id}
+                onClick={() => onActivitySelect?.(activity)}
+              />
+            </div>
           ))}
         </div>
         

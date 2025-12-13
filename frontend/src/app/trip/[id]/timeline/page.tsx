@@ -192,14 +192,18 @@ function CollapsibleSection({
       {/* Activities */}
       {!isCollapsed && (
         <div className="px-1 py-1">
-          {sortedActivities.map((activity) => (
-            <CompactActivityRow
-              key={activity.id}
-              activity={activity}
-              isSelected={selectedActivityId === activity.id}
-              onClick={() => onActivitySelect(activity)}
-              showDate={showDateInRows}
-            />
+          {sortedActivities.map((activity, index) => (
+            <div key={activity.id}>
+              {index > 0 && (
+                <div className="h-px bg-gray-200/50 dark:bg-gray-700/50 mx-2" />
+              )}
+              <CompactActivityRow
+                activity={activity}
+                isSelected={selectedActivityId === activity.id}
+                onClick={() => onActivitySelect(activity)}
+                showDate={showDateInRows}
+              />
+            </div>
           ))}
         </div>
       )}
