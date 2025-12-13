@@ -1,24 +1,39 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { FileText, Lightbulb, MessageSquare, Plus } from 'lucide-react'
 import { useTripContext } from '@/contexts/TripContext'
 import { ManageActivityForm } from './ManageActivityForm'
+import { ActivityReadView } from './ActivityReadView'
 import { RecommendationsSection } from './RecommendationsSection'
 import { TripAIChat } from './TripAIChat'
 
 type TabType = 'details' | 'recommend' | 'assistant'
+type ViewMode = 'view' | 'edit'
 
-export function TripSidePanel() {
+interface TripSidePanelProps {
+  /** If true, starts in view mode and allows switching to edit. If false, goes directly to edit mode */
+  defaultViewMode?: boolean
+}
+
+export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
   const { selectedActivity, setSelectedActivity, isCreatingActivity, setIsCreatingActivity } = useTripContext()
   const [activeTab, setActiveTab] = useState<TabType>('details')
+  const [viewMode, setViewMode] = useState<ViewMode>(defaultViewMode ? 'view' : 'edit')
+  const previousActivityId = useRef<string | null>(null)
 
   // Auto-switch to details tab when an activity is selected
   useEffect(() => {
     if (selectedActivity) {
       setActiveTab('details')
+      
+      // If activity changed and we're in defaultViewMode, reset to view mode
+      if (defaultViewMode && selectedActivity.id !== previousActivityId.current) {
+        setViewMode('view')
+      }
+      previousActivityId.current = selectedActivity.id
     }
-  }, [selectedActivity])
+  }, [selectedActivity, defaultViewMode])
 
   const handleClose = () => {
     setSelectedActivity(null)
@@ -91,12 +106,13 @@ export function TripSidePanel() {
         {/* Tab Content */}
         <div className="flex-1 overflow-y-auto min-h-0">
           {activeTab === 'details' && (
-            <div className="p-3">
+            <div className="p-4">
               {isCreatingActivity ? (
-                <div>
-                  <div className="flex items-center justify-between mb-3">
+                <div className="flex flex-col h-full -m-4">
+                  {/* Sticky Header */}
+                  <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                     <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-                      New Activity
+                      Add New Activity
                     </h3>
                     <button
                       onClick={handleClose}
@@ -105,32 +121,79 @@ export function TripSidePanel() {
                       Cancel
                     </button>
                   </div>
-                  <ManageActivityForm
-                    mode="create"
-                    onSave={handleSave}
-                    onCancel={handleCancel}
-                  />
+                  {/* Form Content */}
+                  <div className="p-4">
+                    <ManageActivityForm
+                      mode="create"
+                      onSave={handleSave}
+                      onCancel={handleCancel}
+                    />
+                  </div>
                 </div>
               ) : selectedActivity ? (
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-                      Edit Activity
-                    </h3>
-                    <button
-                      onClick={handleClose}
-                      className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-                    >
-                      ✕
-                    </button>
+                viewMode === 'view' && defaultViewMode ? (
+                  /* View mode - shows activity details with Edit button */
+                  <div className="flex flex-col h-full -m-4">
+                    <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                      <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+                        Activity Details
+                      </h3>
+                      <button
+                        onClick={handleClose}
+                        className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <div className="p-4">
+                      <ActivityReadView
+                        activity={selectedActivity}
+                        onEdit={() => setViewMode('edit')}
+                      />
+                    </div>
                   </div>
-                  <ManageActivityForm
-                    mode="edit"
-                    activity={selectedActivity}
-                    onSave={handleSave}
-                    onCancel={handleCancel}
-                  />
-                </div>
+                ) : (
+                  /* Edit mode */
+                  <div className="flex flex-col h-full -m-4">
+                    <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                      <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+                        Edit Activity
+                      </h3>
+                      <button
+                        onClick={() => {
+                          if (defaultViewMode) {
+                            setViewMode('view')
+                          } else {
+                            handleClose()
+                          }
+                        }}
+                        className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                      >
+                        {defaultViewMode ? '← Back' : '✕'}
+                      </button>
+                    </div>
+                    <div className="p-4">
+                      <ManageActivityForm
+                        mode="edit"
+                        activity={selectedActivity}
+                        onSave={() => {
+                          if (defaultViewMode) {
+                            setViewMode('view')
+                          } else {
+                            handleSave()
+                          }
+                        }}
+                        onCancel={() => {
+                          if (defaultViewMode) {
+                            setViewMode('view')
+                          } else {
+                            handleCancel()
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+                )
               ) : (
                 <EmptyDetailsState onAddClick={handleAddActivity} />
               )}
@@ -138,7 +201,7 @@ export function TripSidePanel() {
           )}
 
           {activeTab === 'recommend' && (
-            <div className="p-3">
+            <div className="p-4">
               {selectedActivity ? (
                 <RecommendationsSection activity={selectedActivity} />
               ) : (

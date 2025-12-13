@@ -427,13 +427,23 @@ export function TripMap({ className }: TripMapProps) {
 
   const handlePrev = () => {
     if (canGoPrev) {
-      setCurrentIndex(prev => prev - 1)
+      const newIndex = currentIndex - 1
+      setCurrentIndex(newIndex)
+      const point = mapPoints[newIndex]
+      if (point) {
+        setSelectedActivity(point.activity)
+      }
     }
   }
 
   const handleNext = () => {
     if (canGoNext) {
-      setCurrentIndex(prev => prev + 1)
+      const newIndex = currentIndex + 1
+      setCurrentIndex(newIndex)
+      const point = mapPoints[newIndex]
+      if (point) {
+        setSelectedActivity(point.activity)
+      }
     }
   }
 

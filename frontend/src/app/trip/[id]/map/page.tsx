@@ -1,6 +1,7 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { TripLayout } from '@/components/features/TripLayout'
 import { TripMap } from '@/components/features/TripMap'
 import { TripSidePanel } from '@/components/features/TripSidePanel'
@@ -14,8 +15,24 @@ interface MapPageProps {
 }
 
 function MapContent() {
-  const { activities } = useTripContext()
+  const { activities, setSelectedActivity } = useTripContext()
   const { theme } = useTheme()
+  const searchParams = useSearchParams()
+  const hasInitialized = useRef(false)
+
+  // Auto-select activity based on URL parameter (only on initial load)
+  useEffect(() => {
+    if (hasInitialized.current) return
+    
+    const activityId = searchParams.get('a')
+    if (activityId && activities.length > 0) {
+      const activity = activities.find(a => a.id === activityId)
+      if (activity) {
+        setSelectedActivity(activity)
+        hasInitialized.current = true
+      }
+    }
+  }, [searchParams, activities, setSelectedActivity])
 
   // Check if there are any activities with locations
   const hasLocationActivities = activities.some(a => a.location || a.locationRange)
@@ -48,7 +65,7 @@ function MapContent() {
 
       {/* Right Panel - Details/Recommendations/AI Chat (40% on desktop, full width on mobile) */}
       <div className="w-full md:w-[40%] h-[50%] md:h-full">
-        <TripSidePanel />
+        <TripSidePanel defaultViewMode />
       </div>
     </div>
   )

@@ -88,10 +88,10 @@ export function ManageActivityForm({
   if (mode === 'edit' && activity && selectedType) {
     const FormComponent = getFormComponent(selectedType)
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">{getTypeIcon(selectedType)}</span>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <span className="text-xl">{getTypeIcon(selectedType)}</span>
+          <h3 className="text-sm font-medium text-gray-900 dark:text-white">
             Edit {getTypeLabel(selectedType)}
           </h3>
         </div>
@@ -107,32 +107,27 @@ export function ManageActivityForm({
   // Type selection step
   if (!selectedType) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-            {mode === 'create' ? 'Add New Activity' : 'Edit Activity'}
-          </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Choose the type of activity you want to add
-          </p>
-        </div>
+      <div className="space-y-4">
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          Choose the type of activity
+        </p>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2">
           {activityTypes.map((type) => (
             <button
               key={type.value}
               onClick={() => setSelectedType(type.value)}
-              className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors text-left group"
+              className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors text-left group"
             >
-              <div className="flex items-start gap-3">
-                <span className="text-2xl group-hover:scale-110 transition-transform">
+              <div className="flex items-start gap-2">
+                <span className="text-xl group-hover:scale-110 transition-transform">
                   {type.icon}
                 </span>
                 <div>
-                  <h4 className="font-medium text-gray-900 dark:text-white">
+                  <h4 className="text-sm font-medium text-gray-900 dark:text-white">
                     {type.label}
                   </h4>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                     {type.description}
                   </p>
                 </div>
@@ -141,10 +136,10 @@ export function ManageActivityForm({
           ))}
         </div>
 
-        <div className="flex gap-3 pt-4">
+        <div className="flex gap-2 pt-2">
           <button
             onClick={onCancel}
-            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
+            className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-xs font-medium"
           >
             Cancel
           </button>
@@ -157,20 +152,12 @@ export function ManageActivityForm({
   const FormComponent = getFormComponent(selectedType)
   
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">{getTypeIcon(selectedType)}</span>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-            Add {getTypeLabel(selectedType)}
-          </h3>
-        </div>
-        <button
-          onClick={() => setSelectedType(null)}
-          className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
-        >
-          ← Change Type
-        </button>
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <span className="text-xl">{getTypeIcon(selectedType)}</span>
+        <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+          {getTypeLabel(selectedType)}
+        </h3>
       </div>
       
       <FormComponent

@@ -38,13 +38,20 @@ The project has a working Gantt chart but needs visual and UX improvements based
 
 **NOTE TO AI:** Tick checkboxes as soon as task has been implemented.
 
+- [ ] Proper datepicker
+- [ ] Save button looks ugly on the edit panel
+- [ ] Recommended section revamp
+- [ ] Assistant revamp
+- [ ] Plan trip wizard revamp
+- [ ] Show suggestions in the timeline view
+
 **Details/edit activity changes**
-- [ ] no longer "view"/"edit" modes - it goes straight to edit
-- [ ] Make it more condensed
+- [x] no longer "view"/"edit" modes - it goes straight to edit
+- [x] Make it more condensed
 - [ ] Make "Save" button never go past the bottom of the screen
-- [ ] Remove "change type" link". When adding an activity, "Cancel" button should be a "Back" button which does the same. When editing it should still be cancel.
-- [ ] Header where it says "Edit actiivty" (and where the back/cancel buttons are shown) should be sticky and in a different colour.
-- [ ] Change text "New activity" to "Add new activity" and remove duplicated text below it. Similarly
+- [x] Remove "change type" link". When adding an activity, "Cancel" button should be a "Back" button which does the same. When editing it should still be cancel.
+- [x] Header where it says "Edit actiivty" (and where the back/cancel buttons are shown) should be sticky and in a different colour.
+- [x] Change text "New activity" to "Add new activity" and remove duplicated text below it. Similarly
 
 **General fixes**
 - [x] Remove the page /wallet from the navigation. Won't be part of MVP.
