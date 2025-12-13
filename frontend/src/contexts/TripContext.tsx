@@ -38,12 +38,19 @@ export function TripProvider({ children }: TripProviderProps) {
   const [isCreatingActivity, setIsCreatingActivity] = useState(false)
   const [trip, setTrip] = useState<SimpleTrip | null>(null)
   const [activities, setActivities] = useState<SimpleActivity[]>([])
+  const [isInternalNavigation, setIsInternalNavigation] = useState(false)
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
 
-  // Handle URL-based activity selection
+  // Handle URL-based activity selection (only for external URL changes, not internal navigation)
   useEffect(() => {
+    // Skip if this is an internal navigation (user clicking within the app)
+    if (isInternalNavigation) {
+      setIsInternalNavigation(false)
+      return
+    }
+    
     const activityId = searchParams.get('activity')
     if (activityId && activities.length > 0) {
       const activity = activities.find(a => a.id === activityId)
@@ -51,10 +58,12 @@ export function TripProvider({ children }: TripProviderProps) {
         setSelectedActivity(activity)
       }
     }
-  }, [searchParams, activities, selectedActivity?.id])
+  }, [searchParams, activities])
 
   // Update URL when activity selection changes
   const handleActivitySelect = (activity: SimpleActivity | null) => {
+    // Mark this as internal navigation to prevent the useEffect from re-selecting
+    setIsInternalNavigation(true)
     setSelectedActivity(activity)
     
     const params = new URLSearchParams(searchParams.toString())
