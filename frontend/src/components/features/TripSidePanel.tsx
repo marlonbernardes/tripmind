@@ -1,18 +1,25 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { FileText, Lightbulb, MessageSquare, Plus } from 'lucide-react'
 import { useTripContext } from '@/contexts/TripContext'
 import { ManageActivityForm } from './ManageActivityForm'
 import { RecommendationsSection } from './RecommendationsSection'
 import { TripAIChat } from './TripAIChat'
 
-type TabType = 'details' | 'recommend' | 'ai'
+type TabType = 'details' | 'recommend' | 'assistant'
 
 export function TripSidePanel() {
   const { selectedActivity, setSelectedActivity, isCreatingActivity, setIsCreatingActivity } = useTripContext()
   const [activeTab, setActiveTab] = useState<TabType>('details')
   const [isEditing, setIsEditing] = useState(false)
+
+  // Auto-switch to details tab when an activity is selected
+  useEffect(() => {
+    if (selectedActivity) {
+      setActiveTab('details')
+    }
+  }, [selectedActivity])
 
   const handleClose = () => {
     setSelectedActivity(null)
@@ -45,7 +52,7 @@ export function TripSidePanel() {
       {/* Tabs and Content */}
       <div className="flex-1 flex flex-col min-h-0">
         {/* Tab Navigation */}
-        <div className="flex items-center justify-between px-2 py-1.5 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
+        <div className="flex items-center px-2 py-1.5 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
           <div className="flex items-center gap-1">
             <button
               onClick={() => setActiveTab('details')}
@@ -70,26 +77,17 @@ export function TripSidePanel() {
               Recommend
             </button>
             <button
-              onClick={() => setActiveTab('ai')}
+              onClick={() => setActiveTab('assistant')}
               className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-colors ${
-                activeTab === 'ai'
+                activeTab === 'assistant'
                   ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
               }`}
             >
               <MessageSquare className="w-3 h-3" />
-              AI
+              Assistant
             </button>
           </div>
-          
-          {/* Add Activity Button */}
-          <button
-            onClick={handleAddActivity}
-            className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
-          >
-            <Plus className="w-3 h-3" />
-            Add
-          </button>
         </div>
 
         {/* Tab Content */}
@@ -166,7 +164,7 @@ export function TripSidePanel() {
             </div>
           )}
 
-          {activeTab === 'ai' && (
+          {activeTab === 'assistant' && (
             <div className="h-full">
               <TripAIChat />
             </div>
