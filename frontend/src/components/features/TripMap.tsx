@@ -706,31 +706,7 @@ export function TripMap({ className }: TripMapProps) {
                 )}
               </div>
               
-              {/* Quick action buttons */}
-              <button
-                onClick={() => setIsCreatingActivity(true)}
-                className="flex items-center gap-1.5 px-4 border-l border-gray-200 dark:border-gray-700 text-sm font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
-                title="Add hotel"
-              >
-                <span>🏨</span>
-                <span>Hotel</span>
-              </button>
-              <button
-                onClick={() => setIsCreatingActivity(true)}
-                className="flex items-center gap-1.5 px-4 border-l border-gray-200 dark:border-gray-700 text-sm font-medium bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors"
-                title="Add event"
-              >
-                <span>🎫</span>
-                <span>Event</span>
-              </button>
-              <button
-                onClick={() => setIsCreatingActivity(true)}
-                className="flex items-center gap-1.5 px-4 border-l border-gray-200 dark:border-gray-700 text-sm font-medium bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors"
-                title="Add transport"
-              >
-                <span>🚗</span>
-                <span>Transport</span>
-              </button>
+            
             </div>
           </div>
         </div>

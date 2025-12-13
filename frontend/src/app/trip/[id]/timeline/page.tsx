@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import React from 'react'
-import { ChevronDown, ChevronRight, Calendar, Layers, ChevronsUpDown } from 'lucide-react'
+import { ChevronDown, ChevronRight, Calendar, Layers, ChevronsUpDown, Plus } from 'lucide-react'
 import { TripLayout } from '@/components/features/TripLayout'
 import { TripSidePanel } from '@/components/features/TripSidePanel'
 import { useTripContext } from '@/contexts/TripContext'
@@ -105,24 +105,24 @@ function CollapsibleSection({
   groupKey,
   title,
   subtitle,
-  count,
   activities,
   selectedActivityId,
   onActivitySelect,
   isCollapsed,
   onToggleCollapse,
+  onAddActivity,
   color,
   showDateInRows = false
 }: { 
   groupKey: string
   title: string
   subtitle?: string
-  count: number
   activities: SimpleActivity[]
   selectedActivityId?: string
   onActivitySelect: (activity: SimpleActivity) => void
   isCollapsed: boolean
   onToggleCollapse: (key: string) => void
+  onAddActivity: () => void
   color?: string
   showDateInRows?: boolean
 }) {
@@ -134,9 +134,17 @@ function CollapsibleSection({
   return (
     <div className="border-b border-gray-100 dark:border-gray-800 last:border-b-0">
       {/* Section Header */}
-      <button
+      <div
         onClick={() => onToggleCollapse(groupKey)}
-        className="w-full flex items-center gap-2 px-3 py-1.5 bg-gray-50 dark:bg-gray-900/50 sticky top-0 hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors"
+        className="w-full flex items-center gap-2 px-3 py-1.5 bg-gray-50 dark:bg-gray-900/50 sticky top-0 hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors cursor-pointer"
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            onToggleCollapse(groupKey)
+          }
+        }}
       >
         {/* Collapse indicator */}
         <div className="text-gray-400 dark:text-gray-500">
@@ -167,11 +175,19 @@ function CollapsibleSection({
           )}
         </div>
         
-        {/* Count */}
-        <span className="text-[10px] text-gray-400 dark:text-gray-500">
-          {count}
-        </span>
-      </button>
+        {/* Add Activity Button */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            onAddActivity()
+          }}
+          className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
+        >
+          <Plus className="w-3 h-3" />
+          <span>Add</span>
+        </button>
+      </div>
       
       {/* Activities */}
       {!isCollapsed && (
@@ -359,11 +375,18 @@ function TimelineContent() {
     setGroupBy(mode)
     setCollapsedGroups(new Set())
   }
+  
+  // Handle add activity - open create form
+  const { setIsCreatingActivity } = useTripContext()
+  const handleAddActivity = () => {
+    setSelectedActivity(null)
+    setIsCreatingActivity(true)
+  }
 
   return (
-    <div className="h-full flex">
-      {/* Left Panel - Timeline (60%) */}
-      <div className="w-[60%] h-full flex flex-col bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800">
+    <div className="h-full flex flex-col md:flex-row">
+      {/* Left Panel - Timeline (60% on desktop, full width on mobile) */}
+      <div className="w-full md:w-[60%] h-[50%] md:h-full flex flex-col bg-white dark:bg-gray-950 md:border-r border-b md:border-b-0 border-gray-200 dark:border-gray-800">
         {/* Toolbar */}
         <TimelineToolbar
           groupBy={groupBy}
@@ -400,12 +423,12 @@ function TimelineContent() {
                     groupKey={group.key}
                     title={group.title}
                     subtitle={group.subtitle}
-                    count={group.activities.length}
                     activities={group.activities}
                     selectedActivityId={selectedActivity?.id}
                     onActivitySelect={setSelectedActivity}
                     isCollapsed={collapsedGroups.has(group.key)}
                     onToggleCollapse={handleToggleCollapse}
+                    onAddActivity={handleAddActivity}
                   />
                 ))
               ) : (
@@ -415,12 +438,12 @@ function TimelineContent() {
                     key={group.key}
                     groupKey={group.key}
                     title={group.title}
-                    count={group.activities.length}
                     activities={group.activities}
                     selectedActivityId={selectedActivity?.id}
                     onActivitySelect={setSelectedActivity}
                     isCollapsed={collapsedGroups.has(group.key)}
                     onToggleCollapse={handleToggleCollapse}
+                    onAddActivity={handleAddActivity}
                     color={group.color}
                     showDateInRows
                   />
@@ -431,8 +454,8 @@ function TimelineContent() {
         </div>
       </div>
 
-      {/* Right Panel - Details/Recommendations/AI Chat (40%) */}
-      <div className="w-[40%] h-full">
+      {/* Right Panel - Details/Recommendations/AI Chat (40% on desktop, full width on mobile) */}
+      <div className="w-full md:w-[40%] h-[50%] md:h-full">
         <TripSidePanel />
       </div>
     </div>

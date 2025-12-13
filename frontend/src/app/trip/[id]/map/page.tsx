@@ -21,9 +21,9 @@ function MapContent() {
   const hasLocationActivities = activities.some(a => a.location || a.locationRange)
 
   return (
-    <div className="h-full flex">
-      {/* Left Panel - Map (60%) */}
-      <div className="w-[60%] h-full bg-gray-100 dark:bg-gray-900">
+    <div className="h-full flex flex-col md:flex-row">
+      {/* Left Panel - Map (60% on desktop, full width on mobile) */}
+      <div className="w-full md:w-[60%] h-[50%] md:h-full bg-gray-100 dark:bg-gray-900 border-b md:border-b-0 border-gray-200 dark:border-gray-800">
         {!hasLocationActivities ? (
           <div className="h-full flex items-center justify-center">
             <div className="text-center px-6">
@@ -46,8 +46,8 @@ function MapContent() {
         )}
       </div>
 
-      {/* Right Panel - Details/Recommendations/AI Chat (40%) */}
-      <div className="w-[40%] h-full">
+      {/* Right Panel - Details/Recommendations/AI Chat (40% on desktop, full width on mobile) */}
+      <div className="w-full md:w-[40%] h-[50%] md:h-full">
         <TripSidePanel />
       </div>
     </div>
