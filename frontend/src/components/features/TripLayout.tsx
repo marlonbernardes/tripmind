@@ -4,7 +4,6 @@ import { ReactNode, useEffect } from 'react'
 import Link from 'next/link'
 import { TripProvider, useTripContext } from '@/contexts/TripContext'
 import { TripHeader } from './TripHeader'
-import { ActivityDetailsPanel } from './ActivityDetailsPanel'
 import { mockTrips, getActivitiesForTrip } from '@/lib/mock-data'
 
 interface TripLayoutProps {
@@ -83,7 +82,6 @@ export function TripLayout({ children, tripId, hideSidePanel = false }: TripLayo
       <TripLayoutContent tripId={tripId}>
         {children}
       </TripLayoutContent>
-      {!hideSidePanel && <ActivityDetailsPanel />}
     </TripProvider>
   )
 }
