@@ -8,6 +8,7 @@ import { ActivityReadView } from './ActivityReadView'
 import { RecommendationsSection } from './RecommendationsSection'
 import { TripAIChat } from './TripAIChat'
 import { TripConfigTab } from './TripConfigTab'
+import { getActivityIcon, getActivityLabel } from '@/lib/activity-config'
 
 type TabType = 'details' | 'recommend' | 'assistant' | 'config'
 type ViewMode = 'view' | 'edit'
@@ -58,8 +59,6 @@ export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
     setIsCreatingActivity(true)
     setActiveTab('details')
   }
-
-  const hasContent = selectedActivity || isCreatingActivity
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800">
@@ -120,35 +119,19 @@ export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
           {activeTab === 'details' && (
             <div className="p-4">
               {isCreatingActivity ? (
-                <div className="flex flex-col h-full -m-4">
-                  {/* Sticky Header */}
-                  <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                    <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-                      Add New Activity
-                    </h3>
-                    <button
-                      onClick={handleClose}
-                      className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                  {/* Form Content */}
-                  <div className="p-4">
-                    <ManageActivityForm
-                      mode="create"
-                      onSave={handleSave}
-                      onCancel={handleCancel}
-                    />
-                  </div>
-                </div>
+                <ManageActivityForm
+                  mode="create"
+                  onSave={handleSave}
+                  onCancel={handleCancel}
+                />
               ) : selectedActivity ? (
                 viewMode === 'view' && defaultViewMode ? (
                   /* View mode - shows activity details with Edit button */
                   <div className="flex flex-col h-full -m-4">
                     <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                      <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-                        Activity Details
+                      <h3 className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                        <span>{getActivityIcon(selectedActivity.type)}</span>
+                        {getActivityLabel(selectedActivity.type)}
                       </h3>
                       <button
                         onClick={handleClose}
@@ -168,8 +151,9 @@ export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
                   /* Edit mode */
                   <div className="flex flex-col h-full -m-4">
                     <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                      <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-                        Edit Activity
+                      <h3 className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                        <span>{getActivityIcon(selectedActivity.type)}</span>
+                        Edit {getActivityLabel(selectedActivity.type)}
                       </h3>
                       <button
                         onClick={() => {
@@ -243,7 +227,6 @@ export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
     </div>
   )
 }
-
 
 // Empty State Component
 function EmptyDetailsState({ onAddClick }: { onAddClick: () => void }) {

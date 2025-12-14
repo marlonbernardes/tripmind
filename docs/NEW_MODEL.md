@@ -134,15 +134,11 @@ interface FlightMetadata {
 
 interface StayMetadata {
   propertyName?: string      // Was hotelName
-  propertyLink?: string      // Was hotelLink
   confirmationCode?: string
-  roomType?: string
 }
 
 interface EventMetadata {
-  venue?: string
-  ticketLink?: string
-  organizer?: string
+  // Simplified - no event-specific fields for MVP
 }
 
 interface TransportMetadata {
@@ -166,7 +162,8 @@ interface TaskMetadata {
 
 **Changes:**
 - `FlightMetadata`: Removed `flightNumberInbound` (return flight is separate activity)
-- `StayMetadata`: Renamed from `HotelMetadata`, uses `propertyName`/`propertyLink`
+- `StayMetadata`: Simplified - removed `roomType`, `propertyLink`
+- `EventMetadata`: Simplified - removed `venue`, `organizer`, `ticketLink`
 
 ---
 

@@ -96,15 +96,11 @@ export interface FlightMetadata {
 
 export interface StayMetadata {
   propertyName?: string
-  propertyLink?: string
   confirmationCode?: string
-  roomType?: string
 }
 
 export interface EventMetadata {
-  venue?: string
-  ticketLink?: string
-  organizer?: string
+  // Simplified - no event-specific fields needed for MVP
 }
 
 export interface TransportMetadata {

@@ -4,42 +4,49 @@ export interface ActivityTypeConfig {
   label: string
   color: string
   icon: string
+  description: string
   defaultCollapsed?: boolean  // For Gantt chart and similar views
 }
 
-// Activity type configuration - colors, labels, icons
+// Activity type configuration - colors, labels, icons, descriptions
 export const activityTypeConfig: Record<ActivityType, ActivityTypeConfig> = {
   flight: {
     label: 'Flight',
     color: '#3B82F6', // blue-500
     icon: '✈️',
+    description: 'Air travel between destinations',
     defaultCollapsed: true
   },
   stay: {
     label: 'Stay',
     color: '#8B5CF6', // violet-500
     icon: '🏨',
+    description: 'Accommodation and lodging',
     defaultCollapsed: true
   },
   event: {
     label: 'Event',
     color: '#F59E0B', // amber-500
-    icon: '🎫'
+    icon: '🎫',
+    description: 'Shows, concerts, attractions'
   },
   transport: {
     label: 'Transport',
     color: '#10B981', // emerald-500
-    icon: '🚗'
+    icon: '🚗',
+    description: 'Local transportation'
   },
   note: {
     label: 'Note',
     color: '#6B7280', // gray-500
-    icon: '📝'
+    icon: '📝',
+    description: 'General notes and reminders'
   },
   task: {
     label: 'Task',
     color: '#EF4444', // red-500
-    icon: '✓'
+    icon: '✅',
+    description: 'To-do items and tasks'
   }
 }
 
@@ -71,6 +78,11 @@ export function getActivityIcon(type: ActivityType): string {
 // Helper function to check if activity type should be collapsed by default
 export function isDefaultCollapsed(type: ActivityType): boolean {
   return activityTypeConfig[type]?.defaultCollapsed ?? false
+}
+
+// Helper function to get activity description
+export function getActivityDescription(type: ActivityType): string {
+  return activityTypeConfig[type]?.description ?? ''
 }
 
 // Activity type icons for quick selection

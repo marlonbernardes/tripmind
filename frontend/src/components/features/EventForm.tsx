@@ -23,16 +23,12 @@ export function EventForm({ activity, onSave, onCancel }: EventFormProps) {
     endDay: undefined as number | undefined,
     endTime: '',
     location: '',
-    venue: '',
-    ticketLink: '',
-    organizer: '',
     status: 'draft' as ActivityStatus,
     notes: ''
   })
 
   useEffect(() => {
     if (activity) {
-      const metadata = activity.metadata as EventMetadata || {}
       setFormData({
         title: activity.title,
         day: activity.day,
@@ -40,9 +36,6 @@ export function EventForm({ activity, onSave, onCancel }: EventFormProps) {
         endDay: activity.endDay,
         endTime: activity.endTime || '',
         location: activity.city || '',
-        venue: metadata.venue || '',
-        ticketLink: metadata.ticketLink || '',
-        organizer: metadata.organizer || '',
         status: activity.status,
         notes: activity.notes || ''
       })
@@ -63,11 +56,7 @@ export function EventForm({ activity, onSave, onCancel }: EventFormProps) {
       city: formData.location,
       status: formData.status,
       notes: formData.notes || undefined,
-      metadata: {
-        venue: formData.venue || undefined,
-        ticketLink: formData.ticketLink || undefined,
-        organizer: formData.organizer || undefined
-      }
+      metadata: {} as EventMetadata
     }
 
     onSave(activityData)
@@ -161,48 +150,6 @@ export function EventForm({ activity, onSave, onCancel }: EventFormProps) {
           </div>
         </div>
       )}
-
-      {/* Venue */}
-      <div>
-        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Venue
-        </label>
-        <input
-          type="text"
-          value={formData.venue}
-          onChange={(e) => setFormData(prev => ({ ...prev, venue: e.target.value }))}
-          className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-          placeholder="e.g. Madison Square Garden"
-        />
-      </div>
-
-      {/* Organizer */}
-      <div>
-        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Organizer
-        </label>
-        <input
-          type="text"
-          value={formData.organizer}
-          onChange={(e) => setFormData(prev => ({ ...prev, organizer: e.target.value }))}
-          className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-          placeholder="e.g. Live Nation"
-        />
-      </div>
-
-      {/* Ticket Link */}
-      <div>
-        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Ticket Link
-        </label>
-        <input
-          type="url"
-          value={formData.ticketLink}
-          onChange={(e) => setFormData(prev => ({ ...prev, ticketLink: e.target.value }))}
-          className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-          placeholder="https://ticketmaster.com/..."
-        />
-      </div>
 
       {/* Status */}
       <div>

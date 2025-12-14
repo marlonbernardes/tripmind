@@ -23,8 +23,6 @@ export function StayForm({ activity, onSave, onCancel, defaultDay = 1 }: StayFor
     time: '',
     endDay: undefined as number | undefined,
     endTime: '',
-    propertyLink: '',
-    roomType: '',
     confirmationCode: '',
     status: 'draft' as ActivityStatus,
     notes: ''
@@ -40,8 +38,6 @@ export function StayForm({ activity, onSave, onCancel, defaultDay = 1 }: StayFor
         time: activity.time || '',
         endDay: activity.endDay,
         endTime: activity.endTime || '',
-        propertyLink: metadata.propertyLink || '',
-        roomType: metadata.roomType || '',
         confirmationCode: metadata.confirmationCode || '',
         status: activity.status,
         notes: activity.notes || ''
@@ -72,8 +68,6 @@ export function StayForm({ activity, onSave, onCancel, defaultDay = 1 }: StayFor
       notes: formData.notes || undefined,
       metadata: {
         propertyName: formData.propertyName || undefined,
-        propertyLink: formData.propertyLink || undefined,
-        roomType: formData.roomType || undefined,
         confirmationCode: formData.confirmationCode || undefined
       } as StayMetadata
     }
@@ -167,34 +161,6 @@ export function StayForm({ activity, onSave, onCancel, defaultDay = 1 }: StayFor
           </div>
         </div>
       )}
-
-      {/* Room Type */}
-      <div>
-        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Room Type
-        </label>
-        <input
-          type="text"
-          value={formData.roomType}
-          onChange={(e) => setFormData(prev => ({ ...prev, roomType: e.target.value }))}
-          className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-          placeholder="e.g. Deluxe King Room"
-        />
-      </div>
-
-      {/* Property Link */}
-      <div>
-        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Property Website
-        </label>
-        <input
-          type="url"
-          value={formData.propertyLink}
-          onChange={(e) => setFormData(prev => ({ ...prev, propertyLink: e.target.value }))}
-          className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-          placeholder="https://property-website.com"
-        />
-      </div>
 
       {/* Confirmation Code */}
       <div>

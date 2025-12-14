@@ -6,6 +6,7 @@ import type { Activity, ActivityType } from '@/types/simple'
 import { FlightForm } from './FlightForm'
 import { StayForm } from './HotelForm'
 import { EventForm } from './EventForm'
+import { allActivityTypes, getActivityIcon, getActivityLabel, getActivityDescription } from '@/lib/activity-config'
 
 interface ManageActivityFormProps {
   mode: 'create' | 'edit'
@@ -15,50 +16,6 @@ interface ManageActivityFormProps {
   onCancel?: () => void
 }
 
-const activityTypes: { 
-  value: ActivityType
-  label: string
-  icon: string
-  description: string
-}[] = [
-  { 
-    value: 'flight', 
-    label: 'Flight', 
-    icon: '✈️',
-    description: 'Air travel between destinations'
-  },
-  { 
-    value: 'stay', 
-    label: 'Stay', 
-    icon: '🏨',
-    description: 'Accommodation and lodging'
-  },
-  { 
-    value: 'event', 
-    label: 'Event', 
-    icon: '🎫',
-    description: 'Shows, concerts, attractions'
-  },
-  { 
-    value: 'transport', 
-    label: 'Transport', 
-    icon: '🚗',
-    description: 'Local transportation'
-  },
-  { 
-    value: 'note', 
-    label: 'Note', 
-    icon: '📝',
-    description: 'General notes and reminders'
-  },
-  { 
-    value: 'task', 
-    label: 'Task', 
-    icon: '✅',
-    description: 'To-do items and tasks'
-  },
-]
-
 export function ManageActivityForm({ 
   mode, 
   activity, 
@@ -67,9 +24,11 @@ export function ManageActivityForm({
   onCancel 
 }: ManageActivityFormProps) {
   const { addActivity, updateActivity } = useTripContext()
-  const [selectedType, setSelectedType] = useState<ActivityType | null>(
-    mode === 'edit' && activity ? activity.type : null
-  )
+  // For create mode, track type selection in state
+  // For edit mode, derive type from the activity prop to react to type changes
+  const [createModeType, setCreateModeType] = useState<ActivityType | null>(null)
+  const selectedType = mode === 'edit' && activity ? activity.type : createModeType
+  const setSelectedType = setCreateModeType
 
   const handleActivitySave = (activityData: Omit<Activity, 'id'>) => {
     try {
@@ -88,20 +47,12 @@ export function ManageActivityForm({
   if (mode === 'edit' && activity && selectedType) {
     const FormComponent = getFormComponent(selectedType)
     return (
-      <div className="space-y-3">
-        <div className="flex items-center gap-2">
-          <span className="text-xl">{getTypeIcon(selectedType)}</span>
-          <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-            Edit {getTypeLabel(selectedType)}
-          </h3>
-        </div>
-        <FormComponent
-          activity={activity}
-          onSave={handleActivitySave}
-          onCancel={onCancel || (() => {})}
-          defaultDay={initialDay}
-        />
-      </div>
+      <FormComponent
+        activity={activity}
+        onSave={handleActivitySave}
+        onCancel={onCancel || (() => {})}
+        defaultDay={initialDay}
+      />
     )
   }
 
@@ -114,22 +65,22 @@ export function ManageActivityForm({
         </p>
 
         <div className="grid grid-cols-2 gap-2">
-          {activityTypes.map((type) => (
+          {allActivityTypes.map((type) => (
             <button
-              key={type.value}
-              onClick={() => setSelectedType(type.value)}
+              key={type}
+              onClick={() => setSelectedType(type)}
               className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors text-left group"
             >
               <div className="flex items-start gap-2">
                 <span className="text-xl group-hover:scale-110 transition-transform">
-                  {type.icon}
+                  {getActivityIcon(type)}
                 </span>
                 <div>
                   <h4 className="text-sm font-medium text-gray-900 dark:text-white">
-                    {type.label}
+                    {getActivityLabel(type)}
                   </h4>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                    {type.description}
+                    {getActivityDescription(type)}
                   </p>
                 </div>
               </div>
@@ -153,25 +104,16 @@ export function ManageActivityForm({
   const FormComponent = getFormComponent(selectedType)
   
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2">
-        <span className="text-xl">{getTypeIcon(selectedType)}</span>
-        <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-          {getTypeLabel(selectedType)}
-        </h3>
-      </div>
-      
-      <FormComponent
-        activity={activity}
-        onSave={handleActivitySave}
-        onCancel={onCancel || (() => {})}
-        defaultDay={initialDay}
-      />
-    </div>
+    <FormComponent
+      activity={activity}
+      onSave={handleActivitySave}
+      onCancel={onCancel || (() => {})}
+      defaultDay={initialDay}
+    />
   )
 }
 
-// Helper functions
+// Helper function to get the appropriate form component
 function getFormComponent(type: ActivityType) {
   switch (type) {
     case 'flight':
@@ -187,14 +129,4 @@ function getFormComponent(type: ActivityType) {
       // For now, fallback to EventForm for other types
       return EventForm
   }
-}
-
-function getTypeIcon(type: ActivityType): string {
-  const typeInfo = activityTypes.find(t => t.value === type)
-  return typeInfo?.icon || '📝'
-}
-
-function getTypeLabel(type: ActivityType): string {
-  const typeInfo = activityTypes.find(t => t.value === type)
-  return typeInfo?.label || 'Activity'
 }

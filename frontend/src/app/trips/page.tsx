@@ -5,13 +5,13 @@ import { useRouter } from 'next/navigation'
 import { TripCard } from '@/components/features/TripCard'
 import { mockTrips } from '@/lib/mock-data'
 
-type DateType = 'specific' | 'flexible'
+type DateMode = 'fixed' | 'flexible'
 
 export default function TripsPage() {
   const router = useRouter()
   const [showCreateModal, setShowCreateModal] = useState(false)
-  const [dateType, setDateType] = useState<DateType>('specific')
-  const [selectedMonth, setSelectedMonth] = useState<string>('')
+  const [dateMode, setDateMode] = useState<DateMode>('fixed')
+  const [duration, setDuration] = useState(7)
   const [locations, setLocations] = useState<string[]>([''])
   
   const addLocation = () => {
@@ -28,19 +28,15 @@ export default function TripsPage() {
     setLocations(newLocations)
   }
   
-  // Generate next 6 months for flexible dates
-  const getNextMonths = () => {
-    const months = []
-    const now = new Date()
-    for (let i = 0; i < 6; i++) {
-      const date = new Date(now.getFullYear(), now.getMonth() + i, 1)
-      months.push({
-        id: `${date.getFullYear()}-${date.getMonth()}-${i}`, // Unique ID
-        value: date.toISOString().slice(0, 7),
-        label: date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-      })
-    }
-    return months
+  // Duration label helper
+  const getDurationLabel = (days: number) => {
+    if (days === 1) return '1 day'
+    if (days < 7) return `${days} days`
+    if (days === 7) return '1 week'
+    if (days === 14) return '2 weeks'
+    if (days === 21) return '3 weeks'
+    if (days === 28) return '4 weeks'
+    return `${days} days`
   }
 
   return (
@@ -168,39 +164,39 @@ export default function TripsPage() {
                 </div>
               </div>
               
-              {/* Date Type Toggle */}
+              {/* Date Mode Toggle */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                  Date Preference
+                  When are you traveling?
                 </label>
                 <div className="flex gap-2 p-1 bg-gray-100 dark:bg-gray-800 rounded-lg">
                   <button
                     type="button"
-                    onClick={() => setDateType('specific')}
+                    onClick={() => setDateMode('fixed')}
                     className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                      dateType === 'specific'
+                      dateMode === 'fixed'
                         ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
                         : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                     }`}
                   >
-                    Specific Dates
+                    Fixed Dates
                   </button>
                   <button
                     type="button"
-                    onClick={() => setDateType('flexible')}
+                    onClick={() => setDateMode('flexible')}
                     className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                      dateType === 'flexible'
+                      dateMode === 'flexible'
                         ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
                         : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                     }`}
                   >
-                    Flexible Dates
+                    Flexible
                   </button>
                 </div>
               </div>
               
-              {/* Specific Dates Fields */}
-              {dateType === 'specific' && (
+              {/* Fixed Dates Fields */}
+              {dateMode === 'fixed' && (
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -223,43 +219,30 @@ export default function TripsPage() {
                 </div>
               )}
               
-              {/* Flexible Dates Fields */}
-              {dateType === 'flexible' && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Duration
+              {/* Flexible Dates - Duration Slider */}
+              {dateMode === 'flexible' && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Trip Duration
                     </label>
-                    <select className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
-                      <option>Weekend (2-3 days)</option>
-                      <option>1 Week</option>
-                      <option>10 Days</option>
-                      <option>2 Weeks</option>
-                      <option>3 Weeks</option>
-                      <option>1 Month</option>
-                    </select>
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                      {getDurationLabel(duration)}
+                    </span>
                   </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                      Preferred Month
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {getNextMonths().map((month) => (
-                        <button
-                          key={month.id}
-                          type="button"
-                          onClick={() => setSelectedMonth(month.value)}
-                          className={`px-4 py-2 text-sm border rounded-lg transition-colors ${
-                            selectedMonth === month.value
-                              ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 border-gray-900 dark:border-gray-100'
-                              : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
-                          }`}
-                        >
-                          {month.label}
-                        </button>
-                      ))}
-                    </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="30"
+                    value={duration}
+                    onChange={(e) => setDuration(Number(e.target.value))}
+                    className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-gray-900 dark:accent-gray-100"
+                  />
+                  <div className="flex justify-between mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    <span>1 day</span>
+                    <span>1 week</span>
+                    <span>2 weeks</span>
+                    <span>1 month</span>
                   </div>
                 </div>
               )}

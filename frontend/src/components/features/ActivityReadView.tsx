@@ -147,11 +147,6 @@ function StayDetails({ metadata }: { metadata: StayMetadata }) {
           {metadata.propertyName}
         </div>
       )}
-      {metadata.roomType && (
-        <div className="text-gray-500 dark:text-gray-500">
-          {metadata.roomType}
-        </div>
-      )}
       {metadata.confirmationCode && (
         <div className="text-gray-500 dark:text-gray-500">
           Confirmation: {metadata.confirmationCode}
@@ -161,20 +156,8 @@ function StayDetails({ metadata }: { metadata: StayMetadata }) {
   )
 }
 
-// Event-specific details
+// Event-specific details - simplified, no metadata fields
 function EventDetails({ metadata }: { metadata: EventMetadata }) {
-  return (
-    <div className="space-y-2">
-      {metadata.venue && (
-        <div className="text-gray-600 dark:text-gray-400">
-          📍 {metadata.venue}
-        </div>
-      )}
-      {metadata.organizer && (
-        <div className="text-gray-500 dark:text-gray-500">
-          By {metadata.organizer}
-        </div>
-      )}
-    </div>
-  )
+  // EventMetadata is now empty, but we keep this for potential future fields
+  return null
 }

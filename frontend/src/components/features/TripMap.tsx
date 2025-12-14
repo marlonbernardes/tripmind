@@ -7,7 +7,7 @@ import 'mapbox-gl/dist/mapbox-gl.css'
 import { useTripContext } from '@/contexts/TripContext'
 import type { Activity, Trip } from '@/types/simple'
 import { cn } from '@/lib/utils'
-import { getActivityColor, activityTypeConfig, allActivityTypes } from '@/lib/activity-config'
+import { getActivityColor, getActivityIcon, activityTypeConfig, allActivityTypes } from '@/lib/activity-config'
 import { formatDayHeader, formatActivityTime } from '@/lib/date-service'
 
 interface TripMapProps {
@@ -457,18 +457,6 @@ export function TripMap({ className }: TripMapProps) {
       if (point) {
         setSelectedActivity(point.activity)
       }
-    }
-  }
-
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case 'flight': return '✈️'
-      case 'stay': return '🏨'
-      case 'event': return '🎫'
-      case 'transport': return '🚗'
-      case 'note': return '📝'
-      case 'task': return '✓'
-      default: return '📍'
     }
   }
 

@@ -5,7 +5,7 @@ import { Settings, Calendar, Clock, Palette, AlertTriangle } from 'lucide-react'
 import type { Trip, FixedTrip, FlexibleTrip } from '@/types/simple'
 import { isFixedTrip } from '@/types/simple'
 import { useTripContext } from '@/contexts/TripContext'
-import { getTripDuration } from '@/lib/date-service'
+import { getTripDuration, MAX_TRIP_DURATION } from '@/lib/date-service'
 
 // Preset trip colors
 const TRIP_COLORS = [
@@ -280,7 +280,7 @@ export function TripConfigTab({ onClose }: TripConfigTabProps) {
               <input
                 type="range"
                 min="1"
-                max="30"
+                max={MAX_TRIP_DURATION}
                 value={formData.duration}
                 onChange={(e) => handleDurationChange(parseInt(e.target.value))}
                 className="flex-1"
