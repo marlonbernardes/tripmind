@@ -1,25 +1,30 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import type { SimpleActivity, FlightMetadata } from '@/types/simple'
+import type { Activity, FlightMetadata, ActivityStatus } from '@/types/simple'
 import { RecommendationsSection } from './RecommendationsSection'
+import { useTripContext } from '@/contexts/TripContext'
+import { DaySelect } from '@/components/ui/day-select'
 
 interface FlightFormProps {
-  activity?: SimpleActivity
-  onSave: (activityData: Omit<SimpleActivity, 'id'>) => void
+  activity?: Activity
+  onSave: (activityData: Omit<Activity, 'id'>) => void
   onCancel: () => void
+  defaultDay?: number
 }
 
-export function FlightForm({ activity, onSave, onCancel }: FlightFormProps) {
+export function FlightForm({ activity, onSave, onCancel, defaultDay = 1 }: FlightFormProps) {
+  const { trip } = useTripContext()
   const [formData, setFormData] = useState({
     from: '',
     to: '',
-    start: '',
-    end: '',
-    flightNumberOutbound: '',
-    flightNumberInbound: '',
+    day: defaultDay,
+    time: '',
+    endDay: undefined as number | undefined,
+    endTime: '',
+    flightNumber: '',
     airline: '',
-    status: 'planned' as 'planned' | 'booked',
+    status: 'draft' as ActivityStatus,
     notes: ''
   })
 
@@ -29,10 +34,11 @@ export function FlightForm({ activity, onSave, onCancel }: FlightFormProps) {
       setFormData({
         from: metadata.from || '',
         to: metadata.to || '',
-        start: activity.start,
-        end: activity.end || '',
-        flightNumberOutbound: metadata.flightNumberOutbound || '',
-        flightNumberInbound: metadata.flightNumberInbound || '',
+        day: activity.day,
+        time: activity.time || '',
+        endDay: activity.endDay,
+        endTime: activity.endTime || '',
+        flightNumber: metadata.flightNumber || '',
         airline: metadata.airline || '',
         status: activity.status,
         notes: activity.notes || ''
@@ -43,146 +49,157 @@ export function FlightForm({ activity, onSave, onCancel }: FlightFormProps) {
   const generateTitle = () => {
     if (formData.from && formData.to) {
       let title = `Flight from ${formData.from} to ${formData.to}`
-      if (formData.flightNumberOutbound) {
-        title += ` - ${formData.flightNumberOutbound}`
+      if (formData.flightNumber) {
+        title += ` - ${formData.flightNumber}`
       }
       return title
     }
     return 'Flight'
   }
 
-  const inferLocation = () => {
-    return formData.from || ''
-  }
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
-    const activityData: Omit<SimpleActivity, 'id'> = {
-      tripId: activity?.tripId || '1', // Default trip ID for now
+    const activityData: Omit<Activity, 'id'> = {
+      tripId: activity?.tripId || '1',
       type: 'flight',
       title: generateTitle(),
-      start: formData.start,
-      end: formData.end || undefined,
-      city: inferLocation(),
+      day: formData.day,
+      time: formData.time || undefined,
+      endDay: formData.endDay,
+      endTime: formData.endTime || undefined,
+      city: formData.from || undefined,
       status: formData.status,
       notes: formData.notes || undefined,
       metadata: {
-        from: formData.from,
-        to: formData.to,
-        flightNumberOutbound: formData.flightNumberOutbound || undefined,
-        flightNumberInbound: formData.flightNumberInbound || undefined,
+        from: formData.from || undefined,
+        to: formData.to || undefined,
+        flightNumber: formData.flightNumber || undefined,
         airline: formData.airline || undefined
-      }
+      } as FlightMetadata
     }
 
     onSave(activityData)
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-3">
       {/* From/To Fields */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
             From *
           </label>
           <input
             type="text"
             value={formData.from}
             onChange={(e) => setFormData(prev => ({ ...prev, from: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
             placeholder="Departure city"
             required
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
             To *
           </label>
           <input
             type="text"
             value={formData.to}
             onChange={(e) => setFormData(prev => ({ ...prev, to: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
             placeholder="Arrival city"
             required
           />
         </div>
       </div>
 
-      {/* Departure/Arrival Times */}
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Departure *
-          </label>
-          <input
-            type="datetime-local"
-            value={formData.start}
-            onChange={(e) => setFormData(prev => ({ ...prev, start: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+      {/* Departure Day and Time - always on same line */}
+      {trip && (
+        <div className="grid grid-cols-2 gap-2">
+          <DaySelect
+            trip={trip}
+            value={formData.day}
+            onChange={(day) => setFormData(prev => ({ 
+              ...prev, 
+              day,
+              endDay: prev.endDay && prev.endDay < day ? undefined : prev.endDay
+            }))}
+            label="Departure Day"
             required
           />
+          <div>
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Departure Time
+            </label>
+            <input
+              type="time"
+              value={formData.time}
+              onChange={(e) => setFormData(prev => ({ ...prev, time: e.target.value }))}
+              className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            />
+          </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Arrival
-          </label>
-          <input
-            type="datetime-local"
-            value={formData.end}
-            onChange={(e) => setFormData(prev => ({ ...prev, end: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-          />
-        </div>
-      </div>
+      )}
 
-      {/* Flight Numbers */}
-      <div className="grid grid-cols-2 gap-3">
+      {/* Arrival Day and Time - on same line */}
+      {trip && (
+        <div className="grid grid-cols-2 gap-2">
+          <DaySelect
+            trip={trip}
+            value={formData.endDay ?? formData.day}
+            onChange={(day) => setFormData(prev => ({ 
+              ...prev, 
+              endDay: day === prev.day ? undefined : day
+            }))}
+            label="Arrival Day"
+            minDay={formData.day}
+          />
+          <div>
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Arrival Time
+            </label>
+            <input
+              type="time"
+              value={formData.endTime}
+              onChange={(e) => setFormData(prev => ({ ...prev, endTime: e.target.value }))}
+              className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Flight Number & Airline */}
+      <div className="grid grid-cols-2 gap-2">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Outbound Flight #
+          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Flight Number
           </label>
           <input
             type="text"
-            value={formData.flightNumberOutbound}
-            onChange={(e) => setFormData(prev => ({ ...prev, flightNumberOutbound: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            value={formData.flightNumber}
+            onChange={(e) => setFormData(prev => ({ ...prev, flightNumber: e.target.value }))}
+            className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
             placeholder="e.g. AA123"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Return Flight #
+          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Airline
           </label>
           <input
             type="text"
-            value={formData.flightNumberInbound}
-            onChange={(e) => setFormData(prev => ({ ...prev, flightNumberInbound: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-            placeholder="e.g. AA456"
+            value={formData.airline}
+            onChange={(e) => setFormData(prev => ({ ...prev, airline: e.target.value }))}
+            className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            placeholder="e.g. American Airlines"
           />
         </div>
       </div>
 
-      {/* Airline */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Airline
-        </label>
-        <input
-          type="text"
-          value={formData.airline}
-          onChange={(e) => setFormData(prev => ({ ...prev, airline: e.target.value }))}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-          placeholder="e.g. American Airlines"
-        />
-      </div>
-
       {/* Status */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
           Status *
         </label>
         <div className="flex gap-4">
@@ -190,66 +207,65 @@ export function FlightForm({ activity, onSave, onCancel }: FlightFormProps) {
             <input
               type="radio"
               name="status"
-              value="planned"
-              checked={formData.status === 'planned'}
-              onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'planned' | 'booked' }))}
-              className="mr-2"
+              value="draft"
+              checked={formData.status === 'draft'}
+              onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as ActivityStatus }))}
+              className="mr-1.5"
             />
-            <span className="text-sm text-gray-700 dark:text-gray-300">Planned</span>
+            <span className="text-xs text-gray-700 dark:text-gray-300">Draft</span>
           </label>
           <label className="flex items-center">
             <input
               type="radio"
               name="status"
-              value="booked"
-              checked={formData.status === 'booked'}
-              onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'planned' | 'booked' }))}
-              className="mr-2"
+              value="confirmed"
+              checked={formData.status === 'confirmed'}
+              onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as ActivityStatus }))}
+              className="mr-1.5"
             />
-            <span className="text-sm text-gray-700 dark:text-gray-300">Booked</span>
+            <span className="text-xs text-gray-700 dark:text-gray-300">Confirmed</span>
           </label>
         </div>
       </div>
 
       {/* Notes */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
           Notes
         </label>
         <textarea
           value={formData.notes}
           onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-          rows={3}
+          className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+          rows={2}
           placeholder="Additional notes..."
         />
       </div>
 
-      {/* Recommendations Section - only show if planned and we have enough data */}
-      {formData.status === 'planned' && formData.from && formData.to && formData.start && (
+      {/* Recommendations Section - only show if draft and we have enough data */}
+      {formData.status === 'draft' && formData.from && formData.to && (
         <RecommendationsSection
           activity={{
             type: 'flight',
             status: formData.status,
             city: `${formData.from} to ${formData.to}`,
-            start: formData.start,
-            end: formData.end
+            day: formData.day
           }}
         />
       )}
 
       {/* Action Buttons */}
-      <div className="flex gap-3 pt-4">
+      <div className="flex gap-2 pt-3">
         <button
           type="submit"
-          className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+          className="flex-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs font-medium"
         >
-          Save Flight
+          Save
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
+          className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-xs font-medium"
         >
           Cancel
         </button>

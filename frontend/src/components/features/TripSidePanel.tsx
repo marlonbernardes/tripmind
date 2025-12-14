@@ -1,14 +1,15 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { FileText, Lightbulb, MessageSquare, Plus } from 'lucide-react'
+import { FileText, Lightbulb, MessageSquare, Plus, Settings } from 'lucide-react'
 import { useTripContext } from '@/contexts/TripContext'
 import { ManageActivityForm } from './ManageActivityForm'
 import { ActivityReadView } from './ActivityReadView'
 import { RecommendationsSection } from './RecommendationsSection'
 import { TripAIChat } from './TripAIChat'
+import { TripConfigTab } from './TripConfigTab'
 
-type TabType = 'details' | 'recommend' | 'assistant'
+type TabType = 'details' | 'recommend' | 'assistant' | 'config'
 type ViewMode = 'view' | 'edit'
 
 interface TripSidePanelProps {
@@ -99,6 +100,17 @@ export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
             >
               <MessageSquare className="w-3 h-3" />
               Assistant
+            </button>
+            <button
+              onClick={() => setActiveTab('config')}
+              className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                activeTab === 'config'
+                  ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+              }`}
+            >
+              <Settings className="w-3 h-3" />
+              Config
             </button>
           </div>
         </div>
@@ -218,6 +230,12 @@ export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
           {activeTab === 'assistant' && (
             <div className="h-full">
               <TripAIChat />
+            </div>
+          )}
+
+          {activeTab === 'config' && (
+            <div className="h-full overflow-y-auto">
+              <TripConfigTab onClose={() => setActiveTab('details')} />
             </div>
           )}
         </div>

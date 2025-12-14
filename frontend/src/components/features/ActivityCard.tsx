@@ -1,9 +1,8 @@
-import type { SimpleActivity } from '@/types/simple'
-import { getTimeFromDateTime } from '@/lib/mock-data'
+import type { Activity, ActivityType } from '@/types/simple'
 import { getActivityColor, getActivityLabel } from '@/lib/activity-config'
 
 interface ActivityCardProps {
-  activity: SimpleActivity
+  activity: Activity
   isSelected?: boolean
   onClick?: () => void
 }
@@ -12,8 +11,8 @@ export function ActivityCard({ activity, isSelected = false, onClick }: Activity
   const activityColor = getActivityColor(activity.type)
   const activityLabel = getActivityLabel(activity.type)
   
-  const startTime = getTimeFromDateTime(activity.start)
-  const endTime = activity.end ? getTimeFromDateTime(activity.end) : null
+  const startTime = activity.time ?? ''
+  const endTime = activity.endTime ?? null
   
   const timeDisplay = endTime 
     ? `${startTime} – ${endTime}`
@@ -21,9 +20,9 @@ export function ActivityCard({ activity, isSelected = false, onClick }: Activity
 
   // Get subtle background color based on activity type
   const getBackgroundColor = () => {
-    const colors = {
+    const colors: Record<ActivityType, string> = {
       flight: 'bg-blue-50 dark:bg-blue-950/30',
-      hotel: 'bg-green-50 dark:bg-green-950/30',
+      stay: 'bg-green-50 dark:bg-green-950/30',
       event: 'bg-purple-50 dark:bg-purple-950/30',
       transport: 'bg-amber-50 dark:bg-amber-950/30',
       note: 'bg-gray-50 dark:bg-gray-800/30',
@@ -39,9 +38,9 @@ export function ActivityCard({ activity, isSelected = false, onClick }: Activity
     return 'border-gray-200 dark:border-gray-700'
   }
 
-  // Get styling for planned activities
-  const getPlannedStyling = () => {
-    if (activity.status === 'planned') {
+  // Get styling for draft activities
+  const getDraftStyling = () => {
+    if (activity.status === 'draft') {
       return {
         borderLeft: 'border-l-4 border-l-amber-500',
         opacity: 'opacity-85',
@@ -55,14 +54,14 @@ export function ActivityCard({ activity, isSelected = false, onClick }: Activity
     }
   }
 
-  const plannedStyling = getPlannedStyling()
+  const draftStyling = getDraftStyling()
 
   return (
     <div 
       onClick={onClick}
       className={`flex items-center gap-3 px-4 py-3 rounded-lg border transition-all cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm ${
-        plannedStyling.background
-      } ${getBorderColor()} ${plannedStyling.borderLeft} ${plannedStyling.opacity}`}
+        draftStyling.background
+      } ${getBorderColor()} ${draftStyling.borderLeft} ${draftStyling.opacity}`}
     >
       {/* Colored dot indicator */}
       <div 
@@ -76,19 +75,21 @@ export function ActivityCard({ activity, isSelected = false, onClick }: Activity
             {activity.title}
           </h3>
           <div className="flex items-center gap-2 flex-shrink-0">
-            {activity.status === 'planned' && (
+            {activity.status === 'draft' && (
               <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
-                PLANNED
+                DRAFT
               </span>
             )}
-            {activity.status === 'booked' && (
+            {activity.status === 'confirmed' && (
               <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                BOOKED
+                CONFIRMED
               </span>
             )}
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {timeDisplay}
-            </span>
+            {timeDisplay && (
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {timeDisplay}
+              </span>
+            )}
           </div>
         </div>
         

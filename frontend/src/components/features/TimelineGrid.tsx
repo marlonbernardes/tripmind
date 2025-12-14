@@ -1,39 +1,34 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import type { SimpleActivity, ActivityType } from '@/types/simple'
-import { getDateFromDateTime } from '@/lib/mock-data'
+import type { Activity, ActivityType, Trip } from '@/types/simple'
 import { getActivityColor, getActivityLabel } from '@/lib/activity-config'
+import { getTripDuration, formatDayHeader, compareActivities } from '@/lib/date-service'
+import { useTripContext } from '@/contexts/TripContext'
 
 interface TimelineGridProps {
-  activities: SimpleActivity[]
+  activities: Activity[]
   selectedActivityId?: string
-  onActivitySelect?: (activity: SimpleActivity) => void
+  onActivitySelect?: (activity: Activity) => void
 }
 
 export function TimelineGrid({ activities, selectedActivityId, onActivitySelect }: TimelineGridProps) {
+  const { trip } = useTripContext()
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
-    new Set(['flight', 'transport', 'hotel', 'event', 'task', 'note'])
+    new Set(['flight', 'transport', 'stay', 'event', 'task', 'note'])
   )
 
-  // Get date range for grid columns
-  const dateRange = useMemo(() => {
-    if (activities.length === 0) return []
-    
-    const dates = [...new Set(activities.map(a => getDateFromDateTime(a.start)))].sort()
-    const startDate = new Date(dates[0])
-    const endDate = new Date(dates[dates.length - 1])
-    
-    const range = []
-    const current = new Date(startDate)
-    
-    while (current <= endDate) {
-      range.push(new Date(current))
-      current.setDate(current.getDate() + 1)
+  // Get day range for grid columns based on trip duration
+  const dayRange = useMemo(() => {
+    if (!trip) {
+      // Fallback: calculate from activities
+      if (activities.length === 0) return []
+      const maxDay = Math.max(...activities.map(a => a.endDay ?? a.day))
+      return Array.from({ length: maxDay }, (_, i) => i + 1)
     }
-    
-    return range
-  }, [activities])
+    const duration = getTripDuration(trip)
+    return Array.from({ length: duration }, (_, i) => i + 1)
+  }, [trip, activities])
 
   // Group activities by type
   const activitiesByType = useMemo(() => {
@@ -43,25 +38,16 @@ export function TimelineGrid({ activities, selectedActivityId, onActivitySelect 
       }
       acc[activity.type].push(activity)
       return acc
-    }, {} as Record<string, SimpleActivity[]>)
+    }, {} as Record<string, Activity[]>)
     
-    const typeOrder = ['flight', 'transport', 'hotel', 'event', 'task', 'note']
+    const typeOrder: ActivityType[] = ['flight', 'transport', 'stay', 'event', 'task', 'note']
     return typeOrder
       .filter(type => grouped[type])
       .map(type => ({
         type,
-        activities: grouped[type].sort((a, b) => {
-          return new Date(a.start).getTime() - new Date(b.start).getTime()
-        })
+        activities: grouped[type].sort(compareActivities)
       }))
   }, [activities])
-
-  // Get today's date for indicator
-  const today = new Date()
-  const todayStr = today.toISOString().split('T')[0]
-  const showTodayIndicator = dateRange.some(date => 
-    date.toISOString().split('T')[0] === todayStr
-  )
 
   const toggleCategory = (categoryType: string) => {
     setExpandedCategories(prev => {
@@ -75,29 +61,23 @@ export function TimelineGrid({ activities, selectedActivityId, onActivitySelect 
     })
   }
 
-  const formatDate = (date: Date) => {
-    return {
-      month: date.toLocaleDateString('en-US', { month: 'short' }),
-      day: date.getDate()
+  const formatDayColumn = (day: number) => {
+    if (!trip) return { label: `Day ${day}`, subLabel: '' }
+    const header = formatDayHeader(trip, day)
+    // For fixed trips, header is like "Mon, Jan 8" - split it
+    const parts = header.split(', ')
+    if (parts.length === 2) {
+      return { label: parts[1], subLabel: parts[0] } // "Jan 8", "Mon"
     }
+    return { label: header, subLabel: '' }
   }
 
-  const getActivityPosition = (activity: SimpleActivity, date: Date) => {
-    const activityStartDate = getDateFromDateTime(activity.start)
-    const dateStr = date.toISOString().split('T')[0]
+  const getActivityPosition = (activity: Activity, day: number) => {
+    const startDay = activity.day
+    const endDay = activity.endDay ?? activity.day
     
-    if (activityStartDate === dateStr) {
-      return { show: true, activity }
-    }
-    
-    // Handle multi-day activities with end times
-    if (activity.end) {
-      const startDate = new Date(getDateFromDateTime(activity.start))
-      const endDate = new Date(getDateFromDateTime(activity.end))
-      
-      if (date >= startDate && date <= endDate) {
-        return { show: true, activity, isSpanning: true }
-      }
+    if (day >= startDay && day <= endDay) {
+      return { show: true, activity, isSpanning: day !== startDay }
     }
     
     return { show: false }
@@ -140,30 +120,29 @@ export function TimelineGrid({ activities, selectedActivityId, onActivitySelect 
       {/* Timeline Grid */}
       <div className="relative overflow-x-auto">
         <div className="min-w-full">
-          {/* Date Headers */}
+          {/* Day Headers */}
           <div className="flex border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
             <div className="w-48 flex-shrink-0 px-6 py-3">
               <span className="text-sm font-medium text-gray-900 dark:text-white">
                 Activities
               </span>
             </div>
-            {dateRange.map((date, index) => {
-              const { month, day } = formatDate(date)
-              const isToday = date.toISOString().split('T')[0] === todayStr
+            {dayRange.map((day) => {
+              const { label, subLabel } = formatDayColumn(day)
               
               return (
                 <div 
-                  key={index} 
-                  className={`flex-1 min-w-[80px] px-3 py-3 text-center border-l border-gray-100 dark:border-gray-800 ${
-                    isToday ? 'bg-gray-100 dark:bg-gray-700' : ''
-                  }`}
+                  key={day} 
+                  className="flex-1 min-w-[80px] px-3 py-3 text-center border-l border-gray-100 dark:border-gray-800"
                 >
                   <div className="text-xs font-medium text-gray-900 dark:text-white">
-                    {month}
+                    {label}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
-                    {day}
-                  </div>
+                  {subLabel && (
+                    <div className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
+                      {subLabel}
+                    </div>
+                  )}
                 </div>
               )
             })}
@@ -207,9 +186,9 @@ export function TimelineGrid({ activities, selectedActivityId, onActivitySelect 
                       </div>
                     </div>
                   </div>
-                  {dateRange.map((date, dateIndex) => (
+                  {dayRange.map((day) => (
                     <div 
-                      key={dateIndex}
+                      key={day}
                       className="flex-1 min-w-[80px] border-l border-gray-100 dark:border-gray-800 relative"
                     />
                   ))}
@@ -246,25 +225,22 @@ export function TimelineGrid({ activities, selectedActivityId, onActivitySelect 
                         </div>
                       </div>
                       
-                      {dateRange.map((date, dateIndex) => {
-                        const position = getActivityPosition(activity, date)
-                        const isToday = date.toISOString().split('T')[0] === todayStr
+                      {dayRange.map((day) => {
+                        const position = getActivityPosition(activity, day)
                         
                         return (
                           <div 
-                            key={dateIndex}
-                            className={`flex-1 min-w-[80px] border-l border-gray-100 dark:border-gray-800 relative py-3 px-2 ${
-                              isToday ? 'bg-gray-100/50 dark:bg-gray-700/30' : ''
-                            }`}
+                            key={day}
+                            className="flex-1 min-w-[80px] border-l border-gray-100 dark:border-gray-800 relative py-3 px-2"
                           >
                             {position.show && (
                               <div 
                                 className="h-6 rounded-md flex items-center justify-center text-xs font-medium text-white shadow-sm border border-black/10"
                                 style={{ backgroundColor: categoryColor }}
-                                title={`${activity.title} - ${new Date(activity.start).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}${activity.end ? ` to ${new Date(activity.end).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}` : ''}`}
+                                title={`${activity.title}${activity.time ? ` - ${activity.time}` : ''}${activity.endTime ? ` to ${activity.endTime}` : ''}`}
                               >
                                 <span className="truncate px-2">
-                                  {activity.title}
+                                  {position.isSpanning ? '' : activity.title}
                                 </span>
                               </div>
                             )}
@@ -278,26 +254,6 @@ export function TimelineGrid({ activities, selectedActivityId, onActivitySelect 
             )
           })}
         </div>
-
-        {/* Today indicator line */}
-        {showTodayIndicator && (
-          <div className="absolute top-0 bottom-0 pointer-events-none">
-            {dateRange.map((date, index) => {
-              const isToday = date.toISOString().split('T')[0] === todayStr
-              if (!isToday) return null
-              
-              const leftOffset = 192 + (index * 80) + 40 // 192px for left column + index * column width + half column width
-              
-              return (
-                <div
-                  key="today-line"
-                  className="absolute top-0 bottom-0 w-px bg-gray-800 dark:bg-gray-200 z-10"
-                  style={{ left: `${leftOffset}px` }}
-                />
-              )
-            })}
-          </div>
-        )}
       </div>
     </div>
   )

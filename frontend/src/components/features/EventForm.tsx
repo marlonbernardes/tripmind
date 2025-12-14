@@ -1,25 +1,32 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import type { SimpleActivity, EventMetadata } from '@/types/simple'
+import type { Activity, EventMetadata, ActivityStatus } from '@/types/simple'
 import { RecommendationsSection } from './RecommendationsSection'
+import { useTripContext } from '@/contexts/TripContext'
+import { getTripDuration } from '@/lib/date-service'
+import { DaySelect } from '@/components/ui/day-select'
 
 interface EventFormProps {
-  activity?: SimpleActivity
-  onSave: (activityData: Omit<SimpleActivity, 'id'>) => void
+  activity?: Activity
+  onSave: (activityData: Omit<Activity, 'id'>) => void
   onCancel: () => void
 }
 
 export function EventForm({ activity, onSave, onCancel }: EventFormProps) {
+  const { trip } = useTripContext()
+  
   const [formData, setFormData] = useState({
     title: '',
-    start: '',
-    end: '',
+    day: 1,
+    time: '',
+    endDay: undefined as number | undefined,
+    endTime: '',
     location: '',
     venue: '',
     ticketLink: '',
     organizer: '',
-    status: 'planned' as 'planned' | 'booked',
+    status: 'draft' as ActivityStatus,
     notes: ''
   })
 
@@ -28,8 +35,10 @@ export function EventForm({ activity, onSave, onCancel }: EventFormProps) {
       const metadata = activity.metadata as EventMetadata || {}
       setFormData({
         title: activity.title,
-        start: activity.start,
-        end: activity.end || '',
+        day: activity.day,
+        time: activity.time || '',
+        endDay: activity.endDay,
+        endTime: activity.endTime || '',
         location: activity.city || '',
         venue: metadata.venue || '',
         ticketLink: metadata.ticketLink || '',
@@ -43,12 +52,14 @@ export function EventForm({ activity, onSave, onCancel }: EventFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
-    const activityData: Omit<SimpleActivity, 'id'> = {
-      tripId: activity?.tripId || '1', // Default trip ID for now
+    const activityData: Omit<Activity, 'id'> = {
+      tripId: activity?.tripId || trip?.id || '1',
       type: 'event',
       title: formData.title,
-      start: formData.start,
-      end: formData.end || undefined,
+      day: formData.day,
+      time: formData.time || undefined,
+      endDay: formData.endDay,
+      endTime: formData.endTime || undefined,
       city: formData.location,
       status: formData.status,
       notes: formData.notes || undefined,
@@ -61,6 +72,8 @@ export function EventForm({ activity, onSave, onCancel }: EventFormProps) {
 
     onSave(activityData)
   }
+
+  const tripDuration = trip ? getTripDuration(trip) : 14
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
@@ -94,32 +107,60 @@ export function EventForm({ activity, onSave, onCancel }: EventFormProps) {
         />
       </div>
 
-      {/* Start/End Times */}
-      <div className="grid grid-cols-2 gap-2">
-        <div>
-          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Start *
-          </label>
-          <input
-            type="datetime-local"
-            value={formData.start}
-            onChange={(e) => setFormData(prev => ({ ...prev, start: e.target.value }))}
-            className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+      {/* Day and Time - always on same line */}
+      {trip && (
+        <div className="grid grid-cols-2 gap-2">
+          <DaySelect
+            trip={trip}
+            value={formData.day}
+            onChange={(day) => setFormData(prev => ({ 
+              ...prev, 
+              day,
+              endDay: prev.endDay && prev.endDay < day ? undefined : prev.endDay
+            }))}
+            label="Day *"
             required
           />
+          <div>
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Time
+            </label>
+            <input
+              type="time"
+              value={formData.time}
+              onChange={(e) => setFormData(prev => ({ ...prev, time: e.target.value }))}
+              className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            />
+          </div>
         </div>
-        <div>
-          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-            End
-          </label>
-          <input
-            type="datetime-local"
-            value={formData.end}
-            onChange={(e) => setFormData(prev => ({ ...prev, end: e.target.value }))}
-            className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+      )}
+
+      {/* End Day and Time - on same line */}
+      {trip && (
+        <div className="grid grid-cols-2 gap-2">
+          <DaySelect
+            trip={trip}
+            value={formData.endDay ?? formData.day}
+            onChange={(day) => setFormData(prev => ({ 
+              ...prev, 
+              endDay: day === prev.day ? undefined : day
+            }))}
+            label="End Day"
+            minDay={formData.day}
           />
+          <div>
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+              End Time
+            </label>
+            <input
+              type="time"
+              value={formData.endTime}
+              onChange={(e) => setFormData(prev => ({ ...prev, endTime: e.target.value }))}
+              className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Venue */}
       <div>
@@ -173,23 +214,23 @@ export function EventForm({ activity, onSave, onCancel }: EventFormProps) {
             <input
               type="radio"
               name="status"
-              value="planned"
-              checked={formData.status === 'planned'}
-              onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'planned' | 'booked' }))}
+              value="draft"
+              checked={formData.status === 'draft'}
+              onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as ActivityStatus }))}
               className="mr-1.5"
             />
-            <span className="text-xs text-gray-700 dark:text-gray-300">Planned</span>
+            <span className="text-xs text-gray-700 dark:text-gray-300">Draft</span>
           </label>
           <label className="flex items-center">
             <input
               type="radio"
               name="status"
-              value="booked"
-              checked={formData.status === 'booked'}
-              onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'planned' | 'booked' }))}
+              value="confirmed"
+              checked={formData.status === 'confirmed'}
+              onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as ActivityStatus }))}
               className="mr-1.5"
             />
-            <span className="text-xs text-gray-700 dark:text-gray-300">Booked</span>
+            <span className="text-xs text-gray-700 dark:text-gray-300">Confirmed</span>
           </label>
         </div>
       </div>
@@ -208,15 +249,17 @@ export function EventForm({ activity, onSave, onCancel }: EventFormProps) {
         />
       </div>
 
-      {/* Recommendations Section - only show if planned and we have enough data */}
-      {formData.status === 'planned' && formData.location && formData.start && (
+      {/* Recommendations Section - only show if draft and we have enough data */}
+      {formData.status === 'draft' && formData.location && formData.day && (
         <RecommendationsSection
           activity={{
             type: 'event',
             status: formData.status,
             city: formData.location,
-            start: formData.start,
-            end: formData.end
+            day: formData.day,
+            time: formData.time,
+            endDay: formData.endDay,
+            endTime: formData.endTime
           }}
         />
       )}

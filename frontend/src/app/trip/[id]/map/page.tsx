@@ -35,7 +35,7 @@ function MapContent() {
   }, [searchParams, activities, setSelectedActivity])
 
   // Check if there are any activities with locations
-  const hasLocationActivities = activities.some(a => a.location || a.locationRange)
+  const hasLocationActivities = activities.some(a => a.location)
 
   return (
     <div className="h-full flex flex-col md:flex-row">

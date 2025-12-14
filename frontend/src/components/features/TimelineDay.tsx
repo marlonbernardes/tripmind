@@ -1,15 +1,17 @@
-import type { SimpleActivity } from '@/types/simple'
+import type { Activity } from '@/types/simple'
 import { ActivityCard } from './ActivityCard'
 import { useTripContext } from '@/contexts/TripContext'
+import { compareActivities } from '@/lib/date-service'
 
 interface TimelineDayProps {
-  date: string
-  activities: SimpleActivity[]
+  day: number
+  dayHeader: string // Pre-formatted header like "Mon, Jan 8" or "Day 1"
+  activities: Activity[]
   selectedActivityId?: string
-  onActivitySelect?: (activity: SimpleActivity) => void
+  onActivitySelect?: (activity: Activity) => void
 }
 
-export function TimelineDay({ date, activities, selectedActivityId, onActivitySelect }: TimelineDayProps) {
+export function TimelineDay({ day, dayHeader, activities, selectedActivityId, onActivitySelect }: TimelineDayProps) {
   const { setIsCreatingActivity } = useTripContext()
 
   const handleAddActivityClick = () => {
@@ -18,19 +20,9 @@ export function TimelineDay({ date, activities, selectedActivityId, onActivitySe
 
   // Group activities by city for the day header
   const cities = [...new Set(activities.filter(a => a.city).map(a => a.city))]
-  
-  // Format date for display
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr)
-    const dayName = date.toLocaleDateString('en-US', { weekday: 'long' })
-    const monthDay = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })
-    return `${dayName}, ${monthDay}`
-  }
 
-  // Sort activities by start time
-  const sortedActivities = [...activities].sort((a, b) => {
-    return new Date(a.start).getTime() - new Date(b.start).getTime()
-  })
+  // Sort activities by time
+  const sortedActivities = [...activities].sort(compareActivities)
 
   return (
     <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
@@ -39,7 +31,7 @@ export function TimelineDay({ date, activities, selectedActivityId, onActivitySe
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-base font-medium text-gray-900 dark:text-white">
-              {formatDate(date)}
+              {dayHeader}
             </h2>
             {cities.length > 0 && (
               <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">

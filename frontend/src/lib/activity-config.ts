@@ -1,82 +1,84 @@
 import type { ActivityType } from '@/types/simple'
 
-// Activity type display configuration
-// Colors work well in both light and dark mode (mid-range saturation)
 export interface ActivityTypeConfig {
-  color: string       // Hex color for use in JS (maps, charts, etc.)
-  bgClass: string     // Tailwind background class
-  textClass: string   // Tailwind text class
   label: string
+  color: string
+  icon: string
+  defaultCollapsed?: boolean  // For Gantt chart and similar views
 }
 
+// Activity type configuration - colors, labels, icons
 export const activityTypeConfig: Record<ActivityType, ActivityTypeConfig> = {
   flight: {
-    color: '#3B82F6',  // blue-500
-    bgClass: 'bg-blue-500',
-    textClass: 'text-blue-500',
     label: 'Flight',
+    color: '#3B82F6', // blue-500
+    icon: '✈️',
+    defaultCollapsed: true
   },
-  hotel: {
-    color: '#10B981',  // emerald-500
-    bgClass: 'bg-emerald-500',
-    textClass: 'text-emerald-500',
-    label: 'Hotel',
+  stay: {
+    label: 'Stay',
+    color: '#8B5CF6', // violet-500
+    icon: '🏨',
+    defaultCollapsed: true
   },
   event: {
-    color: '#8B5CF6',  // violet-500
-    bgClass: 'bg-violet-500',
-    textClass: 'text-violet-500',
     label: 'Event',
+    color: '#F59E0B', // amber-500
+    icon: '🎫'
   },
   transport: {
-    color: '#F59E0B',  // amber-500
-    bgClass: 'bg-amber-500',
-    textClass: 'text-amber-500',
     label: 'Transport',
+    color: '#10B981', // emerald-500
+    icon: '🚗'
   },
   note: {
-    color: '#6B7280',  // gray-500
-    bgClass: 'bg-gray-500',
-    textClass: 'text-gray-500',
     label: 'Note',
+    color: '#6B7280', // gray-500
+    icon: '📝'
   },
   task: {
-    color: '#F97316',  // orange-500
-    bgClass: 'bg-orange-500',
-    textClass: 'text-orange-500',
     label: 'Task',
-  },
+    color: '#EF4444', // red-500
+    icon: '✓'
+  }
 }
 
-// Legacy: Simple color mapping for backward compatibility
-export const ACTIVITY_COLORS: Record<ActivityType, string> = {
-  flight: '#3B82F6',
-  hotel: '#10B981',
-  event: '#8B5CF6',
-  transport: '#F59E0B',
-  note: '#6B7280',
-  task: '#F97316',
-}
+// Ordered list of activity types (for UI display order)
+export const allActivityTypes: ActivityType[] = [
+  'flight',
+  'stay',
+  'event',
+  'transport',
+  'note',
+  'task'
+]
 
-// Helper to get color for activity type
+// Helper function to get activity color
 export function getActivityColor(type: ActivityType): string {
-  return activityTypeConfig[type]?.color || '#6B7280'
+  return activityTypeConfig[type]?.color ?? '#6B7280'
 }
 
-// Helper to get label for activity type
+// Helper function to get activity label
 export function getActivityLabel(type: ActivityType): string {
-  return activityTypeConfig[type]?.label || type
+  return activityTypeConfig[type]?.label ?? type
 }
 
-// Helper to get Tailwind bg class for activity type
-export function getActivityBgClass(type: ActivityType): string {
-  return activityTypeConfig[type]?.bgClass || 'bg-gray-500'
+// Helper function to get activity icon
+export function getActivityIcon(type: ActivityType): string {
+  return activityTypeConfig[type]?.icon ?? '📍'
 }
 
-// Helper to get Tailwind text class for activity type
-export function getActivityTextClass(type: ActivityType): string {
-  return activityTypeConfig[type]?.textClass || 'text-gray-500'
+// Helper function to check if activity type should be collapsed by default
+export function isDefaultCollapsed(type: ActivityType): boolean {
+  return activityTypeConfig[type]?.defaultCollapsed ?? false
 }
 
-// All activity types
-export const allActivityTypes: ActivityType[] = ['flight', 'hotel', 'event', 'transport', 'note', 'task']
+// Activity type icons for quick selection
+export const activityTypeIcons: Record<ActivityType, string> = {
+  flight: '✈️',
+  stay: '🏨',
+  event: '🎫',
+  transport: '🚗',
+  note: '📝',
+  task: '✓'
+}

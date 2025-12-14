@@ -1,4 +1,4 @@
-import type { SimpleTrip, SimpleActivity, FlightMetadata, HotelMetadata, EventMetadata } from '@/types/simple'
+import type { Trip, FixedTrip, Activity, FlightMetadata, StayMetadata, EventMetadata, ActivityStatus } from '@/types/simple'
 
 interface TripGenerationOptions {
   destination: string
@@ -7,7 +7,7 @@ interface TripGenerationOptions {
   userPreferences: string
 }
 
-export function generateMockTrip(userInput: string): { trip: SimpleTrip, activities: SimpleActivity[] } {
+export function generateMockTrip(userInput: string): { trip: Trip, activities: Activity[] } {
   // This is a mock implementation - in the future this would be replaced with AI
   // For now, we'll generate a template trip based on common patterns
   
@@ -15,20 +15,23 @@ export function generateMockTrip(userInput: string): { trip: SimpleTrip, activit
   const baseDate = new Date()
   baseDate.setDate(baseDate.getDate() + 30) // Start trip in 30 days
   
+  const startDate = baseDate.toISOString().split('T')[0]
+  const endDate = new Date(baseDate.getTime() + 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  
   // Generate a trip to Tokyo for 7 days (template)
-  const trip: SimpleTrip = {
+  const trip: FixedTrip = {
     id: tripId,
     name: 'AI Generated Tokyo Adventure',
-    startDate: baseDate.toISOString().split('T')[0],
-    endDate: new Date(baseDate.getTime() + 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    color: '#8B5CF6',
-    activitiesCount: 10
+    dateMode: 'fixed',
+    startDate,
+    endDate,
+    color: '#8B5CF6'
   }
 
-  const activities: SimpleActivity[] = []
+  const activities: Activity[] = []
+  const status: ActivityStatus = 'draft'
 
   // Day 1: Arrival
-  const day1 = new Date(baseDate)
   
   // Outbound flight
   activities.push({
@@ -36,10 +39,12 @@ export function generateMockTrip(userInput: string): { trip: SimpleTrip, activit
     tripId,
     type: 'flight',
     title: 'Flight to Tokyo - TBA',
-    start: new Date(day1.getTime() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours before arrival
-    end: day1.toISOString(),
+    day: 1,
+    time: '10:00',
+    endDay: 1,
+    endTime: '18:00',
     city: 'Narita Airport (NRT)',
-    status: 'planned',
+    status,
     metadata: {
       from: 'Home City',
       to: 'Tokyo',
@@ -53,40 +58,44 @@ export function generateMockTrip(userInput: string): { trip: SimpleTrip, activit
     tripId,
     type: 'transport',
     title: 'Airport Transfer to Hotel',
-    start: new Date(day1.getTime() + 1 * 60 * 60 * 1000).toISOString(),
-    end: new Date(day1.getTime() + 2.5 * 60 * 60 * 1000).toISOString(),
+    day: 1,
+    time: '19:00',
+    endDay: 1,
+    endTime: '20:30',
     city: 'Tokyo',
-    status: 'planned'
+    status
   })
 
-  // Hotel check-in
+  // Hotel check-in (multi-day stay)
   activities.push({
-    id: `${tripId}_hotel_main`,
+    id: `${tripId}_stay_main`,
     tripId,
-    type: 'hotel',
+    type: 'stay',
     title: 'Tokyo Hotel - 6 nights',
-    start: new Date(day1.getTime() + 3 * 60 * 60 * 1000).toISOString(),
-    end: new Date(day1.getTime() + 6 * 24 * 60 * 60 * 1000 + 11 * 60 * 60 * 1000).toISOString(),
+    day: 1,
+    time: '21:00',
+    endDay: 7,
+    endTime: '11:00',
     city: 'Shibuya',
-    status: 'planned',
+    status,
     metadata: {
-      hotelName: 'Tokyo Central Hotel (TBD)',
+      propertyName: 'Tokyo Central Hotel (TBD)',
       roomType: 'Standard Room'
-    } as HotelMetadata
+    } as StayMetadata
   })
 
   // Day 2: Sightseeing
-  const day2 = new Date(baseDate.getTime() + 24 * 60 * 60 * 1000)
-  
   activities.push({
     id: `${tripId}_event_senso_ji`,
     tripId,
     type: 'event',
     title: 'Visit Senso-ji Temple',
-    start: new Date(day2.getTime() + 9 * 60 * 60 * 1000).toISOString(),
-    end: new Date(day2.getTime() + 12 * 60 * 60 * 1000).toISOString(),
+    day: 2,
+    time: '09:00',
+    endDay: 2,
+    endTime: '12:00',
     city: 'Asakusa',
-    status: 'planned',
+    status,
     metadata: {
       venue: 'Senso-ji Temple',
       organizer: 'Self-guided'
@@ -98,10 +107,12 @@ export function generateMockTrip(userInput: string): { trip: SimpleTrip, activit
     tripId,
     type: 'event',
     title: 'Tokyo Skytree Observatory',
-    start: new Date(day2.getTime() + 14 * 60 * 60 * 1000).toISOString(),
-    end: new Date(day2.getTime() + 17 * 60 * 60 * 1000).toISOString(),
+    day: 2,
+    time: '14:00',
+    endDay: 2,
+    endTime: '17:00',
     city: 'Sumida',
-    status: 'planned',
+    status,
     metadata: {
       venue: 'Tokyo Skytree',
       ticketLink: 'https://www.tokyo-skytree.jp/en/'
@@ -109,17 +120,17 @@ export function generateMockTrip(userInput: string): { trip: SimpleTrip, activit
   })
 
   // Day 3: Culture and food
-  const day3 = new Date(baseDate.getTime() + 2 * 24 * 60 * 60 * 1000)
-  
   activities.push({
     id: `${tripId}_event_tsukiji`,
     tripId,
     type: 'event',
     title: 'Tsukiji Outer Market Food Tour',
-    start: new Date(day3.getTime() + 8 * 60 * 60 * 1000).toISOString(),
-    end: new Date(day3.getTime() + 11 * 60 * 60 * 1000).toISOString(),
+    day: 3,
+    time: '08:00',
+    endDay: 3,
+    endTime: '11:00',
     city: 'Tsukiji',
-    status: 'planned',
+    status,
     metadata: {
       venue: 'Tsukiji Outer Market',
       organizer: 'Self-guided food exploration'
@@ -131,45 +142,50 @@ export function generateMockTrip(userInput: string): { trip: SimpleTrip, activit
     tripId,
     type: 'event',
     title: 'Meiji Shrine and Harajuku',
-    start: new Date(day3.getTime() + 13 * 60 * 60 * 1000).toISOString(),
-    end: new Date(day3.getTime() + 17 * 60 * 60 * 1000).toISOString(),
+    day: 3,
+    time: '13:00',
+    endDay: 3,
+    endTime: '17:00',
     city: 'Shibuya',
-    status: 'planned',
+    status,
     metadata: {
       venue: 'Meiji Shrine & Harajuku District'
     } as EventMetadata
   })
 
   // Day 7: Departure
-  const day7 = new Date(baseDate.getTime() + 6 * 24 * 60 * 60 * 1000)
   
-  // Return flight
-  activities.push({
-    id: `${tripId}_flight_return`,
-    tripId,
-    type: 'flight',
-    title: 'Return Flight - TBA',
-    start: new Date(day7.getTime() + 14 * 60 * 60 * 1000).toISOString(),
-    end: new Date(day7.getTime() + 20 * 60 * 60 * 1000).toISOString(),
-    city: 'Narita Airport (NRT)',
-    status: 'planned',
-    metadata: {
-      from: 'Tokyo',
-      to: 'Home City',
-      airline: 'To be booked'
-    } as FlightMetadata
-  })
-
   // Add a pre-flight task
   activities.push({
     id: `${tripId}_task_packing`,
     tripId,
     type: 'task',
     title: 'Pack luggage and check-out',
-    start: new Date(day7.getTime() + 10 * 60 * 60 * 1000).toISOString(),
-    end: new Date(day7.getTime() + 12 * 60 * 60 * 1000).toISOString(),
+    day: 7,
+    time: '10:00',
+    endDay: 7,
+    endTime: '12:00',
     city: 'Shibuya',
-    status: 'planned'
+    status
+  })
+
+  // Return flight
+  activities.push({
+    id: `${tripId}_flight_return`,
+    tripId,
+    type: 'flight',
+    title: 'Return Flight - TBA',
+    day: 7,
+    time: '14:00',
+    endDay: 7,
+    endTime: '20:00',
+    city: 'Narita Airport (NRT)',
+    status,
+    metadata: {
+      from: 'Tokyo',
+      to: 'Home City',
+      airline: 'To be booked'
+    } as FlightMetadata
   })
 
   return { trip, activities }

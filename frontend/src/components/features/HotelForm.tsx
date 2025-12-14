@@ -1,37 +1,46 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import type { SimpleActivity, HotelMetadata } from '@/types/simple'
+import type { Activity, StayMetadata, ActivityStatus } from '@/types/simple'
 import { RecommendationsSection } from './RecommendationsSection'
+import { useTripContext } from '@/contexts/TripContext'
+import { DaySelect } from '@/components/ui/day-select'
 
-interface HotelFormProps {
-  activity?: SimpleActivity
-  onSave: (activityData: Omit<SimpleActivity, 'id'>) => void
+interface StayFormProps {
+  activity?: Activity
+  onSave: (activityData: Omit<Activity, 'id'>) => void
   onCancel: () => void
+  defaultDay?: number
 }
 
-export function HotelForm({ activity, onSave, onCancel }: HotelFormProps) {
+// Exported as both StayForm and HotelForm for backward compatibility
+export function StayForm({ activity, onSave, onCancel, defaultDay = 1 }: StayFormProps) {
+  const { trip } = useTripContext()
   const [formData, setFormData] = useState({
-    hotelName: '',
+    propertyName: '',
     city: '',
-    checkIn: '',
-    checkOut: '',
-    hotelLink: '',
+    day: defaultDay,
+    time: '',
+    endDay: undefined as number | undefined,
+    endTime: '',
+    propertyLink: '',
     roomType: '',
     confirmationCode: '',
-    status: 'planned' as 'planned' | 'booked',
+    status: 'draft' as ActivityStatus,
     notes: ''
   })
 
   useEffect(() => {
     if (activity) {
-      const metadata = activity.metadata as HotelMetadata || {}
+      const metadata = activity.metadata as StayMetadata || {}
       setFormData({
-        hotelName: metadata.hotelName || '',
+        propertyName: metadata.propertyName || '',
         city: activity.city || '',
-        checkIn: activity.start,
-        checkOut: activity.end || '',
-        hotelLink: metadata.hotelLink || '',
+        day: activity.day,
+        time: activity.time || '',
+        endDay: activity.endDay,
+        endTime: activity.endTime || '',
+        propertyLink: metadata.propertyLink || '',
         roomType: metadata.roomType || '',
         confirmationCode: metadata.confirmationCode || '',
         status: activity.status,
@@ -41,47 +50,49 @@ export function HotelForm({ activity, onSave, onCancel }: HotelFormProps) {
   }, [activity])
 
   const generateTitle = () => {
-    if (formData.hotelName) {
-      return `Hotel: ${formData.hotelName}`
+    if (formData.propertyName) {
+      return formData.propertyName
     }
-    return 'Hotel Stay'
+    return 'Accommodation'
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
-    const activityData: Omit<SimpleActivity, 'id'> = {
-      tripId: activity?.tripId || '1', // Default trip ID for now
-      type: 'hotel',
+    const activityData: Omit<Activity, 'id'> = {
+      tripId: activity?.tripId || '1',
+      type: 'stay',
       title: generateTitle(),
-      start: formData.checkIn,
-      end: formData.checkOut || undefined,
-      city: formData.city,
+      day: formData.day,
+      time: formData.time || undefined,
+      endDay: formData.endDay,
+      endTime: formData.endTime || undefined,
+      city: formData.city || undefined,
       status: formData.status,
       notes: formData.notes || undefined,
       metadata: {
-        hotelName: formData.hotelName,
-        hotelLink: formData.hotelLink || undefined,
+        propertyName: formData.propertyName || undefined,
+        propertyLink: formData.propertyLink || undefined,
         roomType: formData.roomType || undefined,
         confirmationCode: formData.confirmationCode || undefined
-      }
+      } as StayMetadata
     }
 
     onSave(activityData)
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Hotel Name */}
+    <form onSubmit={handleSubmit} className="space-y-3">
+      {/* Property Name */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Hotel Name *
+        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Property Name *
         </label>
         <input
           type="text"
-          value={formData.hotelName}
-          onChange={(e) => setFormData(prev => ({ ...prev, hotelName: e.target.value }))}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+          value={formData.propertyName}
+          onChange={(e) => setFormData(prev => ({ ...prev, propertyName: e.target.value }))}
+          className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
           placeholder="e.g. Marriott Downtown"
           required
         />
@@ -89,91 +100,119 @@ export function HotelForm({ activity, onSave, onCancel }: HotelFormProps) {
 
       {/* City */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
           City *
         </label>
         <input
           type="text"
           value={formData.city}
           onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+          className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
           placeholder="e.g. New York"
           required
         />
       </div>
 
-      {/* Check-in/Check-out */}
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Check-in *
-          </label>
-          <input
-            type="datetime-local"
-            value={formData.checkIn}
-            onChange={(e) => setFormData(prev => ({ ...prev, checkIn: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+      {/* Check-in Day and Time - always on same line */}
+      {trip && (
+        <div className="grid grid-cols-2 gap-2">
+          <DaySelect
+            trip={trip}
+            value={formData.day}
+            onChange={(day) => setFormData(prev => ({ 
+              ...prev, 
+              day,
+              endDay: prev.endDay && prev.endDay < day ? undefined : prev.endDay
+            }))}
+            label="Check-in Day *"
             required
           />
+          <div>
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Check-in Time
+            </label>
+            <input
+              type="time"
+              value={formData.time}
+              onChange={(e) => setFormData(prev => ({ ...prev, time: e.target.value }))}
+              className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            />
+          </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Check-out
-          </label>
-          <input
-            type="datetime-local"
-            value={formData.checkOut}
-            onChange={(e) => setFormData(prev => ({ ...prev, checkOut: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+      )}
+
+      {/* Check-out Day and Time - on same line */}
+      {trip && (
+        <div className="grid grid-cols-2 gap-2">
+          <DaySelect
+            trip={trip}
+            value={formData.endDay ?? formData.day}
+            onChange={(day) => setFormData(prev => ({ 
+              ...prev, 
+              endDay: day === prev.day ? undefined : day
+            }))}
+            label="Check-out Day"
+            minDay={formData.day}
           />
+          <div>
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Check-out Time
+            </label>
+            <input
+              type="time"
+              value={formData.endTime}
+              onChange={(e) => setFormData(prev => ({ ...prev, endTime: e.target.value }))}
+              className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Room Type */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
           Room Type
         </label>
         <input
           type="text"
           value={formData.roomType}
           onChange={(e) => setFormData(prev => ({ ...prev, roomType: e.target.value }))}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+          className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
           placeholder="e.g. Deluxe King Room"
         />
       </div>
 
-      {/* Hotel Link */}
+      {/* Property Link */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Hotel Website
+        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Property Website
         </label>
         <input
           type="url"
-          value={formData.hotelLink}
-          onChange={(e) => setFormData(prev => ({ ...prev, hotelLink: e.target.value }))}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-          placeholder="https://hotel-website.com"
+          value={formData.propertyLink}
+          onChange={(e) => setFormData(prev => ({ ...prev, propertyLink: e.target.value }))}
+          className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+          placeholder="https://property-website.com"
         />
       </div>
 
       {/* Confirmation Code */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
           Confirmation Code
         </label>
         <input
           type="text"
           value={formData.confirmationCode}
           onChange={(e) => setFormData(prev => ({ ...prev, confirmationCode: e.target.value }))}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+          className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
           placeholder="e.g. ABC123456"
         />
       </div>
 
       {/* Status */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
           Status *
         </label>
         <div className="flex gap-4">
@@ -181,66 +220,65 @@ export function HotelForm({ activity, onSave, onCancel }: HotelFormProps) {
             <input
               type="radio"
               name="status"
-              value="planned"
-              checked={formData.status === 'planned'}
-              onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'planned' | 'booked' }))}
-              className="mr-2"
+              value="draft"
+              checked={formData.status === 'draft'}
+              onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as ActivityStatus }))}
+              className="mr-1.5"
             />
-            <span className="text-sm text-gray-700 dark:text-gray-300">Planned</span>
+            <span className="text-xs text-gray-700 dark:text-gray-300">Draft</span>
           </label>
           <label className="flex items-center">
             <input
               type="radio"
               name="status"
-              value="booked"
-              checked={formData.status === 'booked'}
-              onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'planned' | 'booked' }))}
-              className="mr-2"
+              value="confirmed"
+              checked={formData.status === 'confirmed'}
+              onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as ActivityStatus }))}
+              className="mr-1.5"
             />
-            <span className="text-sm text-gray-700 dark:text-gray-300">Booked</span>
+            <span className="text-xs text-gray-700 dark:text-gray-300">Confirmed</span>
           </label>
         </div>
       </div>
 
       {/* Notes */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
           Notes
         </label>
         <textarea
           value={formData.notes}
           onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-          rows={3}
+          className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+          rows={2}
           placeholder="Additional notes..."
         />
       </div>
 
-      {/* Recommendations Section - only show if planned and we have enough data */}
-      {formData.status === 'planned' && formData.city && formData.checkIn && (
+      {/* Recommendations Section - only show if draft and we have enough data */}
+      {formData.status === 'draft' && formData.city && (
         <RecommendationsSection
           activity={{
-            type: 'hotel',
+            type: 'stay',
             status: formData.status,
             city: formData.city,
-            start: formData.checkIn,
-            end: formData.checkOut
+            day: formData.day
           }}
         />
       )}
 
       {/* Action Buttons */}
-      <div className="flex gap-3 pt-4">
+      <div className="flex gap-2 pt-3">
         <button
           type="submit"
-          className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+          className="flex-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs font-medium"
         >
-          Save Hotel
+          Save
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
+          className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-xs font-medium"
         >
           Cancel
         </button>
@@ -248,3 +286,6 @@ export function HotelForm({ activity, onSave, onCancel }: HotelFormProps) {
     </form>
   )
 }
+
+// Backward compatibility alias
+export const HotelForm = StayForm

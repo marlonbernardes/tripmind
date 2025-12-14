@@ -1,14 +1,28 @@
 import Link from 'next/link'
-import type { SimpleTrip } from '@/types/simple'
-import { formatDateRange, getDaysCount } from '@/lib/mock-data'
+import type { Trip } from '@/types/simple'
+import { isFixedTrip } from '@/types/simple'
+import { getTripDuration } from '@/lib/date-service'
 
 interface TripCardProps {
-  trip: SimpleTrip
+  trip: Trip
+  activitiesCount?: number
 }
 
-export function TripCard({ trip }: TripCardProps) {
-  const dateRange = formatDateRange(trip.startDate, trip.endDate)
-  const daysCount = getDaysCount(trip.startDate, trip.endDate)
+export function TripCard({ trip, activitiesCount = 0 }: TripCardProps) {
+  const duration = getTripDuration(trip)
+  
+  // Format date range for display
+  const getDateDisplay = () => {
+    if (isFixedTrip(trip)) {
+      const startDate = new Date(trip.startDate)
+      const endDate = new Date(trip.endDate)
+      const startStr = startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      const endStr = endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      return `${startStr} - ${endStr}`
+    }
+    // Flexible trip
+    return 'Flexible dates'
+  }
 
   return (
     <Link href={`/trip/${trip.id}/timeline`}>
@@ -25,16 +39,16 @@ export function TripCard({ trip }: TripCardProps) {
         
         <div className="space-y-2 mb-4">
           <p className="text-gray-600 dark:text-gray-300 text-sm font-medium">
-            {dateRange}
+            {getDateDisplay()}
           </p>
           <p className="text-gray-500 dark:text-gray-400 text-xs">
-            {daysCount} {daysCount === 1 ? 'day' : 'days'}
+            {duration} {duration === 1 ? 'day' : 'days'}
           </p>
         </div>
         
         <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
           <span className="text-xs text-gray-500 dark:text-gray-400">
-            {trip.activitiesCount} {trip.activitiesCount === 1 ? 'activity' : 'activities'}
+            {activitiesCount} {activitiesCount === 1 ? 'activity' : 'activities'}
           </span>
           <div className="text-blue-600 dark:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

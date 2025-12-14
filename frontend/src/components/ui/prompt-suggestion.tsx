@@ -10,7 +10,7 @@ export type PromptSuggestionProps = {
   size?: VariantProps<typeof buttonVariants>["size"]
   className?: string
   highlight?: string
-} & React.ButtonHTMLAttributes<HTMLButtonElement>
+} & Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'children'>
 
 function PromptSuggestion({
   children,

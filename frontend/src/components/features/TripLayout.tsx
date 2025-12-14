@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { TripProvider, useTripContext } from '@/contexts/TripContext'
 import { TripHeader } from './TripHeader'
 import { mockTrips, getActivitiesForTrip } from '@/lib/mock-data'
+import { isFixedTrip } from '@/types/simple'
 
 interface TripLayoutProps {
   children: ReactNode
@@ -21,14 +22,8 @@ function TripLayoutContent({ children, tripId }: { children: ReactNode; tripId: 
     const activitiesData = getActivitiesForTrip(tripId)
     
     if (tripData) {
-      setTrip({
-        id: tripData.id,
-        name: tripData.name,
-        startDate: tripData.startDate,
-        endDate: tripData.endDate,
-        color: tripData.color,
-        activitiesCount: activitiesData.length
-      })
+      // Set the trip data directly - mock data already has correct shape
+      setTrip(tripData)
       setActivities(activitiesData)
     } else {
       setTrip(null)

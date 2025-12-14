@@ -1,9 +1,9 @@
-import type { SimpleActivity } from '@/types/simple'
-import { getDateFromDateTime } from './mock-data'
+import type { Trip, Activity } from '@/types/simple'
+import { compareActivities, formatShortDayHeader, formatDayOfWeek, getTripDuration } from './date-service'
 
-export interface ExpandedActivity extends SimpleActivity {
-  /** The specific date this row represents (for multi-day activities) */
-  displayDate: string
+export interface ExpandedActivity extends Activity {
+  /** The specific day this row represents (for multi-day activities) */
+  displayDay: number
   /** Day number within a multi-day activity (1-based), undefined for single-day */
   dayNumber?: number
   /** Total days for a multi-day activity, undefined for single-day */
@@ -15,100 +15,95 @@ export interface ExpandedActivity extends SimpleActivity {
  * Single-day activities remain as-is.
  * 
  * @param activities - Array of activities to expand
- * @returns Array of expanded activities, sorted by displayDate then start time
+ * @returns Array of expanded activities, sorted by displayDay then time
  */
-export function expandActivitiesToDays(activities: SimpleActivity[]): ExpandedActivity[] {
+export function expandActivitiesToDays(activities: Activity[]): ExpandedActivity[] {
   const expanded: ExpandedActivity[] = []
   
   activities.forEach(activity => {
-    const startDate = new Date(getDateFromDateTime(activity.start))
+    const startDay = activity.day
+    const endDay = activity.endDay ?? activity.day
     
-    if (activity.end) {
-      const endDate = new Date(getDateFromDateTime(activity.end))
-      const currentDate = new Date(startDate)
-      let dayNumber = 1
+    if (endDay > startDay) {
+      // Multi-day activity
+      const totalDays = endDay - startDay + 1
       
-      // Calculate total days
-      const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
-      
-      // Create an entry for each day
-      while (currentDate <= endDate) {
+      for (let currentDay = startDay; currentDay <= endDay; currentDay++) {
         expanded.push({
           ...activity,
-          displayDate: currentDate.toISOString().split('T')[0],
-          dayNumber,
+          displayDay: currentDay,
+          dayNumber: currentDay - startDay + 1,
           totalDays
         })
-        currentDate.setDate(currentDate.getDate() + 1)
-        dayNumber++
       }
     } else {
       // Single-day activity
       expanded.push({
         ...activity,
-        displayDate: getDateFromDateTime(activity.start)
+        displayDay: startDay
       })
     }
   })
   
-  // Sort by displayDate, then by start time
+  // Sort by displayDay, then by time
   return expanded.sort((a, b) => {
-    const dateCompare = a.displayDate.localeCompare(b.displayDate)
-    if (dateCompare !== 0) return dateCompare
-    return new Date(a.start).getTime() - new Date(b.start).getTime()
+    if (a.displayDay !== b.displayDay) {
+      return a.displayDay - b.displayDay
+    }
+    const aTime = a.time ?? '00:00'
+    const bTime = b.time ?? '00:00'
+    return aTime.localeCompare(bTime)
   })
 }
 
 /**
- * Groups activities by date, expanding multi-day activities to appear in each day.
+ * Groups activities by day, expanding multi-day activities to appear in each day.
  * 
  * @param activities - Array of activities to group
- * @returns Object with date keys and arrays of activities
+ * @returns Object with day number keys and arrays of activities
  */
-export function groupActivitiesByDate(activities: SimpleActivity[]): Record<string, SimpleActivity[]> {
-  const grouped: Record<string, SimpleActivity[]> = {}
+export function groupActivitiesByDay(activities: Activity[]): Record<number, Activity[]> {
+  const grouped: Record<number, Activity[]> = {}
   
   activities.forEach(activity => {
-    const startDate = new Date(getDateFromDateTime(activity.start))
+    const startDay = activity.day
+    const endDay = activity.endDay ?? activity.day
     
-    if (activity.end) {
-      // Multi-day activity: add to all days it spans
-      const endDate = new Date(getDateFromDateTime(activity.end))
-      const currentDate = new Date(startDate)
-      
-      while (currentDate <= endDate) {
-        const dateKey = currentDate.toISOString().split('T')[0]
-        if (!grouped[dateKey]) {
-          grouped[dateKey] = []
-        }
-        grouped[dateKey].push(activity)
-        currentDate.setDate(currentDate.getDate() + 1)
+    for (let currentDay = startDay; currentDay <= endDay; currentDay++) {
+      if (!grouped[currentDay]) {
+        grouped[currentDay] = []
       }
-    } else {
-      // Single day activity: add only to start date
-      const dateKey = getDateFromDateTime(activity.start)
-      if (!grouped[dateKey]) {
-        grouped[dateKey] = []
-      }
-      grouped[dateKey].push(activity)
+      grouped[currentDay].push(activity)
     }
+  })
+  
+  // Sort activities within each day
+  Object.keys(grouped).forEach(day => {
+    grouped[Number(day)].sort(compareActivities)
   })
   
   return grouped
 }
 
 /**
- * Format date for display in short format
+ * Get all days that should be displayed for a trip
+ * Includes all days from 1 to trip duration
  */
-export function formatShortDate(dateStr: string): string {
-  const d = new Date(dateStr)
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+export function getAllTripDays(trip: Trip): number[] {
+  const duration = getTripDuration(trip)
+  return Array.from({ length: duration }, (_, i) => i + 1)
 }
 
 /**
- * Format day of week (3 letters)
+ * Format day header for display (delegates to date-service)
  */
-export function formatDayOfWeek(dateStr: string): string {
-  const d = new Date(dateStr)
-  return d.toLocaleDateString('en-US', { weekday: 'short' })
+export function formatShortDate(trip: Trip, day: number): string {
+  return formatShortDayHeader(trip, day)
+}
+
+/**
+ * Format day of week (delegates to date-service)
+ */
+export function getDayOfWeek(trip: Trip, day: number): string {
+  return formatDayOfWeek(trip, day)
 }

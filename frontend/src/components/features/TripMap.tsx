@@ -5,9 +5,10 @@ import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { useTripContext } from '@/contexts/TripContext'
-import type { SimpleActivity } from '@/types/simple'
+import type { Activity, Trip } from '@/types/simple'
 import { cn } from '@/lib/utils'
 import { getActivityColor, activityTypeConfig, allActivityTypes } from '@/lib/activity-config'
+import { formatDayHeader, formatActivityTime } from '@/lib/date-service'
 
 interface TripMapProps {
   className?: string
@@ -19,7 +20,7 @@ const MapPointFlags = {
   ARRIVAL: 2,        // 0b000010 - Arrival point of a range
   OVERNIGHT: 4,      // 0b000100 - Overnight stay
   TRANSFER: 8,       // 0b001000 - Transfer point
-  BOOKED: 16,        // 0b010000 - Activity is booked
+  CONFIRMED: 16,     // 0b010000 - Activity is confirmed
   HIGHLIGHT: 32,     // 0b100000 - Special highlight
 } as const
 
@@ -29,7 +30,7 @@ const flagConfig: Record<number, { label: string; color: string; bgColor: string
   [MapPointFlags.ARRIVAL]: { label: 'Arrival', color: '#059669', bgColor: '#d1fae5' },
   [MapPointFlags.OVERNIGHT]: { label: 'Overnight', color: '#7c3aed', bgColor: '#ede9fe' },
   [MapPointFlags.TRANSFER]: { label: 'Transfer', color: '#ea580c', bgColor: '#ffedd5' },
-  [MapPointFlags.BOOKED]: { label: 'Booked', color: '#16a34a', bgColor: '#dcfce7' },
+  [MapPointFlags.CONFIRMED]: { label: 'Confirmed', color: '#16a34a', bgColor: '#dcfce7' },
   [MapPointFlags.HIGHLIGHT]: { label: 'Highlight', color: '#dc2626', bgColor: '#fee2e2' },
 }
 
@@ -43,14 +44,15 @@ function decodeFlags(flags: number): number[] {
 }
 
 // A map point represents a single location on the map
-// Activities with locationRange generate 2 points (start + end)
+// Activities with location.end generate 2 points (start + end)
 interface MapPoint {
   index: number           // 1-based sequential number
   activityId: string      // Activity ID for URL sync
-  activity: SimpleActivity
+  activity: Activity
   coord: [number, number]
-  time: string            // The specific time for this point
-  flags: number           // Bit flags for features (DEPARTURE, ARRIVAL, BOOKED, etc.)
+  day: number             // The day number for this point
+  time?: string           // The specific time for this point
+  flags: number           // Bit flags for features (DEPARTURE, ARRIVAL, CONFIRMED, etc.)
   pairedIndex?: number    // Index of paired point (for ranges)
   rangeTotal?: number     // Total points in range (1 or 2)
   rangePosition?: number  // Position in range (1 or 2)
@@ -81,7 +83,7 @@ export function TripMap({ className }: TripMapProps) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   
-  const { activities, setSelectedActivity, setIsCreatingActivity } = useTripContext()
+  const { trip, activities, setSelectedActivity, setIsCreatingActivity } = useTripContext()
   
   const [isMapLoaded, setIsMapLoaded] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -89,18 +91,26 @@ export function TripMap({ className }: TripMapProps) {
   // Create flat list of map points from activities
   const mapPoints: MapPoint[] = useMemo(() => {
     const sortedActivities = activities
-      .filter(a => a.location || a.locationRange)
-      .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
+      .filter(a => a.location)
+      .sort((a, b) => {
+        // Sort by day first, then by time
+        if (a.day !== b.day) return a.day - b.day
+        const aTime = a.time ?? '00:00'
+        const bTime = b.time ?? '00:00'
+        return aTime.localeCompare(bTime)
+      })
     
     const points: MapPoint[] = []
     let pointIndex = 1
     
     sortedActivities.forEach(activity => {
-      // Calculate base flags
-      const baseFlags = activity.status === 'booked' ? MapPointFlags.BOOKED : 0
+      if (!activity.location) return
       
-      if (activity.locationRange) {
-        // Activity with range: create 2 points
+      // Calculate base flags
+      const baseFlags = activity.status === 'confirmed' ? MapPointFlags.CONFIRMED : 0
+      
+      if (activity.location.end) {
+        // Activity with range (e.g., flight): create 2 points
         const startIdx = pointIndex
         const endIdx = pointIndex + 1
         
@@ -109,8 +119,9 @@ export function TripMap({ className }: TripMapProps) {
           index: startIdx,
           activityId: activity.id,
           activity,
-          coord: [activity.locationRange.start.lng, activity.locationRange.start.lat],
-          time: activity.start,
+          coord: [activity.location.start.lng, activity.location.start.lat],
+          day: activity.day,
+          time: activity.time,
           flags: baseFlags | MapPointFlags.DEPARTURE,
           pairedIndex: endIdx,
           rangeTotal: 2,
@@ -122,8 +133,9 @@ export function TripMap({ className }: TripMapProps) {
           index: endIdx,
           activityId: activity.id,
           activity,
-          coord: [activity.locationRange.end.lng, activity.locationRange.end.lat],
-          time: activity.end || activity.start,
+          coord: [activity.location.end.lng, activity.location.end.lat],
+          day: activity.endDay ?? activity.day,
+          time: activity.endTime,
           flags: baseFlags | MapPointFlags.ARRIVAL,
           pairedIndex: startIdx,
           rangeTotal: 2,
@@ -131,14 +143,15 @@ export function TripMap({ className }: TripMapProps) {
         })
         
         pointIndex += 2
-      } else if (activity.location) {
+      } else {
         // Single location activity
         points.push({
           index: pointIndex,
           activityId: activity.id,
           activity,
-          coord: [activity.location.lng, activity.location.lat],
-          time: activity.start,
+          coord: [activity.location.start.lng, activity.location.start.lat],
+          day: activity.day,
+          time: activity.time,
           flags: baseFlags,
           rangeTotal: 1,
           rangePosition: 1
@@ -447,20 +460,10 @@ export function TripMap({ className }: TripMapProps) {
     }
   }
 
-  const formatDate = (dateStr: string) => {
-    const d = new Date(dateStr)
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-  }
-
-  const formatTime = (dateStr: string) => {
-    const d = new Date(dateStr)
-    return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
-  }
-
   const getActivityIcon = (type: string) => {
     switch (type) {
       case 'flight': return '✈️'
-      case 'hotel': return '🏨'
+      case 'stay': return '🏨'
       case 'event': return '🎫'
       case 'transport': return '🚗'
       case 'note': return '📝'
@@ -479,14 +482,13 @@ export function TripMap({ className }: TripMapProps) {
 
   // Format time from MapPoint
   const formatPointTime = (point: MapPoint) => {
-    const d = new Date(point.time)
-    return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
+    return point.time ?? ''
   }
 
   // Format date from MapPoint
   const formatPointDate = (point: MapPoint) => {
-    const d = new Date(point.time)
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    if (!trip) return `Day ${point.day}`
+    return formatDayHeader(trip, point.day)
   }
 
   if (!process.env.NEXT_PUBLIC_MAPBOX_TOKEN) {
@@ -698,8 +700,12 @@ export function TripMap({ className }: TripMapProps) {
                       </div>
                       <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                         <span>{formatPointDate(currentPoint)}</span>
-                        <span>•</span>
-                        <span className="font-medium text-gray-700 dark:text-gray-300">{formatPointTime(currentPoint)}</span>
+                        {formatPointTime(currentPoint) && (
+                          <>
+                            <span>•</span>
+                            <span className="font-medium text-gray-700 dark:text-gray-300">{formatPointTime(currentPoint)}</span>
+                          </>
+                        )}
                         {currentPoint.activity.city && (
                           <>
                             <span>•</span>

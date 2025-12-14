@@ -6,10 +6,10 @@ import { ChevronDown, ChevronRight, Calendar, Layers, ChevronsUpDown, Plus, List
 import { TripLayout } from '@/components/features/TripLayout'
 import { TripSidePanel } from '@/components/features/TripSidePanel'
 import { useTripContext } from '@/contexts/TripContext'
-import type { SimpleActivity, ActivityType } from '@/types/simple'
-import { getDateFromDateTime, getTimeFromDateTime } from '@/lib/mock-data'
+import type { Activity, ActivityType, Trip } from '@/types/simple'
 import { getActivityColor, getActivityLabel, allActivityTypes } from '@/lib/activity-config'
-import { expandActivitiesToDays, groupActivitiesByDate, formatShortDate, formatDayOfWeek, type ExpandedActivity } from '@/lib/timeline-utils'
+import { expandActivitiesToDays, groupActivitiesByDay, formatShortDate, getDayOfWeek, getAllTripDays, type ExpandedActivity } from '@/lib/timeline-utils'
+import { formatDayHeader, compareActivities } from '@/lib/date-service'
 
 interface TimelinePageProps {
   params: Promise<{
@@ -22,15 +22,17 @@ type GroupByMode = 'date' | 'type' | 'none'
 // Condensed Activity Row Component
 function CompactActivityRow({ 
   activity, 
-  displayDate,
+  trip,
+  displayDay,
   dayInfo,
   isSelected, 
   onClick,
   showDate = false,
   showEndDate = false
 }: { 
-  activity: SimpleActivity
-  displayDate?: string // For expanded activities, the specific date to show
+  activity: Activity
+  trip: Trip
+  displayDay?: number // For expanded activities, the specific day to show
   dayInfo?: { dayNumber: number; totalDays: number } // For multi-day indicators
   isSelected: boolean
   onClick: () => void
@@ -38,10 +40,10 @@ function CompactActivityRow({
   showEndDate?: boolean // Show end date/time column (for Type grouping)
 }) {
   const activityColor = getActivityColor(activity.type)
-  const startTime = getTimeFromDateTime(activity.start)
-  const startDate = displayDate || getDateFromDateTime(activity.start)
-  const endDate = activity.end ? getDateFromDateTime(activity.end) : null
-  const endTime = activity.end ? getTimeFromDateTime(activity.end) : null
+  const startTime = activity.time ?? ''
+  const currentDay = displayDay ?? activity.day
+  const endDay = activity.endDay ?? activity.day
+  const endTime = activity.endTime ?? ''
   
   // For multi-day activities in All/Date mode: show time only on first/last day
   const getDisplayTime = () => {
@@ -58,7 +60,7 @@ function CompactActivityRow({
         isSelected 
           ? 'bg-gray-100 dark:bg-gray-800' 
           : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
-      } ${activity.status === 'planned' ? 'opacity-75' : ''}`}
+      } ${activity.status === 'draft' ? 'opacity-75' : ''}`}
     >
       {/* Color dot */}
       <div 
@@ -70,10 +72,10 @@ function CompactActivityRow({
       {showDate && (
         <>
           <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500 w-7 flex-shrink-0">
-            {formatDayOfWeek(startDate)}
+            {getDayOfWeek(trip, currentDay)}
           </span>
           <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 w-12 flex-shrink-0">
-            {formatShortDate(startDate)}
+            {formatShortDate(trip, currentDay)}
           </span>
         </>
       )}
@@ -84,14 +86,14 @@ function CompactActivityRow({
       </span>
       
       {/* End Date/Time (for Type grouping) */}
-      {showEndDate && endDate && (
+      {showEndDate && endDay !== activity.day && (
         <>
           <span className="text-[10px] text-gray-400 dark:text-gray-500 flex-shrink-0">→</span>
           <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500 w-7 flex-shrink-0">
-            {formatDayOfWeek(endDate)}
+            {getDayOfWeek(trip, endDay)}
           </span>
           <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 w-12 flex-shrink-0">
-            {formatShortDate(endDate)}
+            {formatShortDate(trip, endDay)}
           </span>
           <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 w-10 flex-shrink-0">
             {endTime}
@@ -110,9 +112,9 @@ function CompactActivityRow({
       </span>
       
       {/* Status badge */}
-      {activity.status === 'planned' && (
+      {activity.status === 'draft' && (
         <span className="text-[9px] px-1 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 flex-shrink-0">
-          PLANNED
+          DRAFT
         </span>
       )}
       
@@ -132,6 +134,7 @@ function CollapsibleSection({
   title,
   subtitle,
   activities,
+  trip,
   selectedActivityId,
   onActivitySelect,
   isCollapsed,
@@ -144,9 +147,10 @@ function CollapsibleSection({
   groupKey: string
   title: string
   subtitle?: string
-  activities: SimpleActivity[]
+  activities: Activity[]
+  trip: Trip
   selectedActivityId?: string
-  onActivitySelect: (activity: SimpleActivity) => void
+  onActivitySelect: (activity: Activity) => void
   isCollapsed: boolean
   onToggleCollapse: (key: string) => void
   onAddActivity: () => void
@@ -154,10 +158,8 @@ function CollapsibleSection({
   showDateInRows?: boolean
   showEndDateInRows?: boolean
 }) {
-  // Sort activities by start time
-  const sortedActivities = [...activities].sort((a, b) => {
-    return new Date(a.start).getTime() - new Date(b.start).getTime()
-  })
+  // Sort activities by day and time
+  const sortedActivities = [...activities].sort(compareActivities)
 
   return (
     <div className="border-b border-gray-100 dark:border-gray-800 last:border-b-0">
@@ -227,6 +229,7 @@ function CollapsibleSection({
               )}
               <CompactActivityRow
                 activity={activity}
+                trip={trip}
                 isSelected={selectedActivityId === activity.id}
                 onClick={() => onActivitySelect(activity)}
                 showDate={showDateInRows}
@@ -305,63 +308,38 @@ function TimelineToolbar({
 }
 
 function TimelineContent() {
-  const { activities, selectedActivity, setSelectedActivity } = useTripContext()
+  const { trip, activities, selectedActivity, setSelectedActivity } = useTripContext()
   const [groupBy, setGroupBy] = useState<GroupByMode>('date')
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
   
-  // Group activities by date
-  const activitiesByDate = useMemo(() => {
-    const grouped: Record<string, SimpleActivity[]> = {}
+  // Group activities by day
+  const activitiesByDay = useMemo(() => {
+    if (!trip) return []
     
-    activities.forEach(activity => {
-      const startDate = new Date(getDateFromDateTime(activity.start))
-      
-      if (activity.end) {
-        // Multi-day activity: add to all days it spans
-        const endDate = new Date(getDateFromDateTime(activity.end))
-        const currentDate = new Date(startDate)
-        
-        while (currentDate <= endDate) {
-          const dateKey = currentDate.toISOString().split('T')[0]
-          if (!grouped[dateKey]) {
-            grouped[dateKey] = []
-          }
-          grouped[dateKey].push(activity)
-          currentDate.setDate(currentDate.getDate() + 1)
-        }
-      } else {
-        // Single day activity: add only to start date
-        const dateKey = getDateFromDateTime(activity.start)
-        if (!grouped[dateKey]) {
-          grouped[dateKey] = []
-        }
-        grouped[dateKey].push(activity)
-      }
-    })
+    const grouped = groupActivitiesByDay(activities)
+    const allDays = getAllTripDays(trip)
     
-    // Sort dates
-    return Object.keys(grouped)
-      .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
-      .map(date => {
-        const d = new Date(date)
-        const dayName = d.toLocaleDateString('en-US', { weekday: 'short' })
-        const monthDay = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-        const cities = [...new Set(grouped[date].filter(a => a.city).map(a => a.city))]
+    return allDays
+      .filter(day => grouped[day]?.length > 0)
+      .map(day => {
+        const dayActivities = grouped[day] || []
+        const cities = [...new Set(dayActivities.filter(a => a.city).map(a => a.city))]
         
         return { 
-          key: date,
-          title: `${dayName} ${monthDay}`,
+          key: `day-${day}`,
+          day,
+          title: formatDayHeader(trip, day),
           subtitle: cities.join(', '),
-          activities: grouped[date]
+          activities: dayActivities
         }
       })
-  }, [activities])
+  }, [activities, trip])
   
   // Group activities by type
   const activitiesByType = useMemo(() => {
-    const grouped: Record<ActivityType, SimpleActivity[]> = {
+    const grouped: Record<ActivityType, Activity[]> = {
       flight: [],
-      hotel: [],
+      stay: [],
       event: [],
       transport: [],
       note: [],
@@ -391,7 +369,7 @@ function TimelineContent() {
   }, [activities])
   
   // Get current groups based on groupBy mode
-  const currentGroups = groupBy === 'date' ? activitiesByDate : groupBy === 'type' ? activitiesByType : []
+  const currentGroups = groupBy === 'date' ? activitiesByDay : groupBy === 'type' ? activitiesByType : []
   
   // Check if all groups are collapsed
   const allCollapsed = currentGroups.length > 0 && 
@@ -433,6 +411,10 @@ function TimelineContent() {
     setSelectedActivity(null)
     setIsCreatingActivity(true)
   }
+  
+  if (!trip) {
+    return <div className="p-4">Loading...</div>
+  }
 
   return (
     <div className="h-full flex flex-col md:flex-row">
@@ -470,13 +452,14 @@ function TimelineContent() {
                 // Flat list - no grouping (with multi-day expansion)
                 <div className="px-1 py-1">
                   {activitiesFlat.map((expandedActivity, index) => (
-                    <div key={`${expandedActivity.id}-${expandedActivity.displayDate}`}>
+                    <div key={`${expandedActivity.id}-day-${expandedActivity.displayDay}`}>
                       {index > 0 && (
                         <div className="h-px bg-gray-200/50 dark:bg-gray-700/50 mx-2" />
                       )}
                       <CompactActivityRow
                         activity={expandedActivity}
-                        displayDate={expandedActivity.displayDate}
+                        trip={trip}
+                        displayDay={expandedActivity.displayDay}
                         dayInfo={expandedActivity.dayNumber ? { dayNumber: expandedActivity.dayNumber, totalDays: expandedActivity.totalDays! } : undefined}
                         isSelected={selectedActivity?.id === expandedActivity.id}
                         onClick={() => setSelectedActivity(expandedActivity)}
@@ -486,14 +469,15 @@ function TimelineContent() {
                   ))}
                 </div>
               ) : groupBy === 'date' ? (
-                // Group by Date
-                activitiesByDate.map((group) => (
+                // Group by Date (Day)
+                activitiesByDay.map((group) => (
                   <CollapsibleSection
                     key={group.key}
                     groupKey={group.key}
                     title={group.title}
                     subtitle={group.subtitle}
                     activities={group.activities}
+                    trip={trip}
                     selectedActivityId={selectedActivity?.id}
                     onActivitySelect={setSelectedActivity}
                     isCollapsed={collapsedGroups.has(group.key)}
@@ -509,6 +493,7 @@ function TimelineContent() {
                     groupKey={group.key}
                     title={group.title}
                     activities={group.activities}
+                    trip={trip}
                     selectedActivityId={selectedActivity?.id}
                     onActivitySelect={setSelectedActivity}
                     isCollapsed={collapsedGroups.has(group.key)}

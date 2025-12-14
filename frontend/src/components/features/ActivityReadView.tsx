@@ -1,32 +1,40 @@
 'use client'
 
-import type { SimpleActivity, FlightMetadata, HotelMetadata, EventMetadata } from '@/types/simple'
-import { getDateFromDateTime, getTimeFromDateTime } from '@/lib/mock-data'
+import type { Activity, FlightMetadata, StayMetadata, EventMetadata } from '@/types/simple'
+import { useTripContext } from '@/contexts/TripContext'
+import { formatDayHeader } from '@/lib/date-service'
+import { getActivityIcon } from '@/lib/activity-config'
 
 interface ActivityReadViewProps {
-  activity: SimpleActivity
+  activity: Activity
   onEdit?: () => void
 }
 
 export function ActivityReadView({ activity, onEdit }: ActivityReadViewProps) {
-  const formatDate = (dateStr: string) => {
-    return new Date(getDateFromDateTime(dateStr)).toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric'
-    })
+  const { trip } = useTripContext()
+
+  // Format day display
+  const getDayDisplay = () => {
+    if (!trip) return `Day ${activity.day}`
+    const dayHeader = formatDayHeader(trip, activity.day)
+    
+    if (activity.endDay && activity.endDay !== activity.day) {
+      const endDayHeader = formatDayHeader(trip, activity.endDay)
+      return `${dayHeader} – ${endDayHeader}`
+    }
+    return dayHeader
   }
 
-  const getActivityIcon = (type: SimpleActivity['type']) => {
-    switch (type) {
-      case 'flight': return '✈️'
-      case 'hotel': return '🏨'
-      case 'event': return '🎫'
-      case 'transport': return '🚗'
-      case 'note': return '📝'
-      case 'task': return '✅'
-      default: return '📝'
+  // Format time display
+  const getTimeDisplay = () => {
+    if (activity.allDay) return 'All day'
+    if (!activity.time) return ''
+    
+    let display = activity.time
+    if (activity.endTime) {
+      display += ` – ${activity.endTime}`
     }
+    return display
   }
 
   return (
@@ -40,11 +48,11 @@ export function ActivityReadView({ activity, onEdit }: ActivityReadViewProps) {
               {activity.title}
             </h4>
             <span className={`inline-block mt-1 px-1.5 py-0.5 text-xs rounded ${
-              activity.status === 'booked' 
+              activity.status === 'confirmed' 
                 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                 : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
             }`}>
-              {activity.status === 'booked' ? 'Booked' : 'Planned'}
+              {activity.status === 'confirmed' ? 'Confirmed' : 'Draft'}
             </span>
           </div>
         </div>
@@ -58,10 +66,8 @@ export function ActivityReadView({ activity, onEdit }: ActivityReadViewProps) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
           <span>
-            {formatDate(activity.start)}
-            {' • '}
-            {getTimeFromDateTime(activity.start)}
-            {activity.end && ` – ${getTimeFromDateTime(activity.end)}`}
+            {getDayDisplay()}
+            {getTimeDisplay() && ` • ${getTimeDisplay()}`}
           </span>
         </div>
 
@@ -81,8 +87,8 @@ export function ActivityReadView({ activity, onEdit }: ActivityReadViewProps) {
           <FlightDetails metadata={activity.metadata as FlightMetadata} />
         )}
         
-        {activity.type === 'hotel' && activity.metadata && (
-          <HotelDetails metadata={activity.metadata as HotelMetadata} />
+        {activity.type === 'stay' && activity.metadata && (
+          <StayDetails metadata={activity.metadata as StayMetadata} />
         )}
         
         {activity.type === 'event' && activity.metadata && (
@@ -125,20 +131,20 @@ function FlightDetails({ metadata }: { metadata: FlightMetadata }) {
       {metadata.airline && (
         <div className="text-gray-500 dark:text-gray-500">
           {metadata.airline}
-          {metadata.flightNumberOutbound && ` • ${metadata.flightNumberOutbound}`}
+          {metadata.flightNumber && ` • ${metadata.flightNumber}`}
         </div>
       )}
     </div>
   )
 }
 
-// Hotel-specific details
-function HotelDetails({ metadata }: { metadata: HotelMetadata }) {
+// Stay-specific details
+function StayDetails({ metadata }: { metadata: StayMetadata }) {
   return (
     <div className="space-y-2">
-      {metadata.hotelName && (
+      {metadata.propertyName && (
         <div className="text-gray-600 dark:text-gray-400 font-medium">
-          {metadata.hotelName}
+          {metadata.propertyName}
         </div>
       )}
       {metadata.roomType && (

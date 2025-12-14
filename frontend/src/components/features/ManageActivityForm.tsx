@@ -1,22 +1,22 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useTripContext } from '@/contexts/TripContext'
-import type { SimpleActivity } from '@/types/simple'
+import type { Activity, ActivityType } from '@/types/simple'
 import { FlightForm } from './FlightForm'
-import { HotelForm } from './HotelForm'
+import { StayForm } from './HotelForm'
 import { EventForm } from './EventForm'
 
 interface ManageActivityFormProps {
   mode: 'create' | 'edit'
-  activity?: SimpleActivity
-  initialDate?: string // For create mode, pre-populate the date
+  activity?: Activity
+  initialDay?: number // For create mode, pre-populate the day
   onSave?: () => void
   onCancel?: () => void
 }
 
 const activityTypes: { 
-  value: SimpleActivity['type']
+  value: ActivityType
   label: string
   icon: string
   description: string
@@ -28,8 +28,8 @@ const activityTypes: {
     description: 'Air travel between destinations'
   },
   { 
-    value: 'hotel', 
-    label: 'Hotel', 
+    value: 'stay', 
+    label: 'Stay', 
     icon: '🏨',
     description: 'Accommodation and lodging'
   },
@@ -62,16 +62,16 @@ const activityTypes: {
 export function ManageActivityForm({ 
   mode, 
   activity, 
-  initialDate,
+  initialDay = 1,
   onSave, 
   onCancel 
 }: ManageActivityFormProps) {
   const { addActivity, updateActivity } = useTripContext()
-  const [selectedType, setSelectedType] = useState<SimpleActivity['type'] | null>(
+  const [selectedType, setSelectedType] = useState<ActivityType | null>(
     mode === 'edit' && activity ? activity.type : null
   )
 
-  const handleActivitySave = (activityData: Omit<SimpleActivity, 'id'>) => {
+  const handleActivitySave = (activityData: Omit<Activity, 'id'>) => {
     try {
       if (mode === 'create') {
         addActivity(activityData)
@@ -99,6 +99,7 @@ export function ManageActivityForm({
           activity={activity}
           onSave={handleActivitySave}
           onCancel={onCancel || (() => {})}
+          defaultDay={initialDay}
         />
       </div>
     )
@@ -164,18 +165,19 @@ export function ManageActivityForm({
         activity={activity}
         onSave={handleActivitySave}
         onCancel={onCancel || (() => {})}
+        defaultDay={initialDay}
       />
     </div>
   )
 }
 
 // Helper functions
-function getFormComponent(type: SimpleActivity['type']) {
+function getFormComponent(type: ActivityType) {
   switch (type) {
     case 'flight':
       return FlightForm
-    case 'hotel':
-      return HotelForm
+    case 'stay':
+      return StayForm
     case 'event':
       return EventForm
     case 'transport':
@@ -187,12 +189,12 @@ function getFormComponent(type: SimpleActivity['type']) {
   }
 }
 
-function getTypeIcon(type: SimpleActivity['type']): string {
+function getTypeIcon(type: ActivityType): string {
   const typeInfo = activityTypes.find(t => t.value === type)
   return typeInfo?.icon || '📝'
 }
 
-function getTypeLabel(type: SimpleActivity['type']): string {
+function getTypeLabel(type: ActivityType): string {
   const typeInfo = activityTypes.find(t => t.value === type)
   return typeInfo?.label || 'Activity'
 }

@@ -1,17 +1,17 @@
 'use client'
 
 import { ExternalLink, Plane, Building2, Calendar, Car } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import type { SimpleActivity } from '@/types/simple'
-import { getDateFromDateTime } from '@/lib/mock-data'
+import type { ActivityType, ActivityStatus } from '@/types/simple'
 
 interface RecommendationsSectionProps {
   activity: {
-    type: SimpleActivity['type']
-    status: 'planned' | 'booked'
+    type: ActivityType
+    status: ActivityStatus
     city?: string
-    start: string
-    end?: string
+    day: number
+    time?: string
+    endDay?: number
+    endTime?: string
   }
 }
 
@@ -23,13 +23,9 @@ interface BookingLink {
 }
 
 const generateBookingUrls = (
-  type: SimpleActivity['type'],
-  city?: string,
-  startDate?: string,
-  endDate?: string
+  type: ActivityType,
+  city?: string
 ): BookingLink[] => {
-  const start = startDate ? getDateFromDateTime(startDate) : ''
-  const end = endDate ? getDateFromDateTime(endDate) : ''
   const cityParam = city ? encodeURIComponent(city) : ''
 
   switch (type) {
@@ -37,29 +33,29 @@ const generateBookingUrls = (
       return [
         {
           name: 'Google Flights',
-          url: `https://flights.google.com/search?q=${cityParam}&date=${start}`,
+          url: `https://flights.google.com/search?q=${cityParam}`,
           icon: Plane,
           description: 'Compare flight prices and schedules'
         },
         {
           name: 'Skyscanner',
-          url: `https://skyscanner.com/transport/flights/?to=${cityParam}&outbounddate=${start}`,
+          url: `https://skyscanner.com/transport/flights/?to=${cityParam}`,
           icon: Plane,
           description: 'Find cheap flights worldwide'
         }
       ]
     
-    case 'hotel':
+    case 'stay':
       return [
         {
           name: 'Booking.com',
-          url: `https://booking.com/search?city=${cityParam}&checkin=${start}&checkout=${end || start}`,
+          url: `https://booking.com/search?city=${cityParam}`,
           icon: Building2,
           description: 'Hotels, apartments, and unique stays'
         },
         {
           name: 'Airbnb',
-          url: `https://airbnb.com/s/${cityParam}/homes?checkin=${start}&checkout=${end || start}`,
+          url: `https://airbnb.com/s/${cityParam}/homes`,
           icon: Building2,
           description: 'Vacation rentals and experiences'
         }
@@ -75,7 +71,7 @@ const generateBookingUrls = (
         },
         {
           name: 'Omio',
-          url: `https://omio.com/search?destination=${cityParam}&departure_date=${start}`,
+          url: `https://omio.com/search?destination=${cityParam}`,
           icon: Car,
           description: 'Trains, buses, and flights'
         }
@@ -85,7 +81,7 @@ const generateBookingUrls = (
       return [
         {
           name: 'Eventbrite',
-          url: `https://eventbrite.com/d/${cityParam}/events--${start}`,
+          url: `https://eventbrite.com/d/${cityParam}/events`,
           icon: Calendar,
           description: 'Find events and activities'
         },
@@ -103,16 +99,14 @@ const generateBookingUrls = (
 }
 
 export function RecommendationsSection({ activity }: RecommendationsSectionProps) {
-  // Don't show recommendations for booked activities
-  if (activity.status === 'booked') {
+  // Don't show recommendations for confirmed activities
+  if (activity.status === 'confirmed') {
     return null
   }
 
   const bookingLinks = generateBookingUrls(
     activity.type,
-    activity.city,
-    activity.start,
-    activity.end
+    activity.city
   )
 
   // Don't render if no booking links are available
@@ -127,7 +121,7 @@ export function RecommendationsSection({ activity }: RecommendationsSectionProps
           Booking Recommendations
         </h4>
         <p className="text-xs text-gray-500 dark:text-gray-400">
-          Book this activity to remove these suggestions
+          Mark as confirmed to remove these suggestions
         </p>
       </div>
       
@@ -167,7 +161,7 @@ export function RecommendationsSection({ activity }: RecommendationsSectionProps
         <p className="text-xs text-amber-700 dark:text-amber-300 flex items-start gap-2">
           <span className="text-amber-500 mt-0.5">💡</span>
           <span>
-            Tip: These links include your dates and location. Mark as "Booked" once you've completed your reservation.
+            Tip: Mark as "Confirmed" once you've completed your reservation.
           </span>
         </p>
       </div>

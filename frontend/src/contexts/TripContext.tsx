@@ -2,20 +2,20 @@
 
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
-import type { SimpleActivity, SimpleTrip } from '@/types/simple'
+import type { Activity, Trip } from '@/types/simple'
 
 interface TripContextType {
-  selectedActivity: SimpleActivity | null
-  setSelectedActivity: (activity: SimpleActivity | null) => void
+  selectedActivity: Activity | null
+  setSelectedActivity: (activity: Activity | null) => void
   isCreatingActivity: boolean
   setIsCreatingActivity: (isCreating: boolean) => void
-  trip: SimpleTrip | null
-  setTrip: (trip: SimpleTrip | null) => void
+  trip: Trip | null
+  setTrip: (trip: Trip | null) => void
   updateTripName: (name: string) => void
-  activities: SimpleActivity[]
-  setActivities: (activities: SimpleActivity[]) => void
-  addActivity: (activity: Omit<SimpleActivity, 'id'>) => void
-  updateActivity: (id: string, updates: Partial<SimpleActivity>) => void
+  activities: Activity[]
+  setActivities: (activities: Activity[]) => void
+  addActivity: (activity: Omit<Activity, 'id'>) => void
+  updateActivity: (id: string, updates: Partial<Activity>) => void
   deleteActivity: (id: string) => void
 }
 
@@ -34,10 +34,10 @@ interface TripProviderProps {
 }
 
 export function TripProvider({ children }: TripProviderProps) {
-  const [selectedActivity, setSelectedActivity] = useState<SimpleActivity | null>(null)
+  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null)
   const [isCreatingActivity, setIsCreatingActivity] = useState(false)
-  const [trip, setTrip] = useState<SimpleTrip | null>(null)
-  const [activities, setActivities] = useState<SimpleActivity[]>([])
+  const [trip, setTrip] = useState<Trip | null>(null)
+  const [activities, setActivities] = useState<Activity[]>([])
   const [isInternalNavigation, setIsInternalNavigation] = useState(false)
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -61,7 +61,7 @@ export function TripProvider({ children }: TripProviderProps) {
   }, [searchParams, activities])
 
   // Update URL when activity selection changes
-  const handleActivitySelect = (activity: SimpleActivity | null) => {
+  const handleActivitySelect = (activity: Activity | null) => {
     // Mark this as internal navigation to prevent the useEffect from re-selecting
     setIsInternalNavigation(true)
     setSelectedActivity(activity)
@@ -78,15 +78,15 @@ export function TripProvider({ children }: TripProviderProps) {
   }
 
   // CRUD methods for activities
-  const addActivity = (activityData: Omit<SimpleActivity, 'id'>) => {
-    const newActivity: SimpleActivity = {
+  const addActivity = (activityData: Omit<Activity, 'id'>) => {
+    const newActivity: Activity = {
       ...activityData,
       id: `activity_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     }
     setActivities(prevActivities => [...prevActivities, newActivity])
   }
 
-  const updateActivity = (id: string, updates: Partial<SimpleActivity>) => {
+  const updateActivity = (id: string, updates: Partial<Activity>) => {
     setActivities(prevActivities => 
       prevActivities.map(activity => 
         activity.id === id 
