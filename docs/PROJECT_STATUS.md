@@ -38,12 +38,12 @@ The project has a working Gantt chart but needs visual and UX improvements based
 
 **NOTE TO AI:** Tick checkboxes as soon as task has been implemented.
 
-- [ ] Proper datepicker
+- [x] Ability to delete events.
+- [ ] Show suggestions in the timeline view
 - [ ] Save button looks ugly on the edit panel
 - [ ] Recommended section revamp
 - [ ] Assistant revamp
 - [ ] Plan trip wizard revamp
-- [ ] Show suggestions in the timeline view
 
 **Details/edit activity changes**
 - [x] no longer "view"/"edit" modes - it goes straight to edit

@@ -45,14 +45,28 @@ export function expandActivitiesToDays(activities: Activity[]): ExpandedActivity
     }
   })
   
-  // Sort by displayDay, then by time
+  // Sort by displayDay, then by original activity start (day + time), then by activity ID
+  // This keeps multi-day activities together and ordered by when they originally started
   return expanded.sort((a, b) => {
+    // Primary: sort by display day
     if (a.displayDay !== b.displayDay) {
       return a.displayDay - b.displayDay
     }
+    
+    // Secondary: sort by original activity start day
+    if (a.day !== b.day) {
+      return a.day - b.day
+    }
+    
+    // Tertiary: sort by original start time
     const aTime = a.time ?? '00:00'
     const bTime = b.time ?? '00:00'
-    return aTime.localeCompare(bTime)
+    if (aTime !== bTime) {
+      return aTime.localeCompare(bTime)
+    }
+    
+    // Quaternary: keep same activity's days together (by ID)
+    return a.id.localeCompare(b.id)
   })
 }
 

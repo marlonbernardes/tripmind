@@ -1,18 +1,50 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { TripCard } from '@/components/features/TripCard'
-import { mockTrips } from '@/lib/mock-data'
+import { tripService } from '@/lib/trip-service'
+import { MAX_TRIP_DURATION } from '@/lib/date-service'
+import type { Trip } from '@/types/simple'
 
 type DateMode = 'fixed' | 'flexible'
 
 export default function TripsPage() {
   const router = useRouter()
+  const [trips, setTrips] = useState<Trip[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [isCreating, setIsCreating] = useState(false)
   const [dateMode, setDateMode] = useState<DateMode>('fixed')
   const [duration, setDuration] = useState(7)
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
   const [locations, setLocations] = useState<string[]>([''])
+  
+  // Load trips on mount
+  useEffect(() => {
+    loadTrips()
+  }, [])
+
+  const loadTrips = async () => {
+    setIsLoading(true)
+    try {
+      const data = await tripService.getTrips()
+      setTrips(data)
+    } catch (error) {
+      console.error('Failed to load trips:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const resetForm = () => {
+    setDateMode('fixed')
+    setDuration(7)
+    setStartDate('')
+    setEndDate('')
+    setLocations([''])
+  }
   
   const addLocation = () => {
     setLocations([...locations, ''])
@@ -31,12 +63,39 @@ export default function TripsPage() {
   // Duration label helper
   const getDurationLabel = (days: number) => {
     if (days === 1) return '1 day'
-    if (days < 7) return `${days} days`
-    if (days === 7) return '1 week'
-    if (days === 14) return '2 weeks'
-    if (days === 21) return '3 weeks'
-    if (days === 28) return '4 weeks'
     return `${days} days`
+  }
+
+  const handleCreateTrip = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsCreating(true)
+
+    try {
+      // Generate trip name from locations
+      const validLocations = locations.filter(l => l.trim())
+      const tripName = validLocations.length > 0 
+        ? validLocations.join(' → ')
+        : 'New Trip'
+
+      const newTrip = await tripService.createTrip({
+        name: tripName,
+        dateMode,
+        ...(dateMode === 'fixed' 
+          ? { startDate, endDate }
+          : { duration }
+        ),
+      })
+
+      // Close modal, reset form, and navigate to new trip
+      setShowCreateModal(false)
+      resetForm()
+      router.push(`/trip/${newTrip.id}/timeline`)
+    } catch (error) {
+      console.error('Failed to create trip:', error)
+      // In a real app, show error toast here
+    } finally {
+      setIsCreating(false)
+    }
   }
 
   return (
@@ -68,41 +127,46 @@ export default function TripsPage() {
           </div>
         </div>
         
-        {mockTrips.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="w-16 h-16 mx-auto mb-4 text-gray-400">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-            </svg>
+        {isLoading ? (
+          <div className="text-center py-12">
+            <div className="w-8 h-8 mx-auto mb-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+            <p className="text-gray-500 dark:text-gray-400">Loading trips...</p>
           </div>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-            No trips yet
-          </h3>
-          <p className="text-gray-500 dark:text-gray-400 mb-6">
-            Create your first trip to start planning your adventure.
-          </p>
-          <div className="flex flex-col items-center gap-3">
-            <button 
-              onClick={() => router.push('/plan')}
-              className="px-6 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors font-medium shadow-sm"
-            >
-              Plan Your First Trip
-            </button>
-            <button 
-              onClick={() => setShowCreateModal(true)}
-              className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors underline"
-            >
-              or create manually
-            </button>
+        ) : trips.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 mx-auto mb-4 text-gray-400">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+              No trips yet
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400 mb-6">
+              Create your first trip to start planning your adventure.
+            </p>
+            <div className="flex flex-col items-center gap-3">
+              <button 
+                onClick={() => router.push('/plan')}
+                className="px-6 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors font-medium shadow-sm"
+              >
+                Plan Your First Trip
+              </button>
+              <button 
+                onClick={() => setShowCreateModal(true)}
+                className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors underline"
+              >
+                or create manually
+              </button>
+            </div>
           </div>
-        </div>
-      ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {mockTrips.map((trip) => (
-            <TripCard key={trip.id} trip={trip} />
-          ))}
-        </div>
-      )}
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {trips.map((trip) => (
+              <TripCard key={trip.id} trip={trip} />
+            ))}
+          </div>
+        )}
 
       {/* Simple Create Trip Modal */}
       {showCreateModal && (
@@ -203,7 +267,9 @@ export default function TripsPage() {
                       Start Date
                     </label>
                     <input 
-                      type="date" 
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                     />
                   </div>
@@ -212,7 +278,10 @@ export default function TripsPage() {
                       End Date
                     </label>
                     <input 
-                      type="date" 
+                      type="date"
+                      value={endDate}
+                      min={startDate}
+                      onChange={(e) => setEndDate(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                     />
                   </div>
@@ -233,16 +302,14 @@ export default function TripsPage() {
                   <input
                     type="range"
                     min="1"
-                    max="30"
+                    max={MAX_TRIP_DURATION}
                     value={duration}
                     onChange={(e) => setDuration(Number(e.target.value))}
                     className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-gray-900 dark:accent-gray-100"
                   />
                   <div className="flex justify-between mt-1 text-xs text-gray-500 dark:text-gray-400">
                     <span>1 day</span>
-                    <span>1 week</span>
-                    <span>2 weeks</span>
-                    <span>1 month</span>
+                    <span>{MAX_TRIP_DURATION} days</span>
                   </div>
                 </div>
               )}
@@ -267,9 +334,11 @@ export default function TripsPage() {
                 </button>
                 <button 
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
+                  disabled={isCreating}
+                  onClick={handleCreateTrip}
+                  className="flex-1 px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Create Trip
+                  {isCreating ? 'Creating...' : 'Create Trip'}
                 </button>
               </div>
             </form>

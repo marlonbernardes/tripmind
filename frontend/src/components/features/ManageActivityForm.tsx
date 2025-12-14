@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useTripContext } from '@/contexts/TripContext'
 import type { Activity, ActivityType } from '@/types/simple'
 import { FlightForm } from './FlightForm'
@@ -23,7 +23,7 @@ export function ManageActivityForm({
   onSave, 
   onCancel 
 }: ManageActivityFormProps) {
-  const { addActivity, updateActivity } = useTripContext()
+  const { addActivity, updateActivity, deleteActivityWithUndo } = useTripContext()
   // For create mode, track type selection in state
   // For edit mode, derive type from the activity prop to react to type changes
   const [createModeType, setCreateModeType] = useState<ActivityType | null>(null)
@@ -43,6 +43,13 @@ export function ManageActivityForm({
     }
   }
 
+  const handleActivityDelete = useCallback(() => {
+    if (activity) {
+      deleteActivityWithUndo(activity.id)
+      onCancel?.() // Close the panel after delete
+    }
+  }, [activity, deleteActivityWithUndo, onCancel])
+
   // If editing, skip type selection and go straight to the form
   if (mode === 'edit' && activity && selectedType) {
     const FormComponent = getFormComponent(selectedType)
@@ -51,6 +58,7 @@ export function ManageActivityForm({
         activity={activity}
         onSave={handleActivitySave}
         onCancel={onCancel || (() => {})}
+        onDelete={handleActivityDelete}
         defaultDay={initialDay}
       />
     )
@@ -108,6 +116,7 @@ export function ManageActivityForm({
       activity={activity}
       onSave={handleActivitySave}
       onCancel={onCancel || (() => {})}
+      onDelete={activity ? handleActivityDelete : undefined}
       defaultDay={initialDay}
     />
   )
@@ -121,7 +130,6 @@ function getFormComponent(type: ActivityType) {
     case 'stay':
       return StayForm
     case 'event':
-      return EventForm
     case 'transport':
     case 'note':
     case 'task':

@@ -6,14 +6,16 @@ import { RecommendationsSection } from './RecommendationsSection'
 import { useTripContext } from '@/contexts/TripContext'
 import { getTripDuration } from '@/lib/date-service'
 import { DaySelect } from '@/components/ui/day-select'
+import { FormActions } from '@/components/ui/form-actions'
 
 interface EventFormProps {
   activity?: Activity
   onSave: (activityData: Omit<Activity, 'id'>) => void
   onCancel: () => void
+  onDelete?: () => void
 }
 
-export function EventForm({ activity, onSave, onCancel }: EventFormProps) {
+export function EventForm({ activity, onSave, onCancel, onDelete }: EventFormProps) {
   const { trip } = useTripContext()
   
   const [formData, setFormData] = useState({
@@ -212,21 +214,11 @@ export function EventForm({ activity, onSave, onCancel }: EventFormProps) {
       )}
 
       {/* Action Buttons */}
-      <div className="flex gap-2 pt-3">
-        <button
-          type="submit"
-          className="flex-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs font-medium"
-        >
-          Save
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-xs font-medium"
-        >
-          Cancel
-        </button>
-      </div>
+      <FormActions
+        onCancel={onCancel}
+        onDelete={onDelete}
+        isEditing={!!activity}
+      />
     </form>
   )
 }

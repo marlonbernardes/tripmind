@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { TopNavbar } from "@/components/ui/top-navbar";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { ToastProvider } from "@/components/ui/toast";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -23,12 +24,14 @@ export default function RootLayout({
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <body className="font-sans antialiased bg-white dark:bg-gray-950">
         <ThemeProvider>
-          <div className="grid grid-rows-[auto_1fr] h-dvh overflow-hidden">
-            <TopNavbar />
-            <main className="overflow-hidden bg-white dark:bg-gray-950">
-              {children}
-            </main>
-          </div>
+          <ToastProvider>
+            <div className="grid grid-rows-[auto_1fr] h-dvh overflow-hidden">
+              <TopNavbar />
+              <main className="overflow-hidden bg-white dark:bg-gray-950">
+                {children}
+              </main>
+            </div>
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>

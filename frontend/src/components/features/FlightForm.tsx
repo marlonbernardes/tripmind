@@ -5,15 +5,17 @@ import type { Activity, FlightMetadata, ActivityStatus } from '@/types/simple'
 import { RecommendationsSection } from './RecommendationsSection'
 import { useTripContext } from '@/contexts/TripContext'
 import { DaySelect } from '@/components/ui/day-select'
+import { FormActions } from '@/components/ui/form-actions'
 
 interface FlightFormProps {
   activity?: Activity
   onSave: (activityData: Omit<Activity, 'id'>) => void
   onCancel: () => void
+  onDelete?: () => void
   defaultDay?: number
 }
 
-export function FlightForm({ activity, onSave, onCancel, defaultDay = 1 }: FlightFormProps) {
+export function FlightForm({ activity, onSave, onCancel, onDelete, defaultDay = 1 }: FlightFormProps) {
   const { trip } = useTripContext()
   const [formData, setFormData] = useState({
     from: '',
@@ -255,21 +257,11 @@ export function FlightForm({ activity, onSave, onCancel, defaultDay = 1 }: Fligh
       )}
 
       {/* Action Buttons */}
-      <div className="flex gap-2 pt-3">
-        <button
-          type="submit"
-          className="flex-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs font-medium"
-        >
-          Save
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-xs font-medium"
-        >
-          Cancel
-        </button>
-      </div>
+      <FormActions
+        onCancel={onCancel}
+        onDelete={onDelete}
+        isEditing={!!activity}
+      />
     </form>
   )
 }

@@ -6,6 +6,7 @@ import type { Trip, FixedTrip, FlexibleTrip } from '@/types/simple'
 import { isFixedTrip } from '@/types/simple'
 import { useTripContext } from '@/contexts/TripContext'
 import { getTripDuration, MAX_TRIP_DURATION } from '@/lib/date-service'
+import { tripService } from '@/lib/trip-service'
 
 // Preset trip colors
 const TRIP_COLORS = [
@@ -87,36 +88,35 @@ export function TripConfigTab({ onClose }: TripConfigTabProps) {
     }
   }, [trip])
 
-  const handleSave = () => {
+  const [isSaving, setIsSaving] = useState(false)
+
+  const handleSave = async () => {
     if (!trip) return
     
     // Prevent saving if duration is invalid
     if (isDurationInvalid) return
 
-    let updatedTrip: Trip
-    
-    if (formData.dateMode === 'fixed') {
-      updatedTrip = {
-        id: trip.id,
+    setIsSaving(true)
+    try {
+      const updatedTrip = await tripService.updateTrip(trip.id, {
         name: formData.name,
         color: formData.color,
-        dateMode: 'fixed',
-        startDate: formData.startDate,
-        endDate: formData.endDate,
-      } as FixedTrip
-    } else {
-      updatedTrip = {
-        id: trip.id,
-        name: formData.name,
-        color: formData.color,
-        dateMode: 'flexible',
-        duration: formData.duration,
-      } as FlexibleTrip
-    }
+        dateMode: formData.dateMode,
+        ...(formData.dateMode === 'fixed'
+          ? { startDate: formData.startDate, endDate: formData.endDate }
+          : { duration: formData.duration }
+        ),
+      })
 
-    setTrip(updatedTrip)
-    setSelectedActivity(null) // Clear any selected activity to prevent stale data
-    onClose?.()
+      setTrip(updatedTrip)
+      setSelectedActivity(null) // Clear any selected activity to prevent stale data
+      onClose?.()
+    } catch (error) {
+      console.error('Failed to save trip:', error)
+      // In a real app, show error toast here
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const handleDateModeChange = (mode: 'fixed' | 'flexible') => {
@@ -310,14 +310,14 @@ export function TripConfigTab({ onClose }: TripConfigTabProps) {
         <button
           type="button"
           onClick={handleSave}
-          disabled={isDurationInvalid}
+          disabled={isDurationInvalid || isSaving}
           className={`w-full px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
-            isDurationInvalid
+            isDurationInvalid || isSaving
               ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
               : 'bg-blue-600 text-white hover:bg-blue-700'
           }`}
         >
-          Save Changes
+          {isSaving ? 'Saving...' : 'Save Changes'}
         </button>
       </div>
     </div>

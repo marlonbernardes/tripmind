@@ -1,8 +1,10 @@
 'use client'
 
-import { createContext, useContext, useState, ReactNode, useEffect } from 'react'
+import { createContext, useContext, useState, ReactNode, useEffect, useRef, useCallback } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import type { Activity, Trip } from '@/types/simple'
+import { useToast } from '@/components/ui/toast'
+import { tripService } from '@/lib/trip-service'
 
 interface TripContextType {
   selectedActivity: Activity | null
@@ -17,6 +19,7 @@ interface TripContextType {
   addActivity: (activity: Omit<Activity, 'id'>) => void
   updateActivity: (id: string, updates: Partial<Activity>) => void
   deleteActivity: (id: string) => void
+  deleteActivityWithUndo: (id: string) => void
 }
 
 const TripContext = createContext<TripContextType | undefined>(undefined)
@@ -112,6 +115,67 @@ export function TripProvider({ children }: TripProviderProps) {
     }
   }
 
+  // Pending deletion tracking for undo functionality
+  const pendingDeletionRef = useRef<{
+    activity: Activity
+    timeoutId: NodeJS.Timeout
+  } | null>(null)
+
+  const { showToast, hideToast } = useToast()
+
+  const deleteActivityWithUndo = useCallback((id: string) => {
+    // Find the activity to delete
+    const activityToDelete = activities.find(a => a.id === id)
+    if (!activityToDelete) return
+
+    // Clear any existing pending deletion
+    if (pendingDeletionRef.current) {
+      clearTimeout(pendingDeletionRef.current.timeoutId)
+      // Commit the previous pending deletion
+      tripService.deleteActivity(pendingDeletionRef.current.activity.id)
+    }
+
+    // Optimistically remove from UI
+    setActivities(prevActivities => 
+      prevActivities.filter(activity => activity.id !== id)
+    )
+
+    // Clear selected activity if it's the one being deleted
+    if (selectedActivity?.id === id) {
+      handleActivitySelect(null)
+    }
+
+    // Set up the delayed permanent deletion
+    const timeoutId = setTimeout(() => {
+      // Actually delete from service
+      tripService.deleteActivity(id)
+      pendingDeletionRef.current = null
+    }, 5000)
+
+    pendingDeletionRef.current = {
+      activity: activityToDelete,
+      timeoutId
+    }
+
+    // Show toast with undo action
+    showToast({
+      message: 'Activity deleted',
+      action: {
+        label: 'Undo',
+        onClick: () => {
+          // Cancel the pending deletion
+          if (pendingDeletionRef.current?.activity.id === id) {
+            clearTimeout(pendingDeletionRef.current.timeoutId)
+            // Restore the activity
+            setActivities(prev => [...prev, activityToDelete])
+            pendingDeletionRef.current = null
+          }
+        }
+      },
+      duration: 5000
+    })
+  }, [activities, selectedActivity, showToast])
+
   const updateTripName = (name: string) => {
     if (trip) {
       setTrip({ ...trip, name })
@@ -133,6 +197,7 @@ export function TripProvider({ children }: TripProviderProps) {
         addActivity,
         updateActivity,
         deleteActivity,
+        deleteActivityWithUndo,
       }}
     >
       {children}

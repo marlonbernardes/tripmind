@@ -1,11 +1,10 @@
 'use client'
 
-import { ReactNode, useEffect } from 'react'
+import { ReactNode, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { TripProvider, useTripContext } from '@/contexts/TripContext'
 import { TripHeader } from './TripHeader'
-import { mockTrips, getActivitiesForTrip } from '@/lib/mock-data'
-import { isFixedTrip } from '@/types/simple'
+import { tripService } from '@/lib/trip-service'
 
 interface TripLayoutProps {
   children: ReactNode
@@ -15,21 +14,47 @@ interface TripLayoutProps {
 
 function TripLayoutContent({ children, tripId }: { children: ReactNode; tripId: string }) {
   const { trip, setTrip, activities, setActivities } = useTripContext()
+  const [isLoading, setIsLoading] = useState(true)
 
-  // Load trip and activities data
+  // Load trip and activities data from service
   useEffect(() => {
-    const tripData = mockTrips.find(t => t.id === tripId)
-    const activitiesData = getActivitiesForTrip(tripId)
-    
-    if (tripData) {
-      // Set the trip data directly - mock data already has correct shape
-      setTrip(tripData)
-      setActivities(activitiesData)
-    } else {
-      setTrip(null)
-      setActivities([])
+    async function loadTripData() {
+      setIsLoading(true)
+      try {
+        const [tripData, activitiesData] = await Promise.all([
+          tripService.getTrip(tripId),
+          tripService.getActivities(tripId)
+        ])
+        
+        if (tripData) {
+          setTrip(tripData)
+          setActivities(activitiesData)
+        } else {
+          setTrip(null)
+          setActivities([])
+        }
+      } catch (error) {
+        console.error('Failed to load trip:', error)
+        setTrip(null)
+        setActivities([])
+      } finally {
+        setIsLoading(false)
+      }
     }
+    
+    loadTripData()
   }, [tripId, setTrip, setActivities])
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full min-h-screen">
+        <div className="text-center">
+          <div className="w-8 h-8 mx-auto mb-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+          <p className="text-gray-500 dark:text-gray-400">Loading trip...</p>
+        </div>
+      </div>
+    )
+  }
 
   if (!trip) {
     return (
