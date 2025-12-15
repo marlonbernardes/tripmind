@@ -7,7 +7,8 @@
  */
 
 import type { Trip, Activity, Suggestion, StaySuggestionContext, FlightSuggestionContext } from '@/types/simple'
-import { getTripDuration } from './date-service'
+import { isFixedTrip } from '@/types/simple'
+import { getTripDuration, formatShortDayHeader } from './date-service'
 
 // In-memory store for dismissed suggestions (session-only for MVP)
 const dismissedSuggestionIds = new Set<string>()
@@ -56,7 +57,8 @@ export function clearDismissedSuggestions(): void {
  * Logic:
  * 1. For each night of the trip (night N = between Day N and Day N+1)
  * 2. Check if any 'stay' activity spans that night
- * 3. Group consecutive missing nights into single suggestions
+ * 3. Check if any flight "covers" that night (overnight flight or early morning departure)
+ * 4. Group consecutive missing nights into single suggestions
  */
 function generateMissingStaySuggestions(
   tripId: string,
@@ -85,6 +87,28 @@ function generateMissingStaySuggestions(
     }
   }
   
+  // Also check flights that "cover" nights:
+  // 1. Overnight flights (endDay > day) cover the departure night
+  // 2. Early morning flights (before 06:00) mean you're at the airport overnight
+  const flightActivities = activities.filter(a => a.type === 'flight' || a.type === 'transport')
+  
+  for (const flight of flightActivities) {
+    const departureDay = flight.day
+    const arrivalDay = flight.endDay || flight.day
+    const departureTime = flight.time || '12:00'
+    
+    // Overnight flight: covers the departure night (you're on the plane)
+    if (arrivalDay > departureDay) {
+      coveredNights.add(departureDay)
+    }
+    
+    // Early morning flight (before 06:00): covers previous night 
+    // (you're at the airport or traveling to it)
+    if (departureTime < '06:00' && departureDay > 1) {
+      coveredNights.add(departureDay - 1)
+    }
+  }
+  
   // Find missing nights and group consecutive ones
   let missingStart: number | null = null
   let missingEnd: number | null = null
@@ -102,7 +126,7 @@ function generateMissingStaySuggestions(
     } else {
       // Night is covered - if we had a gap, create suggestion
       if (missingStart !== null && missingEnd !== null) {
-        suggestions.push(createStaySuggestion(tripId, missingStart, missingEnd, lastCity))
+        suggestions.push(createStaySuggestion(tripId, trip, missingStart, missingEnd, lastCity))
         missingStart = null
         missingEnd = null
       }
@@ -111,7 +135,7 @@ function generateMissingStaySuggestions(
   
   // Handle trailing missing nights
   if (missingStart !== null && missingEnd !== null) {
-    suggestions.push(createStaySuggestion(tripId, missingStart, missingEnd, lastCity))
+    suggestions.push(createStaySuggestion(tripId, trip, missingStart, missingEnd, lastCity))
   }
   
   return suggestions
@@ -119,14 +143,30 @@ function generateMissingStaySuggestions(
 
 function createStaySuggestion(
   tripId: string,
+  trip: Trip,
   startNight: number,
   endNight: number,
   city: string
 ): Suggestion {
+  // Format night label based on trip type
+  let nightLabel: string
   const nightCount = endNight - startNight + 1
-  const nightLabel = nightCount === 1 
-    ? `night ${startNight}` 
-    : `nights ${startNight}-${endNight}`
+  
+  if (isFixedTrip(trip)) {
+    // For fixed trips, show actual dates
+    const startDate = formatShortDayHeader(trip, startNight)
+    if (nightCount === 1) {
+      nightLabel = startDate
+    } else {
+      const endDate = formatShortDayHeader(trip, endNight)
+      nightLabel = `${startDate} - ${endDate}`
+    }
+  } else {
+    // For flexible trips, show night numbers
+    nightLabel = nightCount === 1 
+      ? `night ${startNight}` 
+      : `nights ${startNight}-${endNight}`
+  }
   
   const context: StaySuggestionContext = {
     type: 'stay',
@@ -233,9 +273,29 @@ function generateMissingFlightSuggestions(
 // ==================== HELPER FUNCTIONS ====================
 
 /**
- * Get the city for activities on a specific day.
+ * Get the city where the user will be spending the night on a specific day.
+ * 
+ * Priority:
+ * 1. Check for flights/transport arriving on this day - use destination city
+ * 2. Fall back to activities on this day - use their city
  */
 function getCityForDay(activities: Activity[], day: number): string | null {
+  // First, check for flights/transport arriving on this day
+  // These indicate where the user will be after traveling
+  const arrivingTransport = activities.find(a => 
+    (a.type === 'flight' || a.type === 'transport') &&
+    (a.endDay || a.day) === day
+  )
+  
+  if (arrivingTransport) {
+    // Try to get the destination city from metadata
+    const metadata = arrivingTransport.metadata as { to?: string } | undefined
+    if (metadata?.to) {
+      return metadata.to
+    }
+  }
+  
+  // Fall back to activities on this day
   const dayActivities = activities.filter(a => 
     a.day === day || (a.day <= day && (a.endDay || a.day) >= day)
   )

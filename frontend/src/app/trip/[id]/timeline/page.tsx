@@ -662,7 +662,7 @@ function TimelineContent() {
                     selectedActivityId={selectedActivity?.id}
                     selectedSuggestionId={selectedSuggestion?.id}
                     onActivitySelect={setSelectedActivity}
-                    onActivityDelete={deleteActivity}
+                    onActivityDelete={deleteActivityWithUndo}
                     onSuggestionSelect={setSelectedSuggestion}
                     onSuggestionDismiss={dismissSuggestion}
                     isCollapsed={collapsedGroups.has(group.key)}

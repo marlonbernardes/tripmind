@@ -2,8 +2,9 @@
 
 import { ExternalLink, Plane, Building2, Plus } from 'lucide-react'
 import type { Suggestion, Trip, StaySuggestionContext, FlightSuggestionContext } from '@/types/simple'
+import { isFixedTrip } from '@/types/simple'
 import { getActivityIcon, getActivityLabel, getActivityColor } from '@/lib/activity-config'
-import { resolveDayToDate, formatSkyscannerDate } from '@/lib/date-service'
+import { resolveDayToDate, formatSkyscannerDate, formatShortDayHeader } from '@/lib/date-service'
 
 interface SuggestionDetailViewProps {
   suggestion: Suggestion
@@ -133,10 +134,16 @@ export function SuggestionDetailView({ suggestion, trip, onCreateActivity }: Sug
               <span className="text-gray-500">City:</span> {suggestion.context.city}
             </p>
             <p className="text-gray-700 dark:text-gray-300">
-              <span className="text-gray-500">Check-in:</span> Day {suggestion.context.checkInDay}
+              <span className="text-gray-500">Check-in:</span>{' '}
+              {isFixedTrip(trip) 
+                ? formatShortDayHeader(trip, suggestion.context.checkInDay)
+                : `Day ${suggestion.context.checkInDay}`}
             </p>
             <p className="text-gray-700 dark:text-gray-300">
-              <span className="text-gray-500">Check-out:</span> Day {suggestion.context.checkOutDay}
+              <span className="text-gray-500">Check-out:</span>{' '}
+              {isFixedTrip(trip)
+                ? formatShortDayHeader(trip, suggestion.context.checkOutDay)
+                : `Day ${suggestion.context.checkOutDay}`}
             </p>
           </div>
         )}
@@ -149,7 +156,10 @@ export function SuggestionDetailView({ suggestion, trip, onCreateActivity }: Sug
               <span className="text-gray-500">To:</span> {suggestion.context.destinationCity}
             </p>
             <p className="text-gray-700 dark:text-gray-300">
-              <span className="text-gray-500">Departure:</span> Day {suggestion.context.departureDay}
+              <span className="text-gray-500">Departure:</span>{' '}
+              {isFixedTrip(trip)
+                ? formatShortDayHeader(trip, suggestion.context.departureDay)
+                : `Day ${suggestion.context.departureDay}`}
             </p>
           </div>
         )}

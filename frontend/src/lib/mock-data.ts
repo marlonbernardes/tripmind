@@ -77,7 +77,13 @@ export const mockActivities: Activity[] = [
       start: { lat: 39.9042, lng: 116.4074 },
       end: { lat: 13.7563, lng: 100.5018 }
     },
-    status: 'confirmed'
+    status: 'confirmed',
+    metadata: {
+      from: 'Beijing',
+      to: 'Bangkok',
+      flightNumber: 'HU429',
+      airline: 'Hainan Airlines'
+    } as FlightMetadata
   },
   {
     id: 'a3',
@@ -93,7 +99,13 @@ export const mockActivities: Activity[] = [
       start: { lat: 13.7563, lng: 100.5018 },
       end: { lat: 7.8804, lng: 98.3923 }
     },
-    status: 'confirmed'
+    status: 'confirmed',
+    metadata: {
+      from: 'Bangkok',
+      to: 'Phuket',
+      flightNumber: 'VZ2304',
+      airline: 'VietJet Air'
+    } as FlightMetadata
   },
   {
     id: 'a4',
@@ -148,7 +160,13 @@ export const mockActivities: Activity[] = [
       start: { lat: 8.1053402, lng: 98.3005581 },
       end: { lat: 13.7563, lng: 100.5018 }
     },
-    status: 'confirmed'
+    status: 'confirmed',
+    metadata: {
+      from: 'Phuket',
+      to: 'Bangkok',
+      flightNumber: 'VZ309',
+      airline: 'VietJet Air'
+    } as FlightMetadata
   },
   // Day 6: Jan 13 - Bangkok to Maldives
   {
@@ -165,7 +183,13 @@ export const mockActivities: Activity[] = [
       start: { lat: 13.9150135, lng: 100.6029074 },
       end: { lat: 4.1887763, lng: 73.5248302 }
     },
-    status: 'confirmed'
+    status: 'confirmed',
+    metadata: {
+      from: 'Bangkok',
+      to: 'Maldives',
+      flightNumber: 'FD175',
+      airline: 'Thai AirAsia'
+    } as FlightMetadata
   },
   // Day 6-10: Jan 13-17 - Maldives
   {
@@ -196,7 +220,12 @@ export const mockActivities: Activity[] = [
       start: { lat: 3.2028, lng: 73.2207 },
       end: { lat: 13.7563, lng: 100.5018 }
     },
-    status: 'confirmed'
+    status: 'confirmed',
+    metadata: {
+      from: 'Maldives',
+      to: 'Bangkok',
+      airline: 'Thai AirAsia'
+    } as FlightMetadata
   },
   // Day 10-14: Jan 17-21 - Bangkok
   {
@@ -227,7 +256,13 @@ export const mockActivities: Activity[] = [
       start: { lat: 13.6900, lng: 100.7501 },
       end: { lat: 39.9042, lng: 116.4074 }
     },
-    status: 'confirmed'
+    status: 'confirmed',
+    metadata: {
+      from: 'Bangkok',
+      to: 'Beijing',
+      flightNumber: 'HU430',
+      airline: 'Hainan Airlines'
+    } as FlightMetadata
   },
   // Day 15: Jan 22 - Beijing to Dublin
   {
@@ -244,7 +279,13 @@ export const mockActivities: Activity[] = [
       start: { lat: 39.9042, lng: 116.4074 },
       end: { lat: 53.4264, lng: -6.2499 }
     },
-    status: 'confirmed'
+    status: 'confirmed',
+    metadata: {
+      from: 'Beijing',
+      to: 'Dublin',
+      flightNumber: 'HU751',
+      airline: 'Hainan Airlines'
+    } as FlightMetadata
   },
   
   // European Summer activities (starts Jun 10)
