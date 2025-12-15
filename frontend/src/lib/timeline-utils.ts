@@ -1,4 +1,4 @@
-import type { Trip, Activity } from '@/types/simple'
+import type { Trip, Activity, Suggestion, ActivityType } from '@/types/simple'
 import { compareActivities, formatShortDayHeader, formatDayOfWeek, getTripDuration } from './date-service'
 
 export interface ExpandedActivity extends Activity {
@@ -120,4 +120,133 @@ export function formatShortDate(trip: Trip, day: number): string {
  */
 export function getDayOfWeek(trip: Trip, day: number): string {
   return formatDayOfWeek(trip, day)
+}
+
+// ==================== SUGGESTION GROUPING ====================
+
+/**
+ * Groups suggestions by their day property.
+ * 
+ * @param suggestions - Array of suggestions to group
+ * @returns Object with day number keys and arrays of suggestions
+ */
+export function groupSuggestionsByDay(suggestions: Suggestion[]): Record<number, Suggestion[]> {
+  const grouped: Record<number, Suggestion[]> = {}
+  
+  suggestions.forEach(suggestion => {
+    const day = suggestion.day
+    if (!grouped[day]) {
+      grouped[day] = []
+    }
+    grouped[day].push(suggestion)
+  })
+  
+  return grouped
+}
+
+/**
+ * Maps a suggestion's context type to the corresponding activity type.
+ * This is used to determine which type section a suggestion belongs to.
+ * 
+ * @param suggestion - The suggestion to get the activity type for
+ * @returns The corresponding activity type
+ */
+export function getSuggestionActivityType(suggestion: Suggestion): ActivityType {
+  const contextType = suggestion.context?.type
+  
+  switch (contextType) {
+    case 'stay':
+      return 'stay'
+    case 'flight':
+      return 'flight'
+    default:
+      // Default to 'event' for unknown types
+      return 'event'
+  }
+}
+
+/**
+ * Groups suggestions by their mapped activity type.
+ * Uses the suggestion's context.type to determine the activity type.
+ * 
+ * @param suggestions - Array of suggestions to group
+ * @returns Object with activity type keys and arrays of suggestions
+ */
+export function groupSuggestionsByActivityType(suggestions: Suggestion[]): Record<ActivityType, Suggestion[]> {
+  const grouped: Record<ActivityType, Suggestion[]> = {
+    flight: [],
+    stay: [],
+    event: [],
+    transport: [],
+    note: [],
+    task: []
+  }
+  
+  suggestions.forEach(suggestion => {
+    const activityType = getSuggestionActivityType(suggestion)
+    grouped[activityType].push(suggestion)
+  })
+  
+  return grouped
+}
+
+/**
+ * Sort suggestions by day for chronological display.
+ * 
+ * @param suggestions - Array of suggestions to sort
+ * @returns New sorted array of suggestions
+ */
+export function sortSuggestionsByDay(suggestions: Suggestion[]): Suggestion[] {
+  return [...suggestions].sort((a, b) => a.day - b.day)
+}
+
+// ==================== MERGED TIMELINE ITEMS ====================
+
+/**
+ * A timeline item that can be either an activity or a suggestion.
+ * Used for the flat "All" view where items are interleaved by day.
+ */
+export type TimelineItem = 
+  | { type: 'activity'; item: ExpandedActivity }
+  | { type: 'suggestion'; item: Suggestion }
+
+/**
+ * Merges expanded activities and suggestions into a single sorted list.
+ * Items are sorted by day, with suggestions appearing first within each day.
+ * 
+ * @param activities - Array of expanded activities
+ * @param suggestions - Array of suggestions
+ * @returns Merged and sorted array of timeline items
+ */
+export function mergeActivitiesAndSuggestions(
+  activities: ExpandedActivity[],
+  suggestions: Suggestion[]
+): TimelineItem[] {
+  const items: TimelineItem[] = [
+    ...activities.map(a => ({ type: 'activity' as const, item: a })),
+    ...suggestions.map(s => ({ type: 'suggestion' as const, item: s }))
+  ]
+  
+  // Sort by day, then suggestions before activities within the same day
+  items.sort((a, b) => {
+    const dayA = a.type === 'activity' ? a.item.displayDay : a.item.day
+    const dayB = b.type === 'activity' ? b.item.displayDay : b.item.day
+    
+    if (dayA !== dayB) return dayA - dayB
+    
+    // Same day: suggestions first
+    if (a.type === 'suggestion' && b.type === 'activity') return -1
+    if (a.type === 'activity' && b.type === 'suggestion') return 1
+    
+    // Both activities: sort by time
+    if (a.type === 'activity' && b.type === 'activity') {
+      const timeA = a.item.time ?? '00:00'
+      const timeB = b.item.time ?? '00:00'
+      return timeA.localeCompare(timeB)
+    }
+    
+    return 0
+  })
+  
+  return items
 }

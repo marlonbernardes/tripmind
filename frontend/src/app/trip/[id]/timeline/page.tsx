@@ -8,7 +8,7 @@ import { TripSidePanel } from '@/components/features/TripSidePanel'
 import { useTripContext } from '@/contexts/TripContext'
 import type { Activity, ActivityType, Trip, Suggestion } from '@/types/simple'
 import { getActivityColor, getActivityLabel, allActivityTypes } from '@/lib/activity-config'
-import { expandActivitiesToDays, groupActivitiesByDay, formatShortDate, getDayOfWeek, getAllTripDays, type ExpandedActivity } from '@/lib/timeline-utils'
+import { expandActivitiesToDays, groupActivitiesByDay, formatShortDate, getDayOfWeek, getAllTripDays, groupSuggestionsByDay, groupSuggestionsByActivityType, mergeActivitiesAndSuggestions, type ExpandedActivity, type TimelineItem } from '@/lib/timeline-utils'
 import { formatDayHeader, compareActivities } from '@/lib/date-service'
 
 interface TimelinePageProps {
@@ -120,25 +120,27 @@ function CompactActivityRow({
         </span>
       )}
       
-      {/* City */}
-      {activity.city && (
-        <span className="text-[10px] text-gray-400 dark:text-gray-500 truncate max-w-20 group-hover:max-w-16 flex-shrink-0 transition-all duration-150">
-          {activity.city}
-        </span>
-      )}
-      
-      {/* Delete button - appears on hover, pushing content left */}
-      {onDelete && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            onDelete()
-          }}
-          className="p-0.5 text-gray-400 hover:text-red-500 dark:hover:text-red-400 flex-shrink-0 w-0 overflow-hidden group-hover:w-4 transition-all duration-150"
-        >
-          <X className="w-3 h-3" />
-        </button>
-      )}
+      {/* City and delete button container - maintains consistent end position */}
+      <div className="flex items-center gap-0 group-hover:gap-1 flex-shrink-0 transition-all duration-150">
+        {activity.city && (
+          <span className="text-[10px] text-gray-400 dark:text-gray-500 truncate max-w-20 group-hover:max-w-16 transition-all duration-150">
+            {activity.city}
+          </span>
+        )}
+        
+        {/* Delete button - appears on hover */}
+        {onDelete && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onDelete()
+            }}
+            className="text-gray-400 hover:text-red-500 dark:hover:text-red-400 w-0 overflow-hidden group-hover:w-4 transition-all duration-150"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        )}
+      </div>
     </div>
   )
 }
@@ -165,21 +167,16 @@ function CompactSuggestionRow({
   return (
     <div 
       onClick={onClick}
-      className={`flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer transition-colors ${
+      className={`group flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer transition-colors ${
         isSelected 
           ? 'bg-amber-100 dark:bg-amber-900/40' 
           : 'bg-amber-50/60 dark:bg-amber-950/30 hover:bg-amber-100/80 dark:hover:bg-amber-900/30'
       }`}
     >
-      {/* Lightbulb icon instead of color dot */}
+      {/* Lightbulb icon */}
       <Lightbulb 
         className="w-3 h-3 flex-shrink-0 text-amber-500"
       />
-      
-      {/* Time placeholder (suggestions don't have specific times) */}
-      <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500 w-10 flex-shrink-0">
-        –
-      </span>
       
       {/* Title and Description */}
       <div className="flex-1 min-w-0">
@@ -198,23 +195,25 @@ function CompactSuggestionRow({
         SUGGESTION
       </span>
       
-      {/* City */}
-      {city && (
-        <span className="text-[10px] text-gray-400 dark:text-gray-500 truncate max-w-20 flex-shrink-0">
-          {city}
-        </span>
-      )}
-      
-      {/* Dismiss button */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation()
-          onDismiss()
-        }}
-        className="p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex-shrink-0"
-      >
-        <X className="w-3 h-3" />
-      </button>
+      {/* City and dismiss button container - maintains consistent end position */}
+      <div className="flex items-center gap-0 group-hover:gap-1 flex-shrink-0 transition-all duration-150">
+        {city && (
+          <span className="text-[10px] text-gray-400 dark:text-gray-500 truncate max-w-20 group-hover:max-w-16 transition-all duration-150">
+            {city}
+          </span>
+        )}
+        
+        {/* Dismiss button - appears on hover */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            onDismiss()
+          }}
+          className="text-gray-400 hover:text-red-500 dark:hover:text-red-400 w-0 overflow-hidden group-hover:w-4 transition-all duration-150"
+        >
+          <X className="w-3 h-3" />
+        </button>
+      </div>
     </div>
   )
 }
@@ -323,6 +322,28 @@ function CollapsibleSection({
       {/* Activities */}
       {!isCollapsed && (
         <div className="px-1 py-1">
+          {/* Suggestions first - at the top of each group */}
+          {suggestions.map((suggestion, index) => (
+            <div key={suggestion.id}>
+              {index > 0 && (
+                <div className="h-px bg-gray-200/50 dark:bg-gray-700/50 mx-2" />
+              )}
+              <CompactSuggestionRow
+                suggestion={suggestion}
+                trip={trip}
+                isSelected={selectedSuggestionId === suggestion.id}
+                onClick={() => onSuggestionSelect?.(suggestion)}
+                onDismiss={() => onSuggestionDismiss?.(suggestion.id)}
+              />
+            </div>
+          ))}
+          
+          {/* Divider between suggestions and activities */}
+          {suggestions.length > 0 && sortedActivities.length > 0 && (
+            <div className="h-px bg-gray-200/50 dark:bg-gray-700/50 mx-2" />
+          )}
+          
+          {/* Activities */}
           {sortedActivities.map((activity, index) => (
             <div key={activity.id}>
               {index > 0 && (
@@ -338,18 +359,6 @@ function CollapsibleSection({
                 showEndDate={showEndDateInRows}
               />
             </div>
-          ))}
-          
-          {/* Suggestions for this day/group - rendered as rows */}
-          {suggestions.map((suggestion) => (
-            <CompactSuggestionRow
-              key={suggestion.id}
-              suggestion={suggestion}
-              trip={trip}
-              isSelected={selectedSuggestionId === suggestion.id}
-              onClick={() => onSuggestionSelect?.(suggestion)}
-              onDismiss={() => onSuggestionDismiss?.(suggestion.id)}
-            />
           ))}
         </div>
       )}
@@ -427,7 +436,7 @@ function TimelineContent() {
     activities, 
     selectedActivity, 
     setSelectedActivity,
-    deleteActivity,
+    deleteActivityWithUndo,
     suggestions,
     selectedSuggestion,
     setSelectedSuggestion,
@@ -436,15 +445,25 @@ function TimelineContent() {
   const [groupBy, setGroupBy] = useState<GroupByMode>('date')
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
   
-  // Group suggestions by day
+  // All activities expanded and sorted chronologically (for 'none' mode)
+  const activitiesFlat = useMemo(() => {
+    return expandActivitiesToDays(activities)
+  }, [activities])
+  
+  // Group suggestions by day (for Date grouping)
   const suggestionsByDay = useMemo(() => {
-    const grouped: Record<number, Suggestion[]> = {}
-    suggestions.forEach(s => {
-      if (!grouped[s.day]) grouped[s.day] = []
-      grouped[s.day].push(s)
-    })
-    return grouped
+    return groupSuggestionsByDay(suggestions)
   }, [suggestions])
+  
+  // Group suggestions by activity type (for Type grouping)
+  const suggestionsByType = useMemo(() => {
+    return groupSuggestionsByActivityType(suggestions)
+  }, [suggestions])
+  
+  // Merged and sorted timeline items for All mode (flat list)
+  const timelineItems = useMemo(() => {
+    return mergeActivitiesAndSuggestions(activitiesFlat, suggestions)
+  }, [activitiesFlat, suggestions])
   
   // Group activities by day
   const activitiesByDay = useMemo(() => {
@@ -486,21 +505,16 @@ function TimelineContent() {
       }
     })
     
-    // Only return types that have activities
+    // Return types that have activities OR suggestions
     return allActivityTypes
-      .filter(type => grouped[type].length > 0)
+      .filter(type => grouped[type].length > 0 || suggestionsByType[type].length > 0)
       .map(type => ({
         key: type,
         title: getActivityLabel(type),
         color: getActivityColor(type),
         activities: grouped[type]
       }))
-  }, [activities])
-  
-  // All activities expanded and sorted chronologically (for 'none' mode)
-  const activitiesFlat = useMemo(() => {
-    return expandActivitiesToDays(activities)
-  }, [activities])
+  }, [activities, suggestionsByType])
   
   // Get current groups based on groupBy mode
   const currentGroups = groupBy === 'date' ? activitiesByDay : groupBy === 'type' ? activitiesByType : []
@@ -583,23 +597,33 @@ function TimelineContent() {
           ) : (
             <div>
               {groupBy === 'none' ? (
-                // Flat list - no grouping (with multi-day expansion)
+                // Flat list - merged activities and suggestions sorted by day
                 <div className="px-1 py-1">
-                  {activitiesFlat.map((expandedActivity, index) => (
-                    <div key={`${expandedActivity.id}-day-${expandedActivity.displayDay}`}>
+                  {timelineItems.map((item, index) => (
+                    <div key={item.type === 'activity' ? `${item.item.id}-day-${item.item.displayDay}` : item.item.id}>
                       {index > 0 && (
                         <div className="h-px bg-gray-200/50 dark:bg-gray-700/50 mx-2" />
                       )}
-                      <CompactActivityRow
-                        activity={expandedActivity}
-                        trip={trip}
-                        displayDay={expandedActivity.displayDay}
-                        dayInfo={expandedActivity.dayNumber ? { dayNumber: expandedActivity.dayNumber, totalDays: expandedActivity.totalDays! } : undefined}
-                        isSelected={selectedActivity?.id === expandedActivity.id}
-                        onClick={() => setSelectedActivity(expandedActivity)}
-                        onDelete={() => deleteActivity(expandedActivity.id)}
-                        showDate
-                      />
+                      {item.type === 'suggestion' ? (
+                        <CompactSuggestionRow
+                          suggestion={item.item}
+                          trip={trip}
+                          isSelected={selectedSuggestion?.id === item.item.id}
+                          onClick={() => setSelectedSuggestion(item.item)}
+                          onDismiss={() => dismissSuggestion(item.item.id)}
+                        />
+                      ) : (
+                        <CompactActivityRow
+                          activity={item.item}
+                          trip={trip}
+                          displayDay={item.item.displayDay}
+                          dayInfo={item.item.dayNumber ? { dayNumber: item.item.dayNumber, totalDays: item.item.totalDays! } : undefined}
+                          isSelected={selectedActivity?.id === item.item.id}
+                          onClick={() => setSelectedActivity(item.item)}
+                          onDelete={() => deleteActivityWithUndo(item.item.id)}
+                          showDate
+                        />
+                      )}
                     </div>
                   ))}
                 </div>
@@ -617,7 +641,7 @@ function TimelineContent() {
                     selectedActivityId={selectedActivity?.id}
                     selectedSuggestionId={selectedSuggestion?.id}
                     onActivitySelect={setSelectedActivity}
-                    onActivityDelete={deleteActivity}
+                    onActivityDelete={deleteActivityWithUndo}
                     onSuggestionSelect={setSelectedSuggestion}
                     onSuggestionDismiss={dismissSuggestion}
                     isCollapsed={collapsedGroups.has(group.key)}
@@ -633,10 +657,14 @@ function TimelineContent() {
                     groupKey={group.key}
                     title={group.title}
                     activities={group.activities}
+                    suggestions={suggestionsByType[group.key as keyof typeof suggestionsByType] || []}
                     trip={trip}
                     selectedActivityId={selectedActivity?.id}
+                    selectedSuggestionId={selectedSuggestion?.id}
                     onActivitySelect={setSelectedActivity}
                     onActivityDelete={deleteActivity}
+                    onSuggestionSelect={setSelectedSuggestion}
+                    onSuggestionDismiss={dismissSuggestion}
                     isCollapsed={collapsedGroups.has(group.key)}
                     onToggleCollapse={handleToggleCollapse}
                     onAddActivity={handleAddActivity}
