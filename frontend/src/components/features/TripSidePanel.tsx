@@ -1,16 +1,16 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { FileText, Lightbulb, MessageSquare, Plus, Settings } from 'lucide-react'
+import { FileText, MessageSquare, Plus, Settings, X } from 'lucide-react'
 import { useTripContext } from '@/contexts/TripContext'
 import { ManageActivityForm } from './ManageActivityForm'
 import { ActivityReadView } from './ActivityReadView'
-import { RecommendationsSection } from './RecommendationsSection'
+import { SuggestionDetailView } from './SuggestionDetailView'
 import { TripAIChat } from './TripAIChat'
 import { TripConfigTab } from './TripConfigTab'
 import { getActivityIcon, getActivityLabel } from '@/lib/activity-config'
 
-type TabType = 'details' | 'recommend' | 'assistant' | 'config'
+type TabType = 'details' | 'assistant' | 'config'
 type ViewMode = 'view' | 'edit'
 
 interface TripSidePanelProps {
@@ -19,12 +19,20 @@ interface TripSidePanelProps {
 }
 
 export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
-  const { selectedActivity, setSelectedActivity, isCreatingActivity, setIsCreatingActivity } = useTripContext()
+  const { 
+    selectedActivity, 
+    setSelectedActivity, 
+    isCreatingActivity, 
+    setIsCreatingActivity,
+    trip,
+    selectedSuggestion,
+    setSelectedSuggestion
+  } = useTripContext()
   const [activeTab, setActiveTab] = useState<TabType>('details')
   const [viewMode, setViewMode] = useState<ViewMode>(defaultViewMode ? 'view' : 'edit')
   const previousActivityId = useRef<string | null>(null)
 
-  // Auto-switch to details tab when an activity is selected
+  // Auto-switch to details tab when an activity or suggestion is selected
   useEffect(() => {
     if (selectedActivity) {
       setActiveTab('details')
@@ -36,6 +44,13 @@ export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
       previousActivityId.current = selectedActivity.id
     }
   }, [selectedActivity, defaultViewMode])
+
+  // Auto-switch to details tab when a suggestion is selected
+  useEffect(() => {
+    if (selectedSuggestion) {
+      setActiveTab('details')
+    }
+  }, [selectedSuggestion])
 
   const handleClose = () => {
     setSelectedActivity(null)
@@ -79,17 +94,6 @@ export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
               Details
             </button>
             <button
-              onClick={() => setActiveTab('recommend')}
-              className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-colors ${
-                activeTab === 'recommend'
-                  ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
-            >
-              <Lightbulb className="w-3 h-3" />
-              Recommend
-            </button>
-            <button
               onClick={() => setActiveTab('assistant')}
               className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-colors ${
                 activeTab === 'assistant'
@@ -124,6 +128,32 @@ export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
                   onSave={handleSave}
                   onCancel={handleCancel}
                 />
+              ) : selectedSuggestion && trip ? (
+                /* Suggestion view - shows suggestion details with booking links */
+                <div className="flex flex-col h-full -m-4">
+                  <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800">
+                    <h3 className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                      💡 Suggestion
+                    </h3>
+                    <button
+                      onClick={() => setSelectedSuggestion(null)}
+                      className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <div className="p-4">
+                    <SuggestionDetailView
+                      suggestion={selectedSuggestion}
+                      trip={trip}
+                      onCreateActivity={() => {
+                        // TODO: Pre-fill activity form with suggestion data
+                        setSelectedSuggestion(null)
+                        setIsCreatingActivity(true)
+                      }}
+                    />
+                  </div>
+                </div>
               ) : selectedActivity ? (
                 viewMode === 'view' && defaultViewMode ? (
                   /* View mode - shows activity details with Edit button */
@@ -192,21 +222,6 @@ export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
                 )
               ) : (
                 <EmptyDetailsState onAddClick={handleAddActivity} />
-              )}
-            </div>
-          )}
-
-          {activeTab === 'recommend' && (
-            <div className="p-4">
-              {selectedActivity ? (
-                <RecommendationsSection activity={selectedActivity} />
-              ) : (
-                <div className="text-center py-8">
-                  <Lightbulb className="w-8 h-8 mx-auto text-gray-300 dark:text-gray-600 mb-2" />
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Select an activity to see recommendations
-                  </p>
-                </div>
               )}
             </div>
           )}

@@ -197,6 +197,31 @@ export function formatActivityTime(activity: Activity): string {
 }
 
 /**
+ * Resolve a day number to an ISO date string (YYYY-MM-DD) for fixed trips.
+ * Returns empty string for flexible trips.
+ */
+export function resolveDayToDate(trip: Trip, day: number): string {
+  if (!isFixedTrip(trip)) {
+    return '' // Flexible trips don't have fixed dates
+  }
+  
+  const startDate = new Date(trip.startDate)
+  const targetDate = new Date(startDate)
+  targetDate.setDate(startDate.getDate() + (day - 1))
+  
+  return targetDate.toISOString().split('T')[0]
+}
+
+/**
+ * Format date for Skyscanner URL (YYMMDD)
+ */
+export function formatSkyscannerDate(isoDate: string): string {
+  if (!isoDate) return ''
+  const [year, month, day] = isoDate.split('-')
+  return `${year.slice(2)}${month}${day}`
+}
+
+/**
  * Format activity date range for display
  * Shows start time, and end if different day or specified
  */

@@ -121,6 +121,44 @@ export interface TaskMetadata {
   completed?: boolean
 }
 
+// ==================== SUGGESTIONS ====================
+
+export type SuggestionType = 'flight' | 'stay'
+
+// Context for stay/hotel suggestions
+export interface StaySuggestionContext {
+  type: 'stay'
+  city: string           // "Tokyo", "Paris" - for booking site URLs
+  checkInDay: number     // Day number (1-based)
+  checkOutDay: number    // Day number (1-based)
+}
+
+// Context for flight suggestions
+export interface FlightSuggestionContext {
+  type: 'flight'
+  originCity: string         // "Paris"
+  destinationCity: string    // "Tokyo"
+  departureDay: number       // Day number (1-based)
+  // Optional airport codes (backend can enrich these)
+  originAirport?: string     // "CDG"
+  destinationAirport?: string // "NRT"
+}
+
+export type SuggestionContext = StaySuggestionContext | FlightSuggestionContext
+
+export interface Suggestion {
+  id: string
+  tripId: string
+  type: SuggestionType
+  title: string              // "Add accommodation" or "Add a flight"
+  description?: string       // "No hotel for nights 3-4" or "Travel from Paris to Tokyo"
+  day: number                // Where to show in timeline (1-based)
+  dismissed: boolean         // User chose to hide this
+  
+  // Type-specific context for booking links
+  context: SuggestionContext
+}
+
 // ==================== LEGACY TYPE MAPPINGS ====================
 // These help with migration - can be removed once migration is complete
 

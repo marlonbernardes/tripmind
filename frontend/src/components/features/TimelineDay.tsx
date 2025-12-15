@@ -1,5 +1,6 @@
-import type { Activity } from '@/types/simple'
+import type { Activity, Suggestion } from '@/types/simple'
 import { ActivityCard } from './ActivityCard'
+import { SuggestionCard } from './SuggestionCard'
 import { useTripContext } from '@/contexts/TripContext'
 import { compareActivities } from '@/lib/date-service'
 
@@ -7,11 +8,25 @@ interface TimelineDayProps {
   day: number
   dayHeader: string // Pre-formatted header like "Mon, Jan 8" or "Day 1"
   activities: Activity[]
+  suggestions?: Suggestion[]
   selectedActivityId?: string
+  selectedSuggestionId?: string
   onActivitySelect?: (activity: Activity) => void
+  onSuggestionSelect?: (suggestion: Suggestion) => void
+  onSuggestionDismiss?: (id: string) => void
 }
 
-export function TimelineDay({ day, dayHeader, activities, selectedActivityId, onActivitySelect }: TimelineDayProps) {
+export function TimelineDay({ 
+  day, 
+  dayHeader, 
+  activities, 
+  suggestions = [],
+  selectedActivityId,
+  selectedSuggestionId,
+  onActivitySelect,
+  onSuggestionSelect,
+  onSuggestionDismiss
+}: TimelineDayProps) {
   const { setIsCreatingActivity } = useTripContext()
 
   const handleAddActivityClick = () => {
@@ -62,6 +77,21 @@ export function TimelineDay({ day, dayHeader, activities, selectedActivityId, on
           ))}
         </div>
         
+        {/* Suggestions for this day */}
+        {suggestions.length > 0 && (
+          <div className="mt-4 space-y-3">
+            {suggestions.map((suggestion) => (
+              <SuggestionCard
+                key={suggestion.id}
+                suggestion={suggestion}
+                isSelected={selectedSuggestionId === suggestion.id}
+                onClick={() => onSuggestionSelect?.(suggestion)}
+                onDismiss={() => onSuggestionDismiss?.(suggestion.id)}
+              />
+            ))}
+          </div>
+        )}
+
         {/* Add Activity Button */}
         <button 
           onClick={handleAddActivityClick}

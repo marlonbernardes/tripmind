@@ -2,11 +2,11 @@
 
 import { useMemo, useState } from 'react'
 import React from 'react'
-import { ChevronDown, ChevronRight, Calendar, Layers, ChevronsUpDown, Plus, List } from 'lucide-react'
+import { ChevronDown, ChevronRight, Calendar, Layers, ChevronsUpDown, Plus, List, Lightbulb, X } from 'lucide-react'
 import { TripLayout } from '@/components/features/TripLayout'
 import { TripSidePanel } from '@/components/features/TripSidePanel'
 import { useTripContext } from '@/contexts/TripContext'
-import type { Activity, ActivityType, Trip } from '@/types/simple'
+import type { Activity, ActivityType, Trip, Suggestion } from '@/types/simple'
 import { getActivityColor, getActivityLabel, allActivityTypes } from '@/lib/activity-config'
 import { expandActivitiesToDays, groupActivitiesByDay, formatShortDate, getDayOfWeek, getAllTripDays, type ExpandedActivity } from '@/lib/timeline-utils'
 import { formatDayHeader, compareActivities } from '@/lib/date-service'
@@ -27,6 +27,7 @@ function CompactActivityRow({
   dayInfo,
   isSelected, 
   onClick,
+  onDelete,
   showDate = false,
   showEndDate = false
 }: { 
@@ -36,6 +37,7 @@ function CompactActivityRow({
   dayInfo?: { dayNumber: number; totalDays: number } // For multi-day indicators
   isSelected: boolean
   onClick: () => void
+  onDelete?: () => void
   showDate?: boolean
   showEndDate?: boolean // Show end date/time column (for Type grouping)
 }) {
@@ -56,7 +58,7 @@ function CompactActivityRow({
   return (
     <div 
       onClick={onClick}
-      className={`flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer transition-colors ${
+      className={`group flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer transition-colors ${
         isSelected 
           ? 'bg-gray-100 dark:bg-gray-800' 
           : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
@@ -120,10 +122,99 @@ function CompactActivityRow({
       
       {/* City */}
       {activity.city && (
-        <span className="text-[10px] text-gray-400 dark:text-gray-500 truncate max-w-20 flex-shrink-0">
+        <span className="text-[10px] text-gray-400 dark:text-gray-500 truncate max-w-20 group-hover:max-w-16 flex-shrink-0 transition-all duration-150">
           {activity.city}
         </span>
       )}
+      
+      {/* Delete button - appears on hover, pushing content left */}
+      {onDelete && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            onDelete()
+          }}
+          className="p-0.5 text-gray-400 hover:text-red-500 dark:hover:text-red-400 flex-shrink-0 w-0 overflow-hidden group-hover:w-4 transition-all duration-150"
+        >
+          <X className="w-3 h-3" />
+        </button>
+      )}
+    </div>
+  )
+}
+
+// Compact Suggestion Row Component - styled like activity rows but with distinct background
+function CompactSuggestionRow({ 
+  suggestion, 
+  trip,
+  isSelected, 
+  onClick,
+  onDismiss
+}: { 
+  suggestion: Suggestion
+  trip: Trip
+  isSelected: boolean
+  onClick: () => void
+  onDismiss: () => void
+}) {
+  // Get city from context based on suggestion type
+  const city = suggestion.context.type === 'stay' 
+    ? suggestion.context.city 
+    : suggestion.context.destinationCity
+  
+  return (
+    <div 
+      onClick={onClick}
+      className={`flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer transition-colors ${
+        isSelected 
+          ? 'bg-amber-100 dark:bg-amber-900/40' 
+          : 'bg-amber-50/60 dark:bg-amber-950/30 hover:bg-amber-100/80 dark:hover:bg-amber-900/30'
+      }`}
+    >
+      {/* Lightbulb icon instead of color dot */}
+      <Lightbulb 
+        className="w-3 h-3 flex-shrink-0 text-amber-500"
+      />
+      
+      {/* Time placeholder (suggestions don't have specific times) */}
+      <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500 w-10 flex-shrink-0">
+        –
+      </span>
+      
+      {/* Title and Description */}
+      <div className="flex-1 min-w-0">
+        <span className="text-xs text-gray-900 dark:text-white truncate block">
+          {suggestion.title}
+        </span>
+        {suggestion.description && (
+          <span className="text-[10px] text-gray-500 dark:text-gray-400 truncate block">
+            {suggestion.description}
+          </span>
+        )}
+      </div>
+      
+      {/* SUGGESTION pill */}
+      <span className="text-[9px] px-1 py-0.5 rounded bg-amber-200 text-amber-800 dark:bg-amber-800/50 dark:text-amber-300 flex-shrink-0">
+        SUGGESTION
+      </span>
+      
+      {/* City */}
+      {city && (
+        <span className="text-[10px] text-gray-400 dark:text-gray-500 truncate max-w-20 flex-shrink-0">
+          {city}
+        </span>
+      )}
+      
+      {/* Dismiss button */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation()
+          onDismiss()
+        }}
+        className="p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex-shrink-0"
+      >
+        <X className="w-3 h-3" />
+      </button>
     </div>
   )
 }
@@ -134,9 +225,14 @@ function CollapsibleSection({
   title,
   subtitle,
   activities,
+  suggestions = [],
   trip,
   selectedActivityId,
+  selectedSuggestionId,
   onActivitySelect,
+  onActivityDelete,
+  onSuggestionSelect,
+  onSuggestionDismiss,
   isCollapsed,
   onToggleCollapse,
   onAddActivity,
@@ -148,9 +244,14 @@ function CollapsibleSection({
   title: string
   subtitle?: string
   activities: Activity[]
+  suggestions?: Suggestion[]
   trip: Trip
   selectedActivityId?: string
+  selectedSuggestionId?: string
   onActivitySelect: (activity: Activity) => void
+  onActivityDelete?: (activityId: string) => void
+  onSuggestionSelect?: (suggestion: Suggestion) => void
+  onSuggestionDismiss?: (id: string) => void
   isCollapsed: boolean
   onToggleCollapse: (key: string) => void
   onAddActivity: () => void
@@ -232,10 +333,23 @@ function CollapsibleSection({
                 trip={trip}
                 isSelected={selectedActivityId === activity.id}
                 onClick={() => onActivitySelect(activity)}
+                onDelete={onActivityDelete ? () => onActivityDelete(activity.id) : undefined}
                 showDate={showDateInRows}
                 showEndDate={showEndDateInRows}
               />
             </div>
+          ))}
+          
+          {/* Suggestions for this day/group - rendered as rows */}
+          {suggestions.map((suggestion) => (
+            <CompactSuggestionRow
+              key={suggestion.id}
+              suggestion={suggestion}
+              trip={trip}
+              isSelected={selectedSuggestionId === suggestion.id}
+              onClick={() => onSuggestionSelect?.(suggestion)}
+              onDismiss={() => onSuggestionDismiss?.(suggestion.id)}
+            />
           ))}
         </div>
       )}
@@ -308,9 +422,29 @@ function TimelineToolbar({
 }
 
 function TimelineContent() {
-  const { trip, activities, selectedActivity, setSelectedActivity } = useTripContext()
+  const { 
+    trip, 
+    activities, 
+    selectedActivity, 
+    setSelectedActivity,
+    deleteActivity,
+    suggestions,
+    selectedSuggestion,
+    setSelectedSuggestion,
+    dismissSuggestion
+  } = useTripContext()
   const [groupBy, setGroupBy] = useState<GroupByMode>('date')
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
+  
+  // Group suggestions by day
+  const suggestionsByDay = useMemo(() => {
+    const grouped: Record<number, Suggestion[]> = {}
+    suggestions.forEach(s => {
+      if (!grouped[s.day]) grouped[s.day] = []
+      grouped[s.day].push(s)
+    })
+    return grouped
+  }, [suggestions])
   
   // Group activities by day
   const activitiesByDay = useMemo(() => {
@@ -463,6 +597,7 @@ function TimelineContent() {
                         dayInfo={expandedActivity.dayNumber ? { dayNumber: expandedActivity.dayNumber, totalDays: expandedActivity.totalDays! } : undefined}
                         isSelected={selectedActivity?.id === expandedActivity.id}
                         onClick={() => setSelectedActivity(expandedActivity)}
+                        onDelete={() => deleteActivity(expandedActivity.id)}
                         showDate
                       />
                     </div>
@@ -477,9 +612,14 @@ function TimelineContent() {
                     title={group.title}
                     subtitle={group.subtitle}
                     activities={group.activities}
+                    suggestions={suggestionsByDay[group.day] || []}
                     trip={trip}
                     selectedActivityId={selectedActivity?.id}
+                    selectedSuggestionId={selectedSuggestion?.id}
                     onActivitySelect={setSelectedActivity}
+                    onActivityDelete={deleteActivity}
+                    onSuggestionSelect={setSelectedSuggestion}
+                    onSuggestionDismiss={dismissSuggestion}
                     isCollapsed={collapsedGroups.has(group.key)}
                     onToggleCollapse={handleToggleCollapse}
                     onAddActivity={handleAddActivity}
@@ -496,6 +636,7 @@ function TimelineContent() {
                     trip={trip}
                     selectedActivityId={selectedActivity?.id}
                     onActivitySelect={setSelectedActivity}
+                    onActivityDelete={deleteActivity}
                     isCollapsed={collapsedGroups.has(group.key)}
                     onToggleCollapse={handleToggleCollapse}
                     onAddActivity={handleAddActivity}

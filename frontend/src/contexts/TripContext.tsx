@@ -2,9 +2,10 @@
 
 import { createContext, useContext, useState, ReactNode, useEffect, useRef, useCallback } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
-import type { Activity, Trip } from '@/types/simple'
+import type { Activity, Trip, Suggestion } from '@/types/simple'
 import { useToast } from '@/components/ui/toast'
 import { tripService } from '@/lib/trip-service'
+import { suggestionService } from '@/lib/suggestion-service'
 
 interface TripContextType {
   selectedActivity: Activity | null
@@ -20,6 +21,12 @@ interface TripContextType {
   updateActivity: (id: string, updates: Partial<Activity>) => void
   deleteActivity: (id: string) => void
   deleteActivityWithUndo: (id: string) => void
+  // Suggestions
+  suggestions: Suggestion[]
+  selectedSuggestion: Suggestion | null
+  setSelectedSuggestion: (suggestion: Suggestion | null) => void
+  dismissSuggestion: (id: string) => void
+  refreshSuggestions: () => void
 }
 
 const TripContext = createContext<TripContextType | undefined>(undefined)
@@ -182,11 +189,66 @@ export function TripProvider({ children }: TripProviderProps) {
     }
   }
 
+  // ==================== SUGGESTIONS ====================
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([])
+  const [selectedSuggestion, setSelectedSuggestionState] = useState<Suggestion | null>(null)
+
+  // Regenerate suggestions when trip or activities change
+  const refreshSuggestions = useCallback(async () => {
+    if (!trip) {
+      setSuggestions([])
+      return
+    }
+    
+    const newSuggestions = await suggestionService.getSuggestions(trip.id, trip, activities)
+    setSuggestions(newSuggestions)
+    
+    // Clear selected suggestion if it no longer exists
+    if (selectedSuggestion && !newSuggestions.find(s => s.id === selectedSuggestion.id)) {
+      setSelectedSuggestionState(null)
+    }
+  }, [trip, activities, selectedSuggestion])
+
+  // Refresh suggestions when activities change
+  useEffect(() => {
+    refreshSuggestions()
+  }, [activities, trip])
+
+  // Handle suggestion selection (clears activity selection)
+  const handleSuggestionSelect = (suggestion: Suggestion | null) => {
+    setSelectedSuggestionState(suggestion)
+    if (suggestion) {
+      // Clear activity selection when a suggestion is selected
+      setSelectedActivity(null)
+      setIsCreatingActivity(false)
+    }
+  }
+
+  // Handle activity selection override to clear suggestion
+  const handleActivitySelectWithSuggestionClear = (activity: Activity | null) => {
+    handleActivitySelect(activity)
+    if (activity) {
+      // Clear suggestion selection when an activity is selected
+      setSelectedSuggestionState(null)
+    }
+  }
+
+  // Dismiss a suggestion
+  const dismissSuggestion = useCallback(async (id: string) => {
+    await suggestionService.dismissSuggestion(id)
+    setSuggestions(prev => prev.filter(s => s.id !== id))
+    
+    // Clear selected suggestion if it's the one being dismissed
+    if (selectedSuggestion?.id === id) {
+      setSelectedSuggestionState(null)
+    }
+  }, [selectedSuggestion])
+
   return (
     <TripContext.Provider
       value={{
         selectedActivity,
-        setSelectedActivity: handleActivitySelect,
+        setSelectedActivity: handleActivitySelectWithSuggestionClear,
         isCreatingActivity,
         setIsCreatingActivity,
         trip,
@@ -198,6 +260,12 @@ export function TripProvider({ children }: TripProviderProps) {
         updateActivity,
         deleteActivity,
         deleteActivityWithUndo,
+        // Suggestions
+        suggestions,
+        selectedSuggestion,
+        setSelectedSuggestion: handleSuggestionSelect,
+        dismissSuggestion,
+        refreshSuggestions,
       }}
     >
       {children}
