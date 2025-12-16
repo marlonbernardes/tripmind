@@ -14,6 +14,7 @@ interface ManageActivityFormProps {
   initialDay?: number // For create mode, pre-populate the day
   onSave?: () => void
   onCancel?: () => void
+  onTypeChange?: (type: ActivityType | null) => void // Callback when type selection changes
 }
 
 export function ManageActivityForm({ 
@@ -21,14 +22,19 @@ export function ManageActivityForm({
   activity, 
   initialDay = 1,
   onSave, 
-  onCancel 
+  onCancel,
+  onTypeChange
 }: ManageActivityFormProps) {
   const { addActivity, updateActivity, deleteActivityWithUndo } = useTripContext()
   // For create mode, track type selection in state
   // For edit mode, derive type from the activity prop to react to type changes
   const [createModeType, setCreateModeType] = useState<ActivityType | null>(null)
   const selectedType = mode === 'edit' && activity ? activity.type : createModeType
-  const setSelectedType = setCreateModeType
+  
+  const setSelectedType = (type: ActivityType | null) => {
+    setCreateModeType(type)
+    onTypeChange?.(type)
+  }
 
   const handleActivitySave = (activityData: Omit<Activity, 'id'>) => {
     try {

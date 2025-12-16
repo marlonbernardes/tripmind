@@ -8,6 +8,7 @@ import { ActivityReadView } from './ActivityReadView'
 import { SuggestionDetailView } from './SuggestionDetailView'
 import { TripConfigTab } from './TripConfigTab'
 import { getActivityIcon, getActivityLabel } from '@/lib/activity-config'
+import type { ActivityType } from '@/types/simple'
 
 type TabType = 'details' | 'config'
 type ViewMode = 'view' | 'edit'
@@ -29,6 +30,7 @@ export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
   } = useTripContext()
   const [activeTab, setActiveTab] = useState<TabType>('details')
   const [viewMode, setViewMode] = useState<ViewMode>(defaultViewMode ? 'view' : 'edit')
+  const [creatingActivityType, setCreatingActivityType] = useState<ActivityType | null>(null)
   const previousActivityId = useRef<string | null>(null)
 
   // Auto-switch to details tab when an activity or suggestion is selected
@@ -70,8 +72,20 @@ export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
 
   const handleAddActivity = () => {
     setSelectedActivity(null)
+    setCreatingActivityType(null) // Reset type when starting fresh
     setIsCreatingActivity(true)
     setActiveTab('details')
+  }
+
+  const handleCreateCancel = () => {
+    setCreatingActivityType(null)
+    setIsCreatingActivity(false)
+  }
+
+  const handleCreateSave = () => {
+    setCreatingActivityType(null)
+    setSelectedActivity(null)
+    setIsCreatingActivity(false)
   }
 
   return (
@@ -113,11 +127,18 @@ export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
               {isCreatingActivity ? (
                 <div className="flex flex-col h-full">
                   <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                    <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-                      Add Activity
+                    <h3 className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                      {creatingActivityType ? (
+                        <>
+                          <span>{getActivityIcon(creatingActivityType)}</span>
+                          Add {getActivityLabel(creatingActivityType)}
+                        </>
+                      ) : (
+                        'What would you like to add?'
+                      )}
                     </h3>
                     <button
-                      onClick={handleCancel}
+                      onClick={handleCreateCancel}
                       className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                     >
                       ✕
@@ -126,8 +147,9 @@ export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
                   <div className="flex-1 overflow-y-auto p-4 pb-0">
                     <ManageActivityForm
                       mode="create"
-                      onSave={handleSave}
-                      onCancel={handleCancel}
+                      onSave={handleCreateSave}
+                      onCancel={handleCreateCancel}
+                      onTypeChange={setCreatingActivityType}
                     />
                   </div>
                 </div>
