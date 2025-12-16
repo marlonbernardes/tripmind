@@ -40,10 +40,16 @@ The project has a working Gantt chart but needs visual and UX improvements based
 
 - [x] Ability to delete events.
 - [ ] Show suggestions in the timeline view
+- [ ] Show suggestions on Map view
 - [ ] Save button looks ugly on the edit panel
-- [ ] Recommended section revamp
-- [ ] Assistant revamp
+- [ ] Assistant revamp. OR GET RID OF IT FOR MVP.
+- [ ] /trips page revamp (cards are ugly and partially broken)
 - [ ] Plan trip wizard revamp
+- [ ] BUG: when deleting all hotels it shows only one suggestion instead of one per city.
+- [ ] Improvement: Show hotel suggestions at the end and flight at the start
+- [ ] New TODO, Task screens. 
+- [ ] Maybe always show recommendations in forms excpet if they are booked.
+- [ ] Show moreinfo on trip header (i.e start/end dates). Add pencil to take users to config screen . Consider disabling inline editing now that we have a config screen.
 
 **Details/edit activity changes**
 - [x] no longer "view"/"edit" modes - it goes straight to edit
