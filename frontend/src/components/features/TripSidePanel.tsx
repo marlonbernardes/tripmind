@@ -1,16 +1,15 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { FileText, MessageSquare, Plus, Settings, X } from 'lucide-react'
+import { FileText, Plus, Settings } from 'lucide-react'
 import { useTripContext } from '@/contexts/TripContext'
 import { ManageActivityForm } from './ManageActivityForm'
 import { ActivityReadView } from './ActivityReadView'
 import { SuggestionDetailView } from './SuggestionDetailView'
-import { TripAIChat } from './TripAIChat'
 import { TripConfigTab } from './TripConfigTab'
 import { getActivityIcon, getActivityLabel } from '@/lib/activity-config'
 
-type TabType = 'details' | 'assistant' | 'config'
+type TabType = 'details' | 'config'
 type ViewMode = 'view' | 'edit'
 
 interface TripSidePanelProps {
@@ -92,17 +91,6 @@ export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
             >
               <FileText className="w-3 h-3" />
               Details
-            </button>
-            <button
-              onClick={() => setActiveTab('assistant')}
-              className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-colors ${
-                activeTab === 'assistant'
-                  ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
-            >
-              <MessageSquare className="w-3 h-3" />
-              Assistant
             </button>
             <button
               onClick={() => setActiveTab('config')}
@@ -223,12 +211,6 @@ export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
               ) : (
                 <EmptyDetailsState onAddClick={handleAddActivity} />
               )}
-            </div>
-          )}
-
-          {activeTab === 'assistant' && (
-            <div className="h-full">
-              <TripAIChat />
             </div>
           )}
 

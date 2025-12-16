@@ -39,10 +39,10 @@ The project has a working Gantt chart but needs visual and UX improvements based
 **NOTE TO AI:** Tick checkboxes as soon as task has been implemented.
 
 - [x] Ability to delete events.
-- [ ] Show suggestions in the timeline view
+- [x] Show suggestions in the timeline view
 - [ ] Show suggestions on Map view
 - [ ] Save button looks ugly on the edit panel
-- [ ] Assistant revamp. OR GET RID OF IT FOR MVP.
+- [x] Assistant revamp. OR GET RID OF IT FOR MVP. (Removed assistant tab and TripAIChat.tsx)
 - [ ] /trips page revamp (cards are ugly and partially broken)
 - [ ] Plan trip wizard revamp
 - [ ] BUG: when deleting all hotels it shows only one suggestion instead of one per city.
