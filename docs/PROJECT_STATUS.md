@@ -43,7 +43,7 @@ The project has a working Gantt chart but needs visual and UX improvements based
 - [ ] Show suggestions on Map view
 - [ ] Save button looks ugly on the edit panel
 - [x] Assistant revamp. OR GET RID OF IT FOR MVP. (Removed assistant tab and TripAIChat.tsx)
-- [ ] /trips page revamp (cards are ugly and partially broken)
+- [x] /trips page revamp (cards are ugly and partially broken)
 - [ ] Plan trip wizard revamp
 - [ ] BUG: when deleting all hotels it shows only one suggestion instead of one per city.
 - [ ] Improvement: Show hotel suggestions at the end and flight at the start

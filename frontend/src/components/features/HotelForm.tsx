@@ -120,7 +120,7 @@ export function StayForm({ activity, onSave, onCancel, onDelete, defaultDay = 1 
               day,
               endDay: prev.endDay && prev.endDay < day ? undefined : prev.endDay
             }))}
-            label="Check-in Day *"
+            label="Check-in Day"
             required
           />
           <div>
@@ -223,13 +223,13 @@ export function StayForm({ activity, onSave, onCancel, onDelete, defaultDay = 1 
         />
       </div>
 
-      {/* Recommendations Section - only show if draft and we have enough data */}
-      {formData.status === 'draft' && formData.city && (
+      {/* Recommendations Section - show for draft activities */}
+      {formData.status === 'draft' && (
         <RecommendationsSection
           activity={{
             type: 'stay',
             status: formData.status,
-            city: formData.city,
+            city: formData.city || undefined,
             day: formData.day
           }}
         />

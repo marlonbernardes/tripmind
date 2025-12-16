@@ -109,7 +109,7 @@ export function EventForm({ activity, onSave, onCancel, onDelete }: EventFormPro
               day,
               endDay: prev.endDay && prev.endDay < day ? undefined : prev.endDay
             }))}
-            label="Day *"
+            label="Day"
             required
           />
           <div>
@@ -198,13 +198,13 @@ export function EventForm({ activity, onSave, onCancel, onDelete }: EventFormPro
         />
       </div>
 
-      {/* Recommendations Section - only show if draft and we have enough data */}
-      {formData.status === 'draft' && formData.location && formData.day && (
+      {/* Recommendations Section - show for draft activities */}
+      {formData.status === 'draft' && (
         <RecommendationsSection
           activity={{
             type: 'event',
             status: formData.status,
-            city: formData.location,
+            city: formData.location || undefined,
             day: formData.day,
             time: formData.time,
             endDay: formData.endDay,

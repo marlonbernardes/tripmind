@@ -109,16 +109,31 @@ export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
         {/* Tab Content */}
         <div className="flex-1 overflow-y-auto min-h-0">
           {activeTab === 'details' && (
-            <div className="p-4">
+            <div className="h-full">
               {isCreatingActivity ? (
-                <ManageActivityForm
-                  mode="create"
-                  onSave={handleSave}
-                  onCancel={handleCancel}
-                />
+                <div className="flex flex-col h-full">
+                  <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                    <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+                      Add Activity
+                    </h3>
+                    <button
+                      onClick={handleCancel}
+                      className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <div className="flex-1 overflow-y-auto p-4 pb-0">
+                    <ManageActivityForm
+                      mode="create"
+                      onSave={handleSave}
+                      onCancel={handleCancel}
+                    />
+                  </div>
+                </div>
               ) : selectedSuggestion && trip ? (
                 /* Suggestion view - shows suggestion details with booking links */
-                <div className="flex flex-col h-full -m-4">
+                <div className="flex flex-col h-full">
                   <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800">
                     <h3 className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
                       💡 Suggestion
@@ -130,7 +145,7 @@ export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
                       ✕
                     </button>
                   </div>
-                  <div className="p-4">
+                  <div className="flex-1 overflow-y-auto p-4">
                     <SuggestionDetailView
                       suggestion={selectedSuggestion}
                       trip={trip}
@@ -145,7 +160,7 @@ export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
               ) : selectedActivity ? (
                 viewMode === 'view' && defaultViewMode ? (
                   /* View mode - shows activity details with Edit button */
-                  <div className="flex flex-col h-full -m-4">
+                  <div className="flex flex-col h-full">
                     <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                       <h3 className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
                         <span>{getActivityIcon(selectedActivity.type)}</span>
@@ -158,7 +173,7 @@ export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
                         ✕
                       </button>
                     </div>
-                    <div className="p-4">
+                    <div className="flex-1 overflow-y-auto p-4">
                       <ActivityReadView
                         activity={selectedActivity}
                         onEdit={() => setViewMode('edit')}
@@ -167,7 +182,7 @@ export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
                   </div>
                 ) : (
                   /* Edit mode */
-                  <div className="flex flex-col h-full -m-4">
+                  <div className="flex flex-col h-full">
                     <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                       <h3 className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
                         <span>{getActivityIcon(selectedActivity.type)}</span>
@@ -186,7 +201,7 @@ export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
                         {defaultViewMode ? '← Back' : '✕'}
                       </button>
                     </div>
-                    <div className="p-4">
+                    <div className="flex-1 overflow-y-auto p-4 pb-0">
                       <ManageActivityForm
                         mode="edit"
                         activity={selectedActivity}

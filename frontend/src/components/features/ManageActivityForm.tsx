@@ -96,10 +96,10 @@ export function ManageActivityForm({
           ))}
         </div>
 
-        <div className="flex gap-2 pt-2">
+        <div className="sticky bottom-0 left-0 right-0 pt-3 pb-1 mt-4 -mx-4 px-4 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
           <button
             onClick={onCancel}
-            className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-xs font-medium"
+            className="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-sm font-medium"
           >
             Cancel
           </button>

@@ -244,13 +244,13 @@ export function FlightForm({ activity, onSave, onCancel, onDelete, defaultDay = 
         />
       </div>
 
-      {/* Recommendations Section - only show if draft and we have enough data */}
-      {formData.status === 'draft' && formData.from && formData.to && (
+      {/* Recommendations Section - show for draft activities */}
+      {formData.status === 'draft' && (
         <RecommendationsSection
           activity={{
             type: 'flight',
             status: formData.status,
-            city: `${formData.from} to ${formData.to}`,
+            city: formData.from && formData.to ? `${formData.from} to ${formData.to}` : undefined,
             day: formData.day
           }}
         />
