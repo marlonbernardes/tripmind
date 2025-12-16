@@ -46,7 +46,7 @@ The project has a working Gantt chart but needs visual and UX improvements based
 - [x] /trips page revamp (cards are ugly and partially broken)
 - [ ] Plan trip wizard revamp
 - [x] BUG: when deleting all hotels it shows only one suggestion instead of one per city.
-- [ ] BUG: Add button should always open the add activity panel (where user selects activity type)
+- [x] BUG: Add button should always open the add activity panel (where user selects activity type)
 - [ ] Improvement: Show hotel suggestions at the end and flight at the start
 - [ ] New TODO, Task screens. 
 - [x] Maybe always show recommendations in forms excpet if they are booked.
