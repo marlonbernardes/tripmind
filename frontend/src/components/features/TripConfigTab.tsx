@@ -36,19 +36,50 @@ function getMinAllowedDuration(activities: { day: number; endDay?: number }[]): 
   )
 }
 
+// Helper to create initial form data from a trip
+function createInitialFormData(trip: Trip | null) {
+  if (!trip) {
+    return {
+      name: '',
+      color: '#3B82F6',
+      dateMode: 'fixed' as 'fixed' | 'flexible',
+      startDate: '',
+      endDate: '',
+      duration: 7,
+    }
+  }
+  
+  const baseData = {
+    name: trip.name,
+    color: trip.color,
+    dateMode: trip.dateMode,
+  }
+  
+  if (isFixedTrip(trip)) {
+    return {
+      ...baseData,
+      startDate: trip.startDate,
+      endDate: trip.endDate,
+      duration: getTripDuration(trip),
+    }
+  } else {
+    return {
+      ...baseData,
+      startDate: '',
+      endDate: '',
+      duration: trip.duration,
+    }
+  }
+}
+
 export function TripConfigTab({ onClose }: TripConfigTabProps) {
   const { trip, setTrip, activities, setSelectedActivity } = useTripContext()
   
-  const [formData, setFormData] = useState({
-    name: '',
-    color: '#3B82F6',
-    dateMode: 'flexible' as 'fixed' | 'flexible',
-    // Fixed trip fields
-    startDate: '',
-    endDate: '',
-    // Flexible trip fields
-    duration: 7,
-  })
+  // Initialize form data from trip immediately to prevent flicker
+  const [formData, setFormData] = useState(() => createInitialFormData(trip))
+  
+  // Track if we've initialized from the trip
+  const [initialized, setInitialized] = useState(!!trip)
 
   // Calculate minimum duration based on activities
   const minDuration = useMemo(() => getMinAllowedDuration(activities), [activities])
@@ -61,32 +92,13 @@ export function TripConfigTab({ onClose }: TripConfigTabProps) {
   // Duration is invalid only if it's LESS than minDuration (not equal)
   const isDurationInvalid = currentFormDuration < minDuration
 
-  // Initialize form from trip
+  // Re-initialize form if trip changes (e.g., navigating to different trip)
   useEffect(() => {
-    if (trip) {
-      const baseData = {
-        name: trip.name,
-        color: trip.color,
-        dateMode: trip.dateMode,
-      }
-      
-      if (isFixedTrip(trip)) {
-        setFormData({
-          ...baseData,
-          startDate: trip.startDate,
-          endDate: trip.endDate,
-          duration: getTripDuration(trip),
-        })
-      } else {
-        setFormData({
-          ...baseData,
-          startDate: '',
-          endDate: '',
-          duration: trip.duration,
-        })
-      }
+    if (trip && !initialized) {
+      setFormData(createInitialFormData(trip))
+      setInitialized(true)
     }
-  }, [trip])
+  }, [trip, initialized])
 
   const [isSaving, setIsSaving] = useState(false)
 

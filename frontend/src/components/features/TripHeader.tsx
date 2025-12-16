@@ -1,20 +1,48 @@
 'use client'
 
-import { useState, useRef, useEffect, KeyboardEvent } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { Pencil } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useTripContext } from '@/contexts/TripContext'
-
-interface Trip {
-  id: string
-  name: string
-  color: string
-}
+import type { Trip } from '@/types/simple'
+import { isFixedTrip, isFlexibleTrip } from '@/types/simple'
 
 interface TripHeaderProps {
   trip: Trip
   activityCount: number
+}
+
+/**
+ * Format trip dates for display
+ * Fixed trips: "Jan 8 – Jan 15, 2026" or "Jan 8 – 15, 2026" (same month)
+ * Flexible trips: "8 days"
+ */
+function formatTripDates(trip: Trip): string {
+  if (isFlexibleTrip(trip)) {
+    const days = trip.duration
+    return `${days} day${days !== 1 ? 's' : ''}`
+  }
+  
+  if (isFixedTrip(trip)) {
+    const start = new Date(trip.startDate)
+    const end = new Date(trip.endDate)
+    
+    const startMonth = start.toLocaleDateString('en-US', { month: 'short' })
+    const endMonth = end.toLocaleDateString('en-US', { month: 'short' })
+    const startDay = start.getDate()
+    const endDay = end.getDate()
+    const year = end.getFullYear()
+    
+    // Same month: "Jan 8 – 15, 2026"
+    if (startMonth === endMonth && start.getFullYear() === end.getFullYear()) {
+      return `${startMonth} ${startDay} – ${endDay}, ${year}`
+    }
+    
+    // Different months: "Jan 8 – Feb 15, 2026"
+    return `${startMonth} ${startDay} – ${endMonth} ${endDay}, ${year}`
+  }
+  
+  return ''
 }
 
 const tripViews = [
@@ -24,83 +52,45 @@ const tripViews = [
 
 export function TripHeader({ trip, activityCount }: TripHeaderProps) {
   const pathname = usePathname()
-  const { updateTripName } = useTripContext()
-  const [isEditing, setIsEditing] = useState(false)
-  const [editValue, setEditValue] = useState(trip.name)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const router = useRouter()
+  const searchParams = useSearchParams()
   
   // Extract current view from pathname
   const currentView = tripViews.find(view => pathname.includes(`/${view.path}`))?.id || 'timeline'
+  
+  // Format dates for display
+  const dateDisplay = formatTripDates(trip)
 
-  // Focus input when entering edit mode
-  useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus()
-      inputRef.current.select()
-    }
-  }, [isEditing])
-
-  // Sync editValue when trip.name changes externally
-  useEffect(() => {
-    setEditValue(trip.name)
-  }, [trip.name])
-
-  const handleStartEdit = () => {
-    setIsEditing(true)
-  }
-
-  const handleSave = () => {
-    const trimmedValue = editValue.trim()
-    if (trimmedValue && trimmedValue !== trip.name) {
-      updateTripName(trimmedValue)
-    } else {
-      setEditValue(trip.name) // Reset if empty or unchanged
-    }
-    setIsEditing(false)
-  }
-
-  const handleCancel = () => {
-    setEditValue(trip.name)
-    setIsEditing(false)
-  }
-
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleSave()
-    } else if (e.key === 'Escape') {
-      handleCancel()
-    }
+  // Handle opening config panel via URL param
+  const handleOpenConfig = () => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('tab', 'config')
+    router.push(`${pathname}?${params.toString()}`, { scroll: false })
   }
   
   return (
     <div className="flex-shrink-0 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 w-full max-w-full overflow-hidden">
       {/* Mobile Layout - 2 rows */}
       <div className="md:hidden">
-        {/* Row 1: Centered Trip Name */}
+        {/* Row 1: Trip Name and Dates */}
         <div className="flex items-center justify-center gap-2 px-3 py-2">
           <div 
             className="w-2 h-2 rounded-full flex-shrink-0"
             style={{ backgroundColor: trip.color }}
           />
-          {isEditing ? (
-            <input
-              ref={inputRef}
-              type="text"
-              value={editValue}
-              onChange={(e) => setEditValue(e.target.value)}
-              onBlur={handleSave}
-              onKeyDown={handleKeyDown}
-              className="text-sm font-semibold text-gray-900 dark:text-white bg-transparent border-b-2 border-blue-500 outline-none px-0 py-0 text-center max-w-[200px]"
-            />
-          ) : (
-            <h1 
-              onClick={handleStartEdit}
-              className="text-sm font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 px-1.5 py-0.5 rounded transition-colors truncate max-w-[200px]"
-              title="Click to edit trip name"
-            >
-              {trip.name}
-            </h1>
-          )}
+          <h1 className="text-sm font-semibold text-gray-900 dark:text-white truncate max-w-[150px]">
+            {trip.name}
+          </h1>
+          <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+            •  {dateDisplay}
+          </span>
+          <button
+            onClick={handleOpenConfig}
+            className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            title="Edit trip settings"
+          >
+            <Pencil className="w-3 h-3" />
+          </button>
         </div>
         
         {/* Row 2: Full-width Navigation */}
@@ -133,25 +123,19 @@ export function TripHeader({ trip, activityCount }: TripHeaderProps) {
               className="w-2 h-2 rounded-full flex-shrink-0"
               style={{ backgroundColor: trip.color }}
             />
-            {isEditing ? (
-              <input
-                ref={inputRef}
-                type="text"
-                value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
-                onBlur={handleSave}
-                onKeyDown={handleKeyDown}
-                className="text-base font-semibold text-gray-900 dark:text-white bg-transparent border-b-2 border-blue-500 outline-none px-0 py-0 min-w-[180px]"
-              />
-            ) : (
-              <h1 
-                onClick={handleStartEdit}
-                className="text-base font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded transition-colors truncate"
-                title="Click to edit trip name"
-              >
-                {trip.name}
-              </h1>
-            )}
+            <h1 className="text-base font-semibold text-gray-900 dark:text-white truncate">
+              {trip.name}
+            </h1>
+            <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+              •  {dateDisplay}
+            </span>
+            <button
+              onClick={handleOpenConfig}
+              className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              title="Edit trip settings"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+            </button>
           </div>
           
           {/* Trip Sub-Navigation */}

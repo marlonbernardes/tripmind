@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { FileText, Plus, Settings } from 'lucide-react'
 import { useTripContext } from '@/contexts/TripContext'
 import { ManageActivityForm } from './ManageActivityForm'
@@ -28,10 +29,26 @@ export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
     selectedSuggestion,
     setSelectedSuggestion
   } = useTripContext()
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
   const [activeTab, setActiveTab] = useState<TabType>('details')
   const [viewMode, setViewMode] = useState<ViewMode>(defaultViewMode ? 'view' : 'edit')
   const [creatingActivityType, setCreatingActivityType] = useState<ActivityType | null>(null)
   const previousActivityId = useRef<string | null>(null)
+
+  // Handle URL-based tab switching (from header pencil icon)
+  useEffect(() => {
+    const tabParam = searchParams.get('tab')
+    if (tabParam === 'config') {
+      setActiveTab('config')
+      // Clear the tab param from URL after switching
+      const params = new URLSearchParams(searchParams.toString())
+      params.delete('tab')
+      const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname
+      router.replace(newUrl, { scroll: false })
+    }
+  }, [searchParams, pathname, router])
 
   // Auto-switch to details tab when an activity or suggestion is selected
   useEffect(() => {
