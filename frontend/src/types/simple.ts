@@ -53,7 +53,7 @@ export interface ActivityLocation {
 
 // ==================== ACTIVITIES ====================
 
-export type ActivityType = 'flight' | 'stay' | 'event' | 'transport' | 'note' | 'task'
+export type ActivityType = 'flight' | 'stay' | 'event' | 'transport'
 export type ActivityStatus = 'draft' | 'confirmed'
 
 export interface Activity {
@@ -78,7 +78,7 @@ export interface Activity {
   notes?: string
   
   // Type-specific metadata
-  metadata?: FlightMetadata | StayMetadata | EventMetadata | TransportMetadata | NoteMetadata | TaskMetadata
+  metadata?: FlightMetadata | StayMetadata | EventMetadata | TransportMetadata
 }
 
 // Legacy alias for backward compatibility during migration
@@ -110,16 +110,6 @@ export interface TransportMetadata {
   confirmationCode?: string
 }
 
-export interface NoteMetadata {
-  category?: string
-  priority?: 'low' | 'medium' | 'high'
-}
-
-export interface TaskMetadata {
-  category?: string
-  priority?: 'low' | 'medium' | 'high'
-  completed?: boolean
-}
 
 // ==================== SUGGESTIONS ====================
 
@@ -163,7 +153,7 @@ export interface Suggestion {
 // These help with migration - can be removed once migration is complete
 
 // Map old 'hotel' type to new 'stay' type
-export type LegacyActivityType = 'flight' | 'hotel' | 'event' | 'transport' | 'note' | 'task'
+export type LegacyActivityType = 'flight' | 'hotel' | 'event' | 'transport'
 
 // Map old 'planned'/'booked' status to new 'draft'/'confirmed'
 export type LegacyActivityStatus = 'planned' | 'booked'

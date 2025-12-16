@@ -48,7 +48,8 @@ The project has a working Gantt chart but needs visual and UX improvements based
 - [x] BUG: when deleting all hotels it shows only one suggestion instead of one per city.
 - [x] BUG: Add button should always open the add activity panel (where user selects activity type)
 - [ ] Improvement: Show hotel suggestions at the end and flight at the start
-- [ ] New TODO, Task screens. 
+- [x] New Transport form
+- [x] Delete Task and Note activities types 
 - [x] Maybe always show recommendations in forms excpet if they are booked.
 - [ ] Show moreinfo on trip header (i.e start/end dates). Add pencil to take users to config screen . Consider disabling inline editing now that we have a config screen.
 

@@ -494,9 +494,7 @@ function TimelineContent() {
       flight: [],
       stay: [],
       event: [],
-      transport: [],
-      note: [],
-      task: []
+      transport: []
     }
     
     activities.forEach(activity => {

@@ -24,11 +24,9 @@ export function ActivityCard({ activity, isSelected = false, onClick }: Activity
       flight: 'bg-blue-50 dark:bg-blue-950/30',
       stay: 'bg-green-50 dark:bg-green-950/30',
       event: 'bg-purple-50 dark:bg-purple-950/30',
-      transport: 'bg-amber-50 dark:bg-amber-950/30',
-      note: 'bg-gray-50 dark:bg-gray-800/30',
-      task: 'bg-orange-50 dark:bg-orange-950/30'
+      transport: 'bg-amber-50 dark:bg-amber-950/30'
     }
-    return colors[activity.type] || colors.note
+    return colors[activity.type] || 'bg-gray-50 dark:bg-gray-800/30'
   }
 
   const getBorderColor = () => {

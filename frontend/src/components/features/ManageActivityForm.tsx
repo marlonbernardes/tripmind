@@ -6,6 +6,7 @@ import type { Activity, ActivityType } from '@/types/simple'
 import { FlightForm } from './FlightForm'
 import { StayForm } from './HotelForm'
 import { EventForm } from './EventForm'
+import { TransportForm } from './TransportForm'
 import { allActivityTypes, getActivityIcon, getActivityLabel, getActivityDescription } from '@/lib/activity-config'
 
 interface ManageActivityFormProps {
@@ -135,12 +136,10 @@ function getFormComponent(type: ActivityType) {
       return FlightForm
     case 'stay':
       return StayForm
-    case 'event':
     case 'transport':
-    case 'note':
-    case 'task':
+      return TransportForm
+    case 'event':
     default:
-      // For now, fallback to EventForm for other types
       return EventForm
   }
 }

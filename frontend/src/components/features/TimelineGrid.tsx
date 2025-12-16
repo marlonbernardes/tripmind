@@ -15,7 +15,7 @@ interface TimelineGridProps {
 export function TimelineGrid({ activities, selectedActivityId, onActivitySelect }: TimelineGridProps) {
   const { trip } = useTripContext()
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
-    new Set(['flight', 'transport', 'stay', 'event', 'task', 'note'])
+    new Set(['flight', 'transport', 'stay', 'event'])
   )
 
   // Get day range for grid columns based on trip duration
@@ -40,7 +40,7 @@ export function TimelineGrid({ activities, selectedActivityId, onActivitySelect 
       return acc
     }, {} as Record<string, Activity[]>)
     
-    const typeOrder: ActivityType[] = ['flight', 'transport', 'stay', 'event', 'task', 'note']
+    const typeOrder: ActivityType[] = ['flight', 'transport', 'stay', 'event']
     return typeOrder
       .filter(type => grouped[type])
       .map(type => ({

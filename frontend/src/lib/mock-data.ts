@@ -505,8 +505,8 @@ export const mockActivities: Activity[] = [
   {
     id: 'd9',
     tripId: '4',
-    type: 'task',
-    title: 'End of Day Task (11:45pm-11:59pm)',
+    type: 'event',
+    title: 'End of Day Event (11:45pm-11:59pm)',
     day: 9,
     time: '23:45',
     endDay: 9,
@@ -517,7 +517,7 @@ export const mockActivities: Activity[] = [
   {
     id: 'd10',
     tripId: '4',
-    type: 'note',
+    type: 'event',
     title: 'Single Moment (no end time)',
     day: 10,
     time: '15:30',

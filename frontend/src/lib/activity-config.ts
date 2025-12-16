@@ -28,25 +28,13 @@ export const activityTypeConfig: Record<ActivityType, ActivityTypeConfig> = {
     label: 'Event',
     color: '#F59E0B', // amber-500
     icon: '🎫',
-    description: 'Shows, concerts, attractions'
+    description: 'Attractions, shows, concerts'
   },
   transport: {
     label: 'Transport',
     color: '#10B981', // emerald-500
     icon: '🚗',
     description: 'Local transportation'
-  },
-  note: {
-    label: 'Note',
-    color: '#6B7280', // gray-500
-    icon: '📝',
-    description: 'General notes and reminders'
-  },
-  task: {
-    label: 'Task',
-    color: '#EF4444', // red-500
-    icon: '✅',
-    description: 'To-do items and tasks'
   }
 }
 
@@ -55,9 +43,7 @@ export const allActivityTypes: ActivityType[] = [
   'flight',
   'stay',
   'event',
-  'transport',
-  'note',
-  'task'
+  'transport'
 ]
 
 // Helper function to get activity color
@@ -90,7 +76,5 @@ export const activityTypeIcons: Record<ActivityType, string> = {
   flight: '✈️',
   stay: '🏨',
   event: '🎫',
-  transport: '🚗',
-  note: '📝',
-  task: '✓'
+  transport: '🚗'
 }

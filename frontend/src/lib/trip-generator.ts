@@ -155,20 +155,6 @@ export function generateMockTrip(userInput: string): { trip: Trip, activities: A
 
   // Day 7: Departure
   
-  // Add a pre-flight task
-  activities.push({
-    id: `${tripId}_task_packing`,
-    tripId,
-    type: 'task',
-    title: 'Pack luggage and check-out',
-    day: 7,
-    time: '10:00',
-    endDay: 7,
-    endTime: '12:00',
-    city: 'Shibuya',
-    status
-  })
-
   // Return flight
   activities.push({
     id: `${tripId}_flight_return`,
