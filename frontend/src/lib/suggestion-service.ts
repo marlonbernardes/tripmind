@@ -58,7 +58,7 @@ export function clearDismissedSuggestions(): void {
  * 1. For each night of the trip (night N = between Day N and Day N+1)
  * 2. Check if any 'stay' activity spans that night
  * 3. Check if any flight "covers" that night (overnight flight or early morning departure)
- * 4. Group consecutive missing nights into single suggestions
+ * 4. Group consecutive missing nights into single suggestions, but break when city changes
  */
 function generateMissingStaySuggestions(
   tripId: string,
@@ -109,36 +109,130 @@ function generateMissingStaySuggestions(
     }
   }
   
-  // Find missing nights and group consecutive ones
+  // Build a map of cities for each night based on where flights arrive
+  // This helps us detect when the user changes cities
+  const cityAtNight = buildCityMap(activities, totalNights)
+  
+  // Find missing nights and group consecutive ones, but break when city changes
   let missingStart: number | null = null
   let missingEnd: number | null = null
-  let lastCity = getDefaultCity(activities)
+  let currentCity: string | null = null
   
   for (let night = 1; night <= totalNights; night++) {
     if (!coveredNights.has(night)) {
       // This night is missing accommodation
+      const nightCity = cityAtNight.get(night) || getDefaultCity(activities)
+      
       if (missingStart === null) {
+        // Starting a new gap
         missingStart = night
-        // Try to find city from activities on this day
-        lastCity = getCityForDay(activities, night) || lastCity
+        missingEnd = night
+        currentCity = nightCity
+      } else if (currentCity && nightCity !== currentCity) {
+        // City changed - create suggestion for previous gap and start new one
+        suggestions.push(createStaySuggestion(tripId, trip, missingStart, missingEnd!, currentCity))
+        missingStart = night
+        missingEnd = night
+        currentCity = nightCity
+      } else {
+        // Same city, extend the gap
+        missingEnd = night
       }
-      missingEnd = night
     } else {
       // Night is covered - if we had a gap, create suggestion
-      if (missingStart !== null && missingEnd !== null) {
-        suggestions.push(createStaySuggestion(tripId, trip, missingStart, missingEnd, lastCity))
+      if (missingStart !== null && missingEnd !== null && currentCity) {
+        suggestions.push(createStaySuggestion(tripId, trip, missingStart, missingEnd, currentCity))
         missingStart = null
         missingEnd = null
+        currentCity = null
       }
     }
   }
   
   // Handle trailing missing nights
-  if (missingStart !== null && missingEnd !== null) {
-    suggestions.push(createStaySuggestion(tripId, trip, missingStart, missingEnd, lastCity))
+  if (missingStart !== null && missingEnd !== null && currentCity) {
+    suggestions.push(createStaySuggestion(tripId, trip, missingStart, missingEnd, currentCity))
   }
   
   return suggestions
+}
+
+/**
+ * Build a map of which city the user is in for each night.
+ * 
+ * Uses flight arrivals to determine city transitions:
+ * - When a flight arrives on day N, the destination city applies from night N onwards
+ * - If multiple flights arrive on the same day, use the LAST one (final destination)
+ * - Until another flight arrival changes the city
+ */
+function buildCityMap(activities: Activity[], totalNights: number): Map<number, string> {
+  const cityMap = new Map<number, string>()
+  
+  // Get all transport activities with arrival info, sorted by day then by arrival time
+  const transports = activities
+    .filter(a => a.type === 'flight' || a.type === 'transport')
+    .map(a => ({
+      arrivalDay: a.endDay || a.day,
+      arrivalTime: a.endTime || a.time || '12:00',
+      destinationCity: (a.metadata as { to?: string } | undefined)?.to || null
+    }))
+    .filter(t => t.destinationCity !== null)
+    .sort((a, b) => {
+      // Sort by day first, then by time (later arrivals come last)
+      if (a.arrivalDay !== b.arrivalDay) return a.arrivalDay - b.arrivalDay
+      return a.arrivalTime.localeCompare(b.arrivalTime)
+    })
+  
+  // Also get cities from non-transport activities as fallback
+  const activityCities = activities
+    .filter(a => a.type !== 'flight' && a.type !== 'transport' && a.city)
+    .map(a => ({
+      day: a.day,
+      city: a.city!
+    }))
+    .sort((a, b) => a.day - b.day)
+  
+  // Build a map of the LAST arriving transport for each day
+  // This represents where the user ends up at the end of that day
+  const lastTransportPerDay = new Map<number, string>()
+  for (const t of transports) {
+    // Since transports are sorted by time, later ones will overwrite earlier ones
+    lastTransportPerDay.set(t.arrivalDay, t.destinationCity!)
+  }
+  
+  // Build the city timeline
+  let currentCity: string | null = null
+  
+  for (let night = 1; night <= totalNights; night++) {
+    // Check if any transport arrives on this day - use the LAST one
+    if (lastTransportPerDay.has(night)) {
+      currentCity = lastTransportPerDay.get(night)!
+    }
+    
+    // If no city yet, try to find from activities on this day
+    if (!currentCity) {
+      const activityOnDay = activityCities.find(a => a.day === night || a.day === night + 1)
+      if (activityOnDay) {
+        currentCity = activityOnDay.city
+      }
+    }
+    
+    if (currentCity) {
+      cityMap.set(night, currentCity)
+    }
+  }
+  
+  // Forward fill: use previous city if current is unknown
+  let lastKnownCity: string | null = null
+  for (let night = 1; night <= totalNights; night++) {
+    if (cityMap.has(night)) {
+      lastKnownCity = cityMap.get(night)!
+    } else if (lastKnownCity) {
+      cityMap.set(night, lastKnownCity)
+    }
+  }
+  
+  return cityMap
 }
 
 function createStaySuggestion(

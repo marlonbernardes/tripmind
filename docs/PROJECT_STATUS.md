@@ -41,7 +41,7 @@ The project has a working Gantt chart but needs visual and UX improvements based
 - [x] Ability to delete events.
 - [x] Show suggestions in the timeline view
 - [ ] Show suggestions on Map view
-- [ ] Save button looks ugly on the edit panel
+- [x] Save button looks ugly on the edit panel
 - [x] Assistant revamp. OR GET RID OF IT FOR MVP. (Removed assistant tab and TripAIChat.tsx)
 - [x] /trips page revamp (cards are ugly and partially broken)
 - [ ] Plan trip wizard revamp
