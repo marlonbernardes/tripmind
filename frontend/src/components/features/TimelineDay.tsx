@@ -27,9 +27,11 @@ export function TimelineDay({
   onSuggestionSelect,
   onSuggestionDismiss
 }: TimelineDayProps) {
-  const { setIsCreatingActivity } = useTripContext()
+  const { setIsCreatingActivity, setSelectedActivity, setSelectedSuggestion } = useTripContext()
 
   const handleAddActivityClick = () => {
+    setSelectedActivity(null)
+    setSelectedSuggestion(null)
     setIsCreatingActivity(true)
   }
 
