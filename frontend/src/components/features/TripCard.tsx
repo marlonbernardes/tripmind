@@ -1,15 +1,23 @@
 import Link from 'next/link'
-import type { Trip } from '@/types/simple'
+import type { Trip, Activity } from '@/types/simple'
 import { isFixedTrip } from '@/types/simple'
 import { getTripDuration } from '@/lib/date-service'
 
 interface TripCardProps {
   trip: Trip
-  activitiesCount?: number
+  activities?: Activity[]
 }
 
-export function TripCard({ trip, activitiesCount = 0 }: TripCardProps) {
+export function TripCard({ trip, activities = [] }: TripCardProps) {
   const duration = getTripDuration(trip)
+  
+  // Extract unique cities from activities
+  const cities = [...new Set(activities.map(a => a.city).filter(Boolean))] as string[]
+  
+  // Count different activity types
+  const flightCount = activities.filter(a => a.type === 'flight').length
+  const stayCount = activities.filter(a => a.type === 'stay').length
+  const eventCount = activities.filter(a => a.type === 'event').length
   
   // Format date range for display
   const getDateDisplay = () => {
@@ -20,41 +28,83 @@ export function TripCard({ trip, activitiesCount = 0 }: TripCardProps) {
       const endStr = endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
       return `${startStr} - ${endStr}`
     }
-    // Flexible trip
-    return 'Flexible dates'
+    return `${duration} ${duration === 1 ? 'day' : 'days'} trip`
   }
 
   return (
-    <Link href={`/trip/${trip.id}/timeline`}>
-      <div className="group p-6 border border-gray-200 rounded-lg hover:shadow-lg transition-all duration-200 cursor-pointer bg-white dark:bg-gray-800 dark:border-gray-700">
-        <div className="flex items-start justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-            {trip.name}
-          </h3>
-          <div 
-            className="w-4 h-4 rounded-full flex-shrink-0"
-            style={{ backgroundColor: trip.color }}
-          />
-        </div>
+    <Link href={`/trip/${trip.id}/timeline`} className="block group">
+      <div 
+        className="relative overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-all duration-200 hover:shadow-lg hover:border-gray-300 dark:hover:border-gray-600 hover:-translate-y-0.5"
+      >
+        {/* Color accent bar */}
+        <div 
+          className="absolute top-0 left-0 right-0 h-1"
+          style={{ backgroundColor: trip.color }}
+        />
         
-        <div className="space-y-2 mb-4">
-          <p className="text-gray-600 dark:text-gray-300 text-sm font-medium">
-            {getDateDisplay()}
-          </p>
-          <p className="text-gray-500 dark:text-gray-400 text-xs">
-            {duration} {duration === 1 ? 'day' : 'days'}
-          </p>
-        </div>
-        
-        <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
-          <span className="text-xs text-gray-500 dark:text-gray-400">
-            {activitiesCount} {activitiesCount === 1 ? 'activity' : 'activities'}
-          </span>
-          <div className="text-blue-600 dark:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+        <div className="p-5 pt-4">
+          {/* Header with name */}
+          <div className="mb-3">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+              {trip.name}
+            </h3>
+            {cities.length > 0 && (
+              <p className="text-sm text-gray-500 dark:text-gray-400 truncate mt-0.5">
+                {cities.slice(0, 3).join(' → ')}{cities.length > 3 ? ' +' + (cities.length - 3) + ' more' : ''}
+              </p>
+            )}
           </div>
+          
+          {/* Date and duration */}
+          <div className="flex items-center gap-2 mb-4 text-sm">
+            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span className="text-gray-600 dark:text-gray-300">{getDateDisplay()}</span>
+            {isFixedTrip(trip) && (
+              <span className="text-gray-400 dark:text-gray-500">
+                · {duration} {duration === 1 ? 'day' : 'days'}
+              </span>
+            )}
+          </div>
+          
+          {/* Activity stats */}
+          {activities.length > 0 ? (
+            <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+              {flightCount > 0 && (
+                <span className="flex items-center gap-1">
+                  <span>✈️</span>
+                  <span>{flightCount}</span>
+                </span>
+              )}
+              {stayCount > 0 && (
+                <span className="flex items-center gap-1">
+                  <span>🏨</span>
+                  <span>{stayCount}</span>
+                </span>
+              )}
+              {eventCount > 0 && (
+                <span className="flex items-center gap-1">
+                  <span>🎯</span>
+                  <span>{eventCount}</span>
+                </span>
+              )}
+              <span className="text-gray-400 dark:text-gray-500">
+                · {activities.length} total
+              </span>
+            </div>
+          ) : (
+            <p className="text-xs text-gray-400 dark:text-gray-500 italic">
+              No activities yet
+            </p>
+          )}
+        </div>
+        
+        {/* Hover indicator */}
+        <div className="absolute bottom-3 right-3 text-gray-300 dark:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
         </div>
       </div>
     </Link>
