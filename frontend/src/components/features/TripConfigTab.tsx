@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { Settings, Calendar, Clock, AlertTriangle } from 'lucide-react'
-import type { Trip } from '@/types/simple'
+import { Settings, Calendar, Clock, AlertTriangle, Check, Target, Timer } from 'lucide-react'
+import type { Trip, TripPacing, TripInterest } from '@/types/simple'
 import { isFixedTrip } from '@/types/simple'
 import { useTripContext } from '@/contexts/TripContext'
 import { getTripDuration, MAX_TRIP_DURATION } from '@/lib/date-service'
 import { tripService } from '@/lib/trip-service'
+import { INTERESTS, PACING_OPTIONS } from '@/lib/interests-config'
 
 interface TripConfigTabProps {
   onClose?: () => void
@@ -32,6 +33,8 @@ function createInitialFormData(trip: Trip | null) {
       startDate: '',
       endDate: '',
       duration: 7,
+      interests: [] as TripInterest[],
+      pacing: 'moderate' as TripPacing,
     }
   }
   
@@ -41,6 +44,8 @@ function createInitialFormData(trip: Trip | null) {
       startDate: trip.startDate,
       endDate: trip.endDate,
       duration: getTripDuration(trip),
+      interests: trip.interests,
+      pacing: trip.pacing,
     }
   } else {
     return {
@@ -48,6 +53,8 @@ function createInitialFormData(trip: Trip | null) {
       startDate: '',
       endDate: '',
       duration: trip.duration,
+      interests: trip.interests,
+      pacing: trip.pacing,
     }
   }
 }
@@ -96,6 +103,8 @@ export function TripConfigTab({ onClose }: TripConfigTabProps) {
           ? { startDate: formData.startDate, endDate: formData.endDate }
           : { duration: formData.duration }
         ),
+        interests: formData.interests,
+        pacing: formData.pacing,
       })
 
       setTrip(updatedTrip)
@@ -133,6 +142,19 @@ export function TripConfigTab({ onClose }: TripConfigTabProps) {
 
   const handleStartDateChange = (startDate: string) => {
     setFormData(prev => ({ ...prev, startDate }))
+  }
+
+  const toggleInterest = (id: TripInterest) => {
+    setFormData(prev => ({
+      ...prev,
+      interests: prev.interests.includes(id)
+        ? prev.interests.filter(i => i !== id)
+        : [...prev.interests, id]
+    }))
+  }
+
+  const handlePacingChange = (pacing: TripPacing) => {
+    setFormData(prev => ({ ...prev, pacing }))
   }
 
   if (!trip) {
@@ -256,6 +278,72 @@ export function TripConfigTab({ onClose }: TripConfigTabProps) {
           </div>
         </div>
       )}
+
+      {/* Interests Section */}
+      <div>
+        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5 flex items-center gap-1">
+          <Target className="w-3 h-3" />
+          Interests
+        </label>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+          Used to suggest relevant activities
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {INTERESTS.map(interest => {
+            const Icon = interest.icon
+            const isSelected = formData.interests.includes(interest.id)
+            return (
+              <button
+                key={interest.id}
+                type="button"
+                onClick={() => toggleInterest(interest.id)}
+                className={`relative inline-flex items-center gap-1.5 px-2 py-1 text-xs rounded-lg border transition-all ${
+                  isSelected
+                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
+                    : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span>{interest.name}</span>
+                {isSelected && (
+                  <Check className="w-3 h-3 ml-0.5" />
+                )}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Pacing Section */}
+      <div>
+        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5 flex items-center gap-1">
+          <Timer className="w-3 h-3" />
+          Pacing
+        </label>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+          Controls activity suggestion density
+        </p>
+        <div className="flex gap-2">
+          {PACING_OPTIONS.map(option => {
+            const Icon = option.icon
+            return (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => handlePacingChange(option.id)}
+                className={`flex-1 px-2 py-2 text-xs font-medium rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                  formData.pacing === option.id
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span>{option.name}</span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
 
       {/* Save Button */}
       <div className="pt-2">

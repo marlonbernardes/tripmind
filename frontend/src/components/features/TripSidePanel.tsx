@@ -16,9 +16,17 @@ type TabType = 'details' | 'config'
 interface TripSidePanelProps {
   /** If true, starts in view mode and allows switching to edit. If false, goes directly to edit mode */
   defaultViewMode?: boolean
+  /** External tab control - when this changes to 'config', switches to the Preferences tab */
+  externalTabTrigger?: 'config' | null
+  /** Callback when external tab trigger is consumed */
+  onExternalTabConsumed?: () => void
 }
 
-export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
+export function TripSidePanel({ 
+  defaultViewMode = false, 
+  externalTabTrigger,
+  onExternalTabConsumed 
+}: TripSidePanelProps) {
   const { 
     sidePanelState,
     viewActivity,
@@ -37,6 +45,14 @@ export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
       setActiveTab('details')
     }
   }, [sidePanelState])
+
+  // Handle external tab trigger (from TripEditModal "Open Preferences" link)
+  useEffect(() => {
+    if (externalTabTrigger === 'config') {
+      setActiveTab('config')
+      onExternalTabConsumed?.()
+    }
+  }, [externalTabTrigger, onExternalTabConsumed])
 
   // Reset creating activity type when entering create mode
   useEffect(() => {

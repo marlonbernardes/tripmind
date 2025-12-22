@@ -1,4 +1,4 @@
-import type { Trip, FixedTrip, Activity, FlightMetadata, StayMetadata } from '@/types/simple'
+import type { Trip, FixedTrip, Activity, FlightMetadata, StayMetadata, TripInterest } from '@/types/simple'
 
 // Mock trips data - using new FixedTrip format
 export const mockTrips: Trip[] = [
@@ -8,7 +8,9 @@ export const mockTrips: Trip[] = [
     dateMode: 'fixed',
     startDate: '2026-01-08',
     endDate: '2026-01-22',
-    color: '#3B82F6'
+    color: '#3B82F6',
+    interests: ['food', 'culture', 'relaxation'] as TripInterest[],
+    pacing: 'moderate'
   } as FixedTrip,
   {
     id: '2',
@@ -16,7 +18,9 @@ export const mockTrips: Trip[] = [
     dateMode: 'fixed',
     startDate: '2025-06-10',
     endDate: '2025-06-25',
-    color: '#10B981'
+    color: '#10B981',
+    interests: ['culture', 'photos', 'food'] as TripInterest[],
+    pacing: 'packed'
   } as FixedTrip,
   {
     id: '3',
@@ -24,7 +28,9 @@ export const mockTrips: Trip[] = [
     dateMode: 'fixed',
     startDate: '2025-04-05',
     endDate: '2025-04-07',
-    color: '#F59E0B'
+    color: '#F59E0B',
+    interests: ['food', 'culture', 'photos'] as TripInterest[],
+    pacing: 'packed'
   } as FixedTrip,
   {
     id: '4',
@@ -32,7 +38,9 @@ export const mockTrips: Trip[] = [
     dateMode: 'fixed',
     startDate: '2026-01-01',
     endDate: '2026-01-10',
-    color: '#8B5CF6'
+    color: '#8B5CF6',
+    interests: ['adventure'] as TripInterest[],
+    pacing: 'relaxed'
   } as FixedTrip
 ]
 

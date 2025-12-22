@@ -1,9 +1,17 @@
 // ==================== TRIPS ====================
 
+// Interest categories for trip personalization
+export type TripInterest = 'food' | 'culture' | 'adventure' | 'nightlife' | 'shopping' | 'relaxation' | 'photos' | 'nature'
+
+// Pacing controls how packed the agenda should be
+export type TripPacing = 'relaxed' | 'moderate' | 'packed'
+
 interface TripBase {
   id: string
   name: string
   color: string
+  interests: TripInterest[]  // Selected interest categories
+  pacing: TripPacing         // Controls suggestion density
 }
 
 // Fixed trip - has concrete dates

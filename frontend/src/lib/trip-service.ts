@@ -5,7 +5,7 @@
  * mock data to a real backend when ready.
  */
 
-import type { Trip, Activity, FixedTrip, FlexibleTrip } from '@/types/simple'
+import type { Trip, Activity, FixedTrip, FlexibleTrip, TripPacing, TripInterest } from '@/types/simple'
 import { mockTrips, mockActivities } from './mock-data'
 
 // ============================================================================
@@ -22,6 +22,9 @@ export interface CreateTripInput {
   duration?: number
   // Optional
   color?: string
+  // Required for wizard-created trips, optional for quick-create (defaults applied)
+  interests?: TripInterest[]
+  pacing?: TripPacing
 }
 
 export interface UpdateTripInput {
@@ -31,6 +34,8 @@ export interface UpdateTripInput {
   startDate?: string
   endDate?: string
   duration?: number
+  interests?: TripInterest[]
+  pacing?: TripPacing
 }
 
 export interface CreateActivityInput extends Omit<Activity, 'id'> {}
@@ -102,6 +107,8 @@ class MockTripService implements ITripService {
 
     const id = generateId('trip')
     const color = input.color ?? getRandomColor()
+    const interests = input.interests ?? []
+    const pacing = input.pacing ?? 'moderate'
 
     let newTrip: Trip
 
@@ -113,6 +120,8 @@ class MockTripService implements ITripService {
         id,
         name: input.name,
         color,
+        interests,
+        pacing,
         dateMode: 'fixed',
         startDate: input.startDate,
         endDate: input.endDate,
@@ -125,6 +134,8 @@ class MockTripService implements ITripService {
         id,
         name: input.name,
         color,
+        interests,
+        pacing,
         dateMode: 'flexible',
         duration: input.duration,
       } as FlexibleTrip
@@ -147,6 +158,10 @@ class MockTripService implements ITripService {
 
     // Handle date mode change
     const newDateMode = updates.dateMode ?? existingTrip.dateMode
+    
+    // Preserve or update interests and pacing
+    const interests = updates.interests ?? existingTrip.interests
+    const pacing = updates.pacing ?? existingTrip.pacing
 
     if (newDateMode === 'fixed') {
       const startDate = updates.startDate ?? (existingTrip.dateMode === 'fixed' ? existingTrip.startDate : '')
@@ -156,6 +171,8 @@ class MockTripService implements ITripService {
         id: existingTrip.id,
         name: updates.name ?? existingTrip.name,
         color: updates.color ?? existingTrip.color,
+        interests,
+        pacing,
         dateMode: 'fixed',
         startDate,
         endDate,
@@ -167,6 +184,8 @@ class MockTripService implements ITripService {
         id: existingTrip.id,
         name: updates.name ?? existingTrip.name,
         color: updates.color ?? existingTrip.color,
+        interests,
+        pacing,
         dateMode: 'flexible',
         duration,
       } as FlexibleTrip

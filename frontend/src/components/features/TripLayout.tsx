@@ -10,9 +10,11 @@ interface TripLayoutProps {
   children: ReactNode
   tripId: string
   hideSidePanel?: boolean
+  /** Callback to open the Preferences tab in the side panel */
+  onOpenPreferences?: () => void
 }
 
-function TripLayoutContent({ children, tripId }: { children: ReactNode; tripId: string }) {
+function TripLayoutContent({ children, tripId, onOpenPreferences }: { children: ReactNode; tripId: string; onOpenPreferences?: () => void }) {
   const { trip, setTrip, activities, setActivities } = useTripContext()
   const [isLoading, setIsLoading] = useState(true)
 
@@ -86,7 +88,7 @@ function TripLayoutContent({ children, tripId }: { children: ReactNode; tripId: 
   return (
     <div className="grid grid-rows-[auto_1fr] h-full bg-white dark:bg-gray-950">
       {/* Trip Header with Sub-Navigation - auto height */}
-      <TripHeader trip={trip} activityCount={activities.length} />
+      <TripHeader trip={trip} activityCount={activities.length} onOpenPreferences={onOpenPreferences} />
 
       {/* Content Area - fills remaining space (1fr) */}
       <div className="overflow-hidden">
@@ -96,10 +98,10 @@ function TripLayoutContent({ children, tripId }: { children: ReactNode; tripId: 
   )
 }
 
-export function TripLayout({ children, tripId, hideSidePanel = false }: TripLayoutProps) {
+export function TripLayout({ children, tripId, hideSidePanel = false, onOpenPreferences }: TripLayoutProps) {
   return (
     <TripProvider>
-      <TripLayoutContent tripId={tripId}>
+      <TripLayoutContent tripId={tripId} onOpenPreferences={onOpenPreferences}>
         {children}
       </TripLayoutContent>
     </TripProvider>

@@ -1,14 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, ChevronRight, Search, Plus, X, Check, Loader2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Search, Plus, X, Check, Loader2, Info } from 'lucide-react'
 import { generateMockTrip } from '@/lib/trip-generator'
 import { tripService } from '@/lib/trip-service'
+import { INTERESTS, PACING_OPTIONS } from '@/lib/interests-config'
+import type { TripPacing, TripInterest } from '@/types/simple'
 
 // Types
-type WizardStep = 'destinations' | 'dates' | 'duration' | 'style' | 'review'
+type WizardStep = 'destinations' | 'dates' | 'style' | 'pacing' | 'loading'
 
 interface WizardData {
   destinations: string[]
@@ -16,11 +18,11 @@ interface WizardData {
   hasSpecificDates: boolean | null
   startDate: string
   endDate: string
-  season: string | null
   duration: string | null
   customDuration: string
-  styles: string[]
-  customStyle: string
+  interests: TripInterest[]
+  customInterest: string
+  pacing: TripPacing | null
 }
 
 // Destination options with Unsplash images
@@ -35,14 +37,6 @@ const DESTINATIONS = [
   { id: 'lisbon', name: 'Lisbon', country: 'Portugal', flag: '🇵🇹', image: 'https://images.unsplash.com/photo-1585208798174-6cedd86e019a?w=400&h=300&fit=crop' },
 ]
 
-const SEASONS = [
-  { id: 'spring', name: 'Spring', months: 'Mar - May', icon: '🌸' },
-  { id: 'summer', name: 'Summer', months: 'Jun - Aug', icon: '☀️' },
-  { id: 'fall', name: 'Fall', months: 'Sep - Nov', icon: '🍂' },
-  { id: 'winter', name: 'Winter', months: 'Dec - Feb', icon: '❄️' },
-  { id: 'flexible', name: 'Flexible', months: 'Anytime', icon: '📅' },
-]
-
 const DURATIONS = [
   { id: 'weekend', name: 'Weekend', days: '2-3 days', icon: '⚡' },
   { id: 'week', name: '1 Week', days: '7 days', icon: '📅' },
@@ -51,25 +45,23 @@ const DURATIONS = [
   { id: '3weeks', name: '3+ Weeks', days: '21+ days', icon: '🗺️' },
 ]
 
-const STYLES = [
-  { id: 'food', name: 'Food & Dining', icon: '🍜' },
-  { id: 'culture', name: 'History & Culture', icon: '🏛️' },
-  { id: 'adventure', name: 'Adventure', icon: '🏃' },
-  { id: 'nightlife', name: 'Nightlife', icon: '🌙' },
-  { id: 'shopping', name: 'Shopping', icon: '🛍️' },
-  { id: 'relaxation', name: 'Relaxation', icon: '🧘' },
-  { id: 'photos', name: 'Photo Spots', icon: '📸' },
-  { id: 'nature', name: 'Nature', icon: '🌲' },
+// Loading messages that cycle during trip generation
+const LOADING_MESSAGES = [
+  'Analyzing your preferences...',
+  'Selecting activities you\'ll love...',
+  'Optimizing your itinerary...',
+  'Adding local recommendations...',
+  'Almost there...',
 ]
 
-const STEPS: WizardStep[] = ['destinations', 'dates', 'duration', 'style', 'review']
+const STEPS: WizardStep[] = ['destinations', 'dates', 'style', 'pacing', 'loading']
 
 const STEP_TITLES: Record<WizardStep, string> = {
   destinations: 'Where do you want to go?',
   dates: 'When are you traveling?',
-  duration: 'How long is your trip?',
-  style: 'What interests you?',
-  review: 'Review your trip',
+  style: 'What are your interests?',
+  pacing: 'How do you like to travel?',
+  loading: 'Creating your trip...',
 }
 
 export function TripWizard() {
@@ -77,6 +69,7 @@ export function TripWizard() {
   const [currentStep, setCurrentStep] = useState<WizardStep>('destinations')
   const [isGenerating, setIsGenerating] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [loadingMessageIndex, setLoadingMessageIndex] = useState(0)
   
   const [data, setData] = useState<WizardData>({
     destinations: [],
@@ -84,15 +77,34 @@ export function TripWizard() {
     hasSpecificDates: null,
     startDate: '',
     endDate: '',
-    season: null,
     duration: null,
     customDuration: '',
-    styles: [],
-    customStyle: '',
+    interests: [],
+    customInterest: '',
+    pacing: null,
   })
 
+  // Cycle through loading messages
+  useEffect(() => {
+    if (currentStep === 'loading') {
+      const interval = setInterval(() => {
+        setLoadingMessageIndex(prev => (prev + 1) % LOADING_MESSAGES.length)
+      }, 2000)
+      return () => clearInterval(interval)
+    }
+  }, [currentStep])
+
+  // Auto-trigger generation when entering loading step
+  useEffect(() => {
+    if (currentStep === 'loading' && !isGenerating) {
+      handleGenerate()
+    }
+  }, [currentStep])
+
   const currentStepIndex = STEPS.indexOf(currentStep)
-  const progress = ((currentStepIndex + 1) / STEPS.length) * 100
+  // Don't count loading step in progress
+  const displayStepCount = STEPS.length - 1
+  const progress = currentStep === 'loading' ? 100 : ((currentStepIndex + 1) / displayStepCount) * 100
 
   const canProceed = (): boolean => {
     switch (currentStep) {
@@ -100,15 +112,17 @@ export function TripWizard() {
         return data.destinations.length > 0 || data.customDestination.trim().length > 0
       case 'dates':
         if (data.hasSpecificDates === null) return false
-        return data.hasSpecificDates 
-          ? Boolean(data.startDate && data.endDate) 
-          : data.season !== null
-      case 'duration':
-        return data.duration !== null || data.customDuration.trim().length > 0
+        if (data.hasSpecificDates) {
+          return Boolean(data.startDate && data.endDate)
+        } else {
+          return data.duration !== null || data.customDuration.trim().length > 0
+        }
       case 'style':
-        return data.styles.length > 0 || data.customStyle.trim().length > 0
-      case 'review':
-        return true
+        return data.interests.length > 0 || data.customInterest.trim().length > 0
+      case 'pacing':
+        return data.pacing !== null
+      case 'loading':
+        return false // Can't proceed from loading
       default:
         return false
     }
@@ -137,12 +151,12 @@ export function TripWizard() {
     }))
   }
 
-  const toggleStyle = (id: string) => {
+  const toggleInterest = (id: TripInterest) => {
     setData(prev => ({
       ...prev,
-      styles: prev.styles.includes(id)
-        ? prev.styles.filter(s => s !== id)
-        : [...prev.styles, id]
+      interests: prev.interests.includes(id)
+        ? prev.interests.filter(s => s !== id)
+        : [...prev.interests, id]
     }))
   }
 
@@ -157,6 +171,7 @@ export function TripWizard() {
   }
 
   const handleGenerate = async () => {
+    if (isGenerating) return
     setIsGenerating(true)
     
     try {
@@ -166,28 +181,57 @@ export function TripWizard() {
       
       const destinationsStr = destinationNames.join(', ')
       
-      const duration = data.duration 
-        ? DURATIONS.find(d => d.id === data.duration)?.days 
-        : data.customDuration
+      // Calculate duration
+      let durationDays: number
+      if (data.hasSpecificDates && data.startDate && data.endDate) {
+        const start = new Date(data.startDate)
+        const end = new Date(data.endDate)
+        durationDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1
+      } else if (data.duration) {
+        // Map duration id to approximate days
+        const durationMap: Record<string, number> = {
+          'weekend': 3,
+          'week': 7,
+          '10days': 10,
+          '2weeks': 14,
+          '3weeks': 21
+        }
+        durationDays = durationMap[data.duration] || 7
+      } else {
+        durationDays = parseInt(data.customDuration) || 7
+      }
       
-      const styles = [
-        ...data.styles.map(s => STYLES.find(style => style.id === s)?.name || s),
-        data.customStyle
-      ].filter(Boolean).join(', ')
+      const duration = DURATIONS.find(d => d.id === data.duration)?.days || data.customDuration
+      
+      const interestNames = data.interests.map(id => {
+        const interest = INTERESTS.find(i => i.id === id)
+        return interest?.name || id
+      })
+      const allInterests = [...interestNames, data.customInterest].filter(Boolean).join(', ')
 
-      const prompt = `Trip to ${destinationsStr} for ${duration}, interested in ${styles}`
+      const prompt = `Trip to ${destinationsStr} for ${duration}, interested in ${allInterests}`
       
       // Generate trip template (using mock for now)
+      // TODO: Backend should use data.interests to determine what event suggestions 
+      // will be made. For example, if user selected 'food', suggest restaurants and food tours.
+      // If user selected 'culture', suggest museums and historical sites.
       const { trip: generatedTrip, activities: generatedActivities } = generateMockTrip(prompt)
       
-      // Create trip via tripService with personalized name
+      // Create trip via tripService with personalized data
+      // TODO: Backend should use data.pacing to control suggestion density:
+      // - 'relaxed': Max 4-hour gaps between activities are acceptable
+      // - 'moderate': Max 2-hour gaps between activities
+      // - 'packed': Minimal gaps, back-to-back activities suggested
       const newTrip = await tripService.createTrip({
         name: `${destinationNames[0]} Adventure`,
-        dateMode: generatedTrip.dateMode,
-        startDate: generatedTrip.dateMode === 'fixed' ? generatedTrip.startDate : undefined,
-        endDate: generatedTrip.dateMode === 'fixed' ? generatedTrip.endDate : undefined,
-        duration: generatedTrip.dateMode === 'flexible' ? generatedTrip.duration : undefined,
+        dateMode: data.hasSpecificDates ? 'fixed' : 'flexible',
+        ...(data.hasSpecificDates 
+          ? { startDate: data.startDate, endDate: data.endDate }
+          : { duration: durationDays }
+        ),
         color: generatedTrip.color,
+        interests: data.interests,
+        pacing: data.pacing || 'moderate',
       })
       
       // Create activities via tripService
@@ -204,6 +248,8 @@ export function TripWizard() {
     } catch (error) {
       console.error('Error generating trip:', error)
       setIsGenerating(false)
+      // Go back to pacing step on error
+      setCurrentStep('pacing')
     }
   }
 
@@ -211,13 +257,6 @@ export function TripWizard() {
     d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     d.country.toLowerCase().includes(searchQuery.toLowerCase())
   )
-
-  const getSelectedDestinationNames = () => {
-    return data.destinations.map(d => {
-      if (d.startsWith('custom:')) return d.replace('custom:', '')
-      return DESTINATIONS.find(dest => dest.id === d)?.name || d
-    })
-  }
 
   const renderStep = () => {
     switch (currentStep) {
@@ -350,7 +389,7 @@ export function TripWizard() {
               </button>
             </div>
 
-            {/* Date picker or season selection */}
+            {/* Date picker for specific dates */}
             {data.hasSpecificDates === true && (
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -379,59 +418,40 @@ export function TripWizard() {
               </div>
             )}
 
+            {/* Duration buttons for flexible dates */}
             {data.hasSpecificDates === false && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-                {SEASONS.map(season => (
-                  <button
-                    key={season.id}
-                    onClick={() => setData(prev => ({ ...prev, season: season.id }))}
-                    className={`p-4 rounded-xl border-2 transition-all text-center ${
-                      data.season === season.id
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                    }`}
-                  >
-                    <div className="text-2xl mb-1">{season.icon}</div>
-                    <div className="font-medium text-gray-900 dark:text-white text-sm">{season.name}</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">{season.months}</div>
-                  </button>
-                ))}
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600 dark:text-gray-400">How long is your trip?</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                  {DURATIONS.map(dur => (
+                    <button
+                      key={dur.id}
+                      onClick={() => setData(prev => ({ ...prev, duration: dur.id, customDuration: '' }))}
+                      className={`p-4 rounded-xl border-2 transition-all text-center ${
+                        data.duration === dur.id
+                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                      }`}
+                    >
+                      <div className="text-2xl mb-1">{dur.icon}</div>
+                      <div className="font-medium text-gray-900 dark:text-white text-sm">{dur.name}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">{dur.days}</div>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Custom duration */}
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Or enter a custom duration (e.g., 12 days)"
+                    value={data.customDuration}
+                    onChange={(e) => setData(prev => ({ ...prev, customDuration: e.target.value, duration: null }))}
+                    className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
               </div>
             )}
-          </div>
-        )
-
-      case 'duration':
-        return (
-          <div className="space-y-6">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-              {DURATIONS.map(dur => (
-                <button
-                  key={dur.id}
-                  onClick={() => setData(prev => ({ ...prev, duration: dur.id, customDuration: '' }))}
-                  className={`p-4 rounded-xl border-2 transition-all text-center ${
-                    data.duration === dur.id
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                  }`}
-                >
-                  <div className="text-2xl mb-1">{dur.icon}</div>
-                  <div className="font-medium text-gray-900 dark:text-white text-sm">{dur.name}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">{dur.days}</div>
-                </button>
-              ))}
-            </div>
-
-            {/* Custom duration */}
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Or enter a custom duration (e.g., 12 days)"
-                value={data.customDuration}
-                onChange={(e) => setData(prev => ({ ...prev, customDuration: e.target.value, duration: null }))}
-                className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
           </div>
         )
 
@@ -441,25 +461,31 @@ export function TripWizard() {
             <p className="text-gray-600 dark:text-gray-400">Select all that apply</p>
             
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-              {STYLES.map(style => (
-                <button
-                  key={style.id}
-                  onClick={() => toggleStyle(style.id)}
-                  className={`p-4 rounded-xl border-2 transition-all text-center ${
-                    data.styles.includes(style.id)
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                  }`}
-                >
-                  <div className="text-2xl mb-1">{style.icon}</div>
-                  <div className="font-medium text-gray-900 dark:text-white text-sm">{style.name}</div>
-                  {data.styles.includes(style.id) && (
-                    <div className="mt-2">
-                      <Check className="w-4 h-4 text-blue-500 mx-auto" />
+              {INTERESTS.map(interest => {
+                const Icon = interest.icon
+                const isSelected = data.interests.includes(interest.id)
+                return (
+                  <button
+                    key={interest.id}
+                    onClick={() => toggleInterest(interest.id)}
+                    className={`relative p-4 rounded-xl border-2 transition-all text-center ${
+                      isSelected
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                    }`}
+                  >
+                    <div className="flex justify-center mb-2">
+                      <Icon className="w-6 h-6 text-gray-700 dark:text-gray-300" />
                     </div>
-                  )}
-                </button>
-              ))}
+                    <div className="font-medium text-gray-900 dark:text-white text-sm">{interest.name}</div>
+                    {isSelected && (
+                      <div className="absolute top-2 right-2 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                        <Check className="w-3 h-3 text-white" />
+                      </div>
+                    )}
+                  </button>
+                )
+              })}
             </div>
 
             {/* Custom interest */}
@@ -467,88 +493,84 @@ export function TripWizard() {
               <input
                 type="text"
                 placeholder="Anything else? (e.g., local markets, hiking)"
-                value={data.customStyle}
-                onChange={(e) => setData(prev => ({ ...prev, customStyle: e.target.value }))}
+                value={data.customInterest}
+                onChange={(e) => setData(prev => ({ ...prev, customInterest: e.target.value }))}
                 className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
         )
 
-      case 'review':
+      case 'pacing':
         return (
           <div className="space-y-6">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 space-y-4 border border-gray-200 dark:border-gray-700">
-              {/* Destinations */}
-              <div>
-                <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">📍 Destinations</div>
-                <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {getSelectedDestinationNames().join(', ')}
-                </div>
-              </div>
+            <p className="text-gray-600 dark:text-gray-400">This helps us suggest the right number of activities</p>
+            
+            <div className="space-y-3">
+              {PACING_OPTIONS.map(option => {
+                const Icon = option.icon
+                return (
+                  <button
+                    key={option.id}
+                    onClick={() => setData(prev => ({ ...prev, pacing: option.id }))}
+                    className={`w-full p-4 rounded-xl border-2 transition-all text-left flex items-center gap-4 ${
+                      data.pacing === option.id
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                    }`}
+                  >
+                    <div className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
+                      <Icon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900 dark:text-white">{option.name}</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">{option.description}</div>
+                    </div>
+                    {data.pacing === option.id && (
+                      <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                        <Check className="w-4 h-4 text-white" />
+                      </div>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )
 
-              {/* Dates */}
-              <div>
-                <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">📅 When</div>
-                <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {data.hasSpecificDates 
-                    ? `${data.startDate} to ${data.endDate}`
-                    : SEASONS.find(s => s.id === data.season)?.name || 'Flexible'
-                  }
-                </div>
-              </div>
-
-              {/* Duration */}
-              <div>
-                <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">⏱️ Duration</div>
-                <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {data.duration 
-                    ? DURATIONS.find(d => d.id === data.duration)?.name
-                    : data.customDuration
-                  }
-                </div>
-              </div>
-
-              {/* Interests */}
-              <div>
-                <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">🎯 Interests</div>
-                <div className="flex flex-wrap gap-2">
-                  {data.styles.map(s => {
-                    const style = STYLES.find(st => st.id === s)
-                    return (
-                      <span
-                        key={s}
-                        className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-sm"
-                      >
-                        {style?.icon} {style?.name}
-                      </span>
-                    )
-                  })}
-                  {data.customStyle && (
-                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-sm">
-                      ✨ {data.customStyle}
-                    </span>
-                  )}
-                </div>
+      case 'loading':
+        return (
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="relative w-20 h-20 mb-8">
+              <div className="absolute inset-0 border-4 border-blue-200 dark:border-blue-900 rounded-full" />
+              <div className="absolute inset-0 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-2xl">✈️</span>
               </div>
             </div>
-
-            <button
-              onClick={handleGenerate}
-              disabled={isGenerating}
-              className="w-full py-4 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Creating your trip...
-                </>
-              ) : (
-                <>
-                  ✨ Create My Trip
-                </>
-              )}
-            </button>
+            
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={loadingMessageIndex}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="text-lg text-gray-600 dark:text-gray-400 text-center"
+              >
+                {LOADING_MESSAGES[loadingMessageIndex]}
+              </motion.p>
+            </AnimatePresence>
+            
+            <div className="mt-8 flex gap-1">
+              {LOADING_MESSAGES.map((_, i) => (
+                <div
+                  key={i}
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    i === loadingMessageIndex ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-700'
+                  }`}
+                />
+              ))}
+            </div>
           </div>
         )
 
@@ -560,25 +582,27 @@ export function TripWizard() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-3xl mx-auto px-4 py-8">
-        {/* Progress bar */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-500 dark:text-gray-400">
-              Step {currentStepIndex + 1} of {STEPS.length}
-            </span>
-            <span className="text-sm text-gray-500 dark:text-gray-400">
-              {Math.round(progress)}%
-            </span>
+        {/* Progress bar - hide on loading */}
+        {currentStep !== 'loading' && (
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                Step {currentStepIndex + 1} of {displayStepCount}
+              </span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                {Math.round(progress)}%
+              </span>
+            </div>
+            <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <motion.div
+                className="h-full bg-blue-500"
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.3 }}
+              />
+            </div>
           </div>
-          <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-            <motion.div
-              className="h-full bg-blue-500"
-              initial={{ width: 0 }}
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.3 }}
-            />
-          </div>
-        </div>
+        )}
 
         {/* Step content */}
         <AnimatePresence mode="wait">
@@ -597,8 +621,16 @@ export function TripWizard() {
           </motion.div>
         </AnimatePresence>
 
-        {/* Navigation */}
-        {currentStep !== 'review' && (
+        {/* "You can change this later" note - show on all steps except loading */}
+        {currentStep !== 'loading' && (
+          <div className="mt-6 flex items-start gap-2 text-sm text-gray-500 dark:text-gray-400">
+            <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <p>You can change all of this later in your trip settings.</p>
+          </div>
+        )}
+
+        {/* Navigation - hide on loading */}
+        {currentStep !== 'loading' && (
           <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
             <button
               onClick={goBack}
@@ -614,21 +646,8 @@ export function TripWizard() {
               disabled={!canProceed()}
               className="flex items-center gap-2 px-6 py-3 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              Continue
+              {currentStep === 'pacing' ? 'Create Trip' : 'Continue'}
               <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
-        )}
-
-        {/* Back button on review step */}
-        {currentStep === 'review' && (
-          <div className="mt-6">
-            <button
-              onClick={goBack}
-              className="flex items-center gap-2 px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
-            >
-              <ChevronLeft className="w-5 h-5" />
-              Back to edit
             </button>
           </div>
         )}

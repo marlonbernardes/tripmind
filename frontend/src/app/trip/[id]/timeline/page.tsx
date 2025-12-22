@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useCallback, useEffect } from 'react'
 import React from 'react'
 import { ChevronDown, ChevronRight, Calendar, Layers, ChevronsUpDown, Plus, List, Lightbulb, X } from 'lucide-react'
 import { ActivityIcon } from '@/components/ui/activity-icon'
@@ -432,7 +432,7 @@ function TimelineToolbar({
   )
 }
 
-function TimelineContent() {
+function TimelineContent({ onOpenPreferencesRef }: { onOpenPreferencesRef: React.MutableRefObject<(() => void) | null> }) {
   const { 
     trip, 
     activities, 
@@ -444,6 +444,19 @@ function TimelineContent() {
     suggestions,
     dismissSuggestion
   } = useTripContext()
+  
+  // External tab trigger for side panel (used by TripEditModal -> Preferences link)
+  const [externalTabTrigger, setExternalTabTrigger] = useState<'config' | null>(null)
+  
+  // Expose the openPreferences function via ref so TripLayout can pass it to TripHeader
+  const openPreferences = useCallback(() => {
+    setExternalTabTrigger('config')
+  }, [])
+  
+  // Set the ref so parent can access this function
+  useEffect(() => {
+    onOpenPreferencesRef.current = openPreferences
+  }, [openPreferences, onOpenPreferencesRef])
   
   // Derive selected IDs from sidePanelState for highlighting
   const selectedActivityId = (sidePanelState.mode === 'viewing' || sidePanelState.mode === 'editing') 
@@ -688,7 +701,10 @@ function TimelineContent() {
 
       {/* Right Panel - Details/Recommendations/AI Chat (40% on desktop, full width on mobile) */}
       <div className="w-full md:w-[40%] h-[50%] md:h-full">
-        <TripSidePanel />
+        <TripSidePanel 
+          externalTabTrigger={externalTabTrigger}
+          onExternalTabConsumed={() => setExternalTabTrigger(null)}
+        />
       </div>
     </div>
   )
@@ -697,9 +713,17 @@ function TimelineContent() {
 export default function TimelinePage({ params }: TimelinePageProps) {
   const { id: tripId } = React.use(params)
   
+  // Ref to hold the openPreferences function from TimelineContent
+  const openPreferencesRef = React.useRef<(() => void) | null>(null)
+  
+  // Callback that TripLayout passes to TripHeader
+  const handleOpenPreferences = React.useCallback(() => {
+    openPreferencesRef.current?.()
+  }, [])
+  
   return (
-    <TripLayout tripId={tripId} hideSidePanel>
-      <TimelineContent />
+    <TripLayout tripId={tripId} hideSidePanel onOpenPreferences={handleOpenPreferences}>
+      <TimelineContent onOpenPreferencesRef={openPreferencesRef} />
     </TripLayout>
   )
 }

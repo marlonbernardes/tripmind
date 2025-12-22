@@ -12,6 +12,8 @@ import { TripEditModal } from './TripEditModal'
 interface TripHeaderProps {
   trip: Trip
   activityCount: number
+  /** Callback to open the Preferences tab in the side panel */
+  onOpenPreferences?: () => void
 }
 
 /**
@@ -52,7 +54,7 @@ const tripViews = [
   { id: 'map', label: 'Map', path: 'map' }
 ]
 
-export function TripHeader({ trip, activityCount }: TripHeaderProps) {
+export function TripHeader({ trip, activityCount, onOpenPreferences }: TripHeaderProps) {
   const pathname = usePathname()
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   
@@ -162,6 +164,7 @@ export function TripHeader({ trip, activityCount }: TripHeaderProps) {
         trip={trip}
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
+        onOpenPreferences={onOpenPreferences}
       />
     </>
   )

@@ -72,20 +72,20 @@ Timeline changes
         - when adding a hotel it should populate the “City” and the “Check-in day”
         - The same applies for the “Create Stay” / “Create Flight” and potential other buttons that show up in the Suggestion screen. This button should also not show the “What would you like to add?” as the activity type is inferred from the button.
 - [x] The “pencil” should be shown next to the trip name in the header and clicking on it should open a modal so the users cna edit the trip name and color. Remove these properties from the “Config”/Preferences tab.
-- [ ] Make the add activity more condensed: no need to show labels (they can be shown inside the input). Make the buttons themselves a bit larger and with an icon inside.
+- [x] Make the add activity more condensed: no need to show labels (they can be shown inside the input). Make the buttons themselves a bit larger and with an icon inside.
 
 
 /plan changes
-- [ ] We need to add a note to the /plan page stating that they can change all details later so its ok if they don’t know or change their mind
-- [ ] “When are you traveling?”
+- [x] We need to add a note to the /plan page stating that they can change all details later so its ok if they don’t know or change their mind
+- [x] “When are you traveling?”
     - Get rid of seasons buttons below. Only leave buttons Specific dates and Flexible at the top. Instead when flexible is selected we should show the buttons displayed on the next question “How long is your trip” below (including custom duration). This means that the qiestoon “How long is your trip” should be removed.
-- [ ] What interests you?
+- [x] What interests you?
 	The “checkmark” indicating what types are selected effectively  changes the size of the button. Instead, adopt the same checkmark done for the first question” (where you select the citites)
 
 
-- [ ] No need to show “Review your trip” screen. Instead show a “Loading” screen indicating that the trip is being created. Show progress messages too. Also add a comment to the code responsible for creating a trip from the quiz answers that it needs to use the “What interests you” to determine what event suggestions will be made. No need to implement this, leave it for the backend - only add a comment. Also add new question to quiz related to “How packed the agenda must be” (not sure how to phrase it). This will control the density(i.e max hour gaps that are accepted between events without a suggestion).. Also add a comment about this.
-- [ ] Show both “interests” and “pacing” (i.e how packed) in the Preferences tab of the timeline page. Allow editing and persist this into the trip.
-- [ ] Remove button “Quick create” from /trips page and related code.
+- [x] No need to show “Review your trip” screen. Instead show a “Loading” screen indicating that the trip is being created. Show progress messages too. Also add a comment to the code responsible for creating a trip from the quiz answers that it needs to use the “What interests you” to determine what event suggestions will be made. No need to implement this, leave it for the backend - only add a comment. Also add new question to quiz related to “How packed the agenda must be” (not sure how to phrase it). This will control the density(i.e max hour gaps that are accepted between events without a suggestion).. Also add a comment about this.
+- [x] Show both “interests” and “pacing” (i.e how packed) in the Preferences tab of the timeline page. Allow editing and persist this into the trip.
+- [x] Remove button “Quick create” from /trips page and related code.
 
 
 **Future changes to consider (perhaps post MVP)**

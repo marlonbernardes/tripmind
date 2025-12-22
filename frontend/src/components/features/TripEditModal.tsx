@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { X, Palette } from 'lucide-react'
+import { X, Palette, Info, Settings } from 'lucide-react'
 import type { Trip } from '@/types/simple'
 import { tripService } from '@/lib/trip-service'
 import { useTripContext } from '@/contexts/TripContext'
@@ -22,9 +22,10 @@ interface TripEditModalProps {
   trip: Trip
   isOpen: boolean
   onClose: () => void
+  onOpenPreferences?: () => void
 }
 
-export function TripEditModal({ trip, isOpen, onClose }: TripEditModalProps) {
+export function TripEditModal({ trip, isOpen, onClose, onOpenPreferences }: TripEditModalProps) {
   const { setTrip } = useTripContext()
   const [name, setName] = useState(trip.name)
   const [color, setColor] = useState(trip.color)
@@ -156,6 +157,29 @@ export function TripEditModal({ trip, isOpen, onClose }: TripEditModalProps) {
                 />
               ))}
             </div>
+          </div>
+
+          {/* Info note about Preferences */}
+          <div className="flex items-start gap-2 p-2.5 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+            <Info className="w-3.5 h-3.5 text-gray-400 mt-0.5 flex-shrink-0" />
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Change dates, duration, and travel preferences in{' '}
+              {onOpenPreferences ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose()
+                    onOpenPreferences()
+                  }}
+                  className="text-blue-600 dark:text-blue-400 hover:underline font-medium inline-flex items-center gap-0.5"
+                >
+                  <Settings className="w-3 h-3" />
+                  Preferences
+                </button>
+              ) : (
+                <span className="font-medium">Preferences</span>
+              )}
+            </p>
           </div>
         </div>
 
