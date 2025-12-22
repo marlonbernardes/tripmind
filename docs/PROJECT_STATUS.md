@@ -39,17 +39,17 @@ The project has a working Gantt chart but needs visual and UX improvements based
 Please read `quiz_context.md` for further context.
 
 Timeline changes
-- [ ] SVG icons for every row in the page (i.e for flights, notes, hotels, events, transport)
-- [ ] Change “Config” tab to “Preferences”
+- [x] SVG icons for every row in the page (i.e for flights, notes, hotels, events, transport)
+- [x] Change “Config” tab to “Preferences”
 - [ ] BUG: When you are adding a new activity but then you click to detail (i.e on a row) it doesn’t detail the activity
-- [ ] Change header “Trips” to “My Trips” and “Plan” to something else (suggest please)
+- [x] Change header “Trips” to “My Trips” and “Plan” to something else (suggest please)
 - [ ] Add button to “Delete” a trip. A new modal needs to be shown as this operation is irreversible.
 - [ ] When adding an activity, it should use the current context to populate the fields in the add activity screen.
     - For example: 
         - when adding a flight, it should populate the “From” section and “Departure day”. W
         - when adding a hotel it should populate the “City” and the “Check-in day”
         - The same applies for the “Create Stay” / “Create Flight” and potential other buttons that show up in the Suggestion screen. This button should also not show the “What would you like to add?” as the activity type is inferred from the button.
-- [  ] The “pencil” should be shown next to the trip name in the header and clicking on it should open a modal so the users cna edit the trip name and color. Remove these properties from the “Config”/Preferences tab.
+- [x] The “pencil” should be shown next to the trip name in the header and clicking on it should open a modal so the users cna edit the trip name and color. Remove these properties from the “Config”/Preferences tab.
 - [ ] Make the add activity more condensed: no need to show labels (they can be shown inside the input). Make the buttons themselves a bit larger and with an icon inside.
 
 

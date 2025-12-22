@@ -1,24 +1,12 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { Settings, Calendar, Clock, Palette, AlertTriangle } from 'lucide-react'
-import type { Trip, FixedTrip, FlexibleTrip } from '@/types/simple'
+import { Settings, Calendar, Clock, AlertTriangle } from 'lucide-react'
+import type { Trip } from '@/types/simple'
 import { isFixedTrip } from '@/types/simple'
 import { useTripContext } from '@/contexts/TripContext'
 import { getTripDuration, MAX_TRIP_DURATION } from '@/lib/date-service'
 import { tripService } from '@/lib/trip-service'
-
-// Preset trip colors
-const TRIP_COLORS = [
-  { name: 'Blue', value: '#3B82F6' },
-  { name: 'Green', value: '#10B981' },
-  { name: 'Purple', value: '#8B5CF6' },
-  { name: 'Orange', value: '#F97316' },
-  { name: 'Pink', value: '#EC4899' },
-  { name: 'Teal', value: '#14B8A6' },
-  { name: 'Red', value: '#EF4444' },
-  { name: 'Indigo', value: '#6366F1' },
-]
 
 interface TripConfigTabProps {
   onClose?: () => void
@@ -40,8 +28,6 @@ function getMinAllowedDuration(activities: { day: number; endDay?: number }[]): 
 function createInitialFormData(trip: Trip | null) {
   if (!trip) {
     return {
-      name: '',
-      color: '#3B82F6',
       dateMode: 'fixed' as 'fixed' | 'flexible',
       startDate: '',
       endDate: '',
@@ -49,22 +35,16 @@ function createInitialFormData(trip: Trip | null) {
     }
   }
   
-  const baseData = {
-    name: trip.name,
-    color: trip.color,
-    dateMode: trip.dateMode,
-  }
-  
   if (isFixedTrip(trip)) {
     return {
-      ...baseData,
+      dateMode: trip.dateMode,
       startDate: trip.startDate,
       endDate: trip.endDate,
       duration: getTripDuration(trip),
     }
   } else {
     return {
-      ...baseData,
+      dateMode: trip.dateMode,
       startDate: '',
       endDate: '',
       duration: trip.duration,
@@ -111,8 +91,6 @@ export function TripConfigTab({ onClose }: TripConfigTabProps) {
     setIsSaving(true)
     try {
       const updatedTrip = await tripService.updateTrip(trip.id, {
-        name: formData.name,
-        color: formData.color,
         dateMode: formData.dateMode,
         ...(formData.dateMode === 'fixed'
           ? { startDate: formData.startDate, endDate: formData.endDate }
@@ -168,44 +146,6 @@ export function TripConfigTab({ onClose }: TripConfigTabProps) {
 
   return (
     <div className="p-4 space-y-4">
-      {/* Trip Name */}
-      <div>
-        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Trip Name
-        </label>
-        <input
-          type="text"
-          value={formData.name}
-          onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-          className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-          placeholder="My Trip"
-        />
-      </div>
-
-      {/* Trip Color */}
-      <div>
-        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-          <Palette className="w-3 h-3 inline mr-1" />
-          Color
-        </label>
-        <div className="flex gap-2 flex-wrap">
-          {TRIP_COLORS.map(color => (
-            <button
-              key={color.value}
-              type="button"
-              onClick={() => setFormData(prev => ({ ...prev, color: color.value }))}
-              className={`w-7 h-7 rounded-full transition-all ${
-                formData.color === color.value
-                  ? 'ring-2 ring-offset-2 ring-gray-400 dark:ring-gray-500 scale-110'
-                  : 'hover:scale-105'
-              }`}
-              style={{ backgroundColor: color.value }}
-              title={color.name}
-            />
-          ))}
-        </div>
-      </div>
-
       {/* Date Mode Toggle */}
       <div>
         <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">

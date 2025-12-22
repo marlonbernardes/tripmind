@@ -11,12 +11,12 @@ export interface NavigationItem {
 export const navigationItems: Omit<NavigationItem, 'icon'>[] = [
   {
     id: 'trips',
-    label: 'Trips',
+    label: 'My Trips',
     href: '/trips',
   },
   {
     id: 'plan',
-    label: 'Plan',
+    label: 'Plan Your Trip',
     href: '/plan',
     activePattern: '/plan',
   },
