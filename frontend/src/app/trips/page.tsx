@@ -52,6 +52,16 @@ export default function TripsPage() {
     }
   }
 
+  const handleDeleteTrip = async (tripId: string) => {
+    try {
+      await tripService.deleteTrip(tripId)
+      // Remove from local state
+      setTripsWithActivities(prev => prev.filter(t => t.trip.id !== tripId))
+    } catch (error) {
+      console.error('Failed to delete trip:', error)
+    }
+  }
+
   const resetForm = () => {
     setDateMode('fixed')
     setDuration(7)
@@ -180,7 +190,12 @@ export default function TripsPage() {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {tripsWithActivities.map(({ trip, activities }) => (
-              <TripCard key={trip.id} trip={trip} activities={activities} />
+              <TripCard 
+                key={trip.id} 
+                trip={trip} 
+                activities={activities} 
+                onDelete={handleDeleteTrip}
+              />
             ))}
           </div>
         )}

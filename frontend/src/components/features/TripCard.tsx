@@ -1,4 +1,8 @@
+'use client'
+
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
+import { MoreVertical, Trash2 } from 'lucide-react'
 import type { Trip, Activity } from '@/types/simple'
 import { isFixedTrip } from '@/types/simple'
 import { getTripDuration } from '@/lib/date-service'
@@ -7,10 +11,47 @@ import { ActivityIcon } from '@/components/ui/activity-icon'
 interface TripCardProps {
   trip: Trip
   activities?: Activity[]
+  onDelete?: (tripId: string) => void
 }
 
-export function TripCard({ trip, activities = [] }: TripCardProps) {
+export function TripCard({ trip, activities = [], onDelete }: TripCardProps) {
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
   const duration = getTripDuration(trip)
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false)
+        setConfirmDelete(false)
+      }
+    }
+    if (menuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [menuOpen])
+
+  const handleMenuClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setMenuOpen(!menuOpen)
+    setConfirmDelete(false)
+  }
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (confirmDelete) {
+      onDelete?.(trip.id)
+      setMenuOpen(false)
+      setConfirmDelete(false)
+    } else {
+      setConfirmDelete(true)
+    }
+  }
   
   // Extract unique cities from activities
   const cities = [...new Set(activities.map(a => a.city).filter(Boolean))] as string[]
@@ -42,6 +83,34 @@ export function TripCard({ trip, activities = [] }: TripCardProps) {
           className="absolute top-0 left-0 right-0 h-1"
           style={{ backgroundColor: trip.color }}
         />
+
+        {/* Three-dot menu */}
+        <div className="absolute top-3 right-3 z-10" ref={menuRef}>
+          <button
+            onClick={handleMenuClick}
+            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+            aria-label="Trip options"
+          >
+            <MoreVertical className="w-4 h-4" />
+          </button>
+          
+          {/* Dropdown menu */}
+          {menuOpen && (
+            <div className="absolute right-0 top-full mt-1 w-36 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-20">
+              <button
+                onClick={handleDeleteClick}
+                className={`w-full px-3 py-2 text-left text-sm flex items-center gap-2 transition-colors ${
+                  confirmDelete
+                    ? 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                    : 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
+                }`}
+              >
+                <Trash2 className="w-4 h-4" />
+                {confirmDelete ? 'Confirm delete' : 'Delete'}
+              </button>
+            </div>
+          )}
+        </div>
         
         <div className="p-5 pt-4">
           {/* Header with name */}

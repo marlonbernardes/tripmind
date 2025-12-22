@@ -43,7 +43,7 @@ Timeline changes
 - [x] Change “Config” tab to “Preferences”
 - [x] BUG: When you are adding a new activity but then you click to detail (i.e on a row) it doesn’t detail the activity
 - [x] Change header “Trips” to “My Trips” and “Plan” to something else (suggest please)
-- [ ] Add button to “Delete” a trip. A new modal needs to be shown as this operation is irreversible. It should redirect users to /trips page.
+- [x] Add button to “Delete” a trip. A new modal needs to be shown as this operation is irreversible. It should redirect users to /trips page.
 - [ ] When adding an activity, it should use the current context to populate the fields in the add activity screen.
     - For example: 
         - when adding a flight, it should populate the “From” section and “Departure day”. W
