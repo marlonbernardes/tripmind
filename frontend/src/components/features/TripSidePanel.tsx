@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { FileText, Plus, Settings } from 'lucide-react'
 import { useTripContext } from '@/contexts/TripContext'
 import { ManageActivityForm } from './ManageActivityForm'
@@ -12,7 +12,6 @@ import { ActivityIcon } from '@/components/ui/activity-icon'
 import type { ActivityType, ActivityContext } from '@/types/simple'
 
 type TabType = 'details' | 'config'
-type ViewMode = 'view' | 'edit'
 
 interface TripSidePanelProps {
   /** If true, starts in view mode and allows switching to edit. If false, goes directly to edit mode */
@@ -21,95 +20,180 @@ interface TripSidePanelProps {
 
 export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
   const { 
-    selectedActivity, 
-    setSelectedActivity, 
-    isCreatingActivity, 
-    setIsCreatingActivity,
-    creatingActivityDay,
-    trip,
-    selectedSuggestion,
-    setSelectedSuggestion
+    sidePanelState,
+    viewActivity,
+    editActivity,
+    createActivity,
+    clearPanel,
+    trip
   } = useTripContext()
+  
   const [activeTab, setActiveTab] = useState<TabType>('details')
-  const [viewMode, setViewMode] = useState<ViewMode>(defaultViewMode ? 'view' : 'edit')
   const [creatingActivityType, setCreatingActivityType] = useState<ActivityType | null>(null)
-  const [activityContext, setActivityContext] = useState<ActivityContext | undefined>(undefined)
-  const previousActivityId = useRef<string | null>(null)
 
-  // Auto-switch to details tab when an activity or suggestion is selected
+  // Auto-switch to details tab when panel state changes
   useEffect(() => {
-    if (selectedActivity) {
+    if (sidePanelState.mode !== 'empty') {
       setActiveTab('details')
-      
-      // If activity changed and we're in defaultViewMode, reset to view mode
-      if (defaultViewMode && selectedActivity.id !== previousActivityId.current) {
-        setViewMode('view')
+    }
+  }, [sidePanelState])
+
+  // Reset creating activity type when entering create mode
+  useEffect(() => {
+    if (sidePanelState.mode === 'creating') {
+      // Only reset type if there's no preselected type in context
+      if (!sidePanelState.context?.preselectedType) {
+        setCreatingActivityType(null)
+      } else {
+        setCreatingActivityType(sidePanelState.context.preselectedType)
       }
-      previousActivityId.current = selectedActivity.id
     }
-  }, [selectedActivity, defaultViewMode])
-
-  // Auto-switch to details tab when a suggestion is selected
-  useEffect(() => {
-    if (selectedSuggestion) {
-      setActiveTab('details')
-    }
-  }, [selectedSuggestion])
-
-  // Reset form state when creatingActivityDay changes (user clicked "Add" on a different day)
-  useEffect(() => {
-    if (isCreatingActivity && creatingActivityDay !== null) {
-      // Reset form state when a new day is selected for creating activity
-      setActivityContext(undefined)
-      setCreatingActivityType(null)
-      setActiveTab('details')
-    }
-  }, [creatingActivityDay])
-
-  const handleClose = () => {
-    setSelectedActivity(null)
-    setIsCreatingActivity(false)
-  }
-
-  const handleSave = () => {
-    setSelectedActivity(null)
-    setIsCreatingActivity(false)
-  }
-
-  const handleCancel = () => {
-    setSelectedActivity(null)
-    if (isCreatingActivity) {
-      setIsCreatingActivity(false)
-    }
-  }
+  }, [sidePanelState])
 
   const handleAddActivity = () => {
-    setSelectedActivity(null)
-    setCreatingActivityType(null) // Reset type when starting fresh
-    setActivityContext(undefined) // Clear context for fresh add
-    setIsCreatingActivity(true)
-    setActiveTab('details')
+    createActivity()
   }
 
-  const handleCreateCancel = () => {
-    setCreatingActivityType(null)
-    setActivityContext(undefined)
-    setIsCreatingActivity(false)
-  }
-
-  const handleCreateSave = () => {
-    setCreatingActivityType(null)
-    setActivityContext(undefined)
-    setSelectedActivity(null)
-    setIsCreatingActivity(false)
-  }
-
-  // Create activity from suggestion with pre-filled context
   const handleCreateFromSuggestion = (context: ActivityContext) => {
-    setActivityContext(context)
-    setCreatingActivityType(context.preselectedType || null)
-    setSelectedSuggestion(null)
-    setIsCreatingActivity(true)
+    createActivity(context)
+  }
+
+  // Render content based on sidePanelState.mode
+  const renderDetailsContent = () => {
+    switch (sidePanelState.mode) {
+      case 'empty':
+        return <EmptyDetailsState onAddClick={handleAddActivity} />
+
+      case 'creating':
+        return (
+          <div className="flex flex-col h-full">
+            <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                {creatingActivityType ? (
+                  <>
+                    <ActivityIcon type={creatingActivityType} size={16} className="text-gray-600 dark:text-gray-400" />
+                    Add {getActivityLabel(creatingActivityType)}
+                  </>
+                ) : (
+                  'What would you like to add?'
+                )}
+              </h3>
+              <button
+                onClick={clearPanel}
+                className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 pb-0">
+              <ManageActivityForm
+                key={`create-${sidePanelState.context?.day ?? 'no-day'}-${sidePanelState.context?.preselectedType ?? 'no-type'}`}
+                mode="create"
+                onSave={clearPanel}
+                onCancel={clearPanel}
+                onTypeChange={setCreatingActivityType}
+                initialContext={sidePanelState.context}
+              />
+            </div>
+          </div>
+        )
+
+      case 'suggestion':
+        if (!trip) return null
+        return (
+          <div className="flex flex-col h-full">
+            <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800">
+              <h3 className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                💡 Suggestion
+              </h3>
+              <button
+                onClick={clearPanel}
+                className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              <SuggestionDetailView
+                suggestion={sidePanelState.suggestion}
+                trip={trip}
+                onCreateActivity={handleCreateFromSuggestion}
+              />
+            </div>
+          </div>
+        )
+
+      case 'viewing':
+        return (
+          <div className="flex flex-col h-full">
+            <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                <ActivityIcon type={sidePanelState.activity.type} size={16} className="text-gray-600 dark:text-gray-400" />
+                {getActivityLabel(sidePanelState.activity.type)}
+              </h3>
+              <button
+                onClick={clearPanel}
+                className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              <ActivityReadView
+                activity={sidePanelState.activity}
+                onEdit={() => editActivity(sidePanelState.activity)}
+              />
+            </div>
+          </div>
+        )
+
+      case 'editing':
+        return (
+          <div className="flex flex-col h-full">
+            <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                <ActivityIcon type={sidePanelState.activity.type} size={16} className="text-gray-600 dark:text-gray-400" />
+                Edit {getActivityLabel(sidePanelState.activity.type)}
+              </h3>
+              <button
+                onClick={() => {
+                  if (defaultViewMode) {
+                    viewActivity(sidePanelState.activity)
+                  } else {
+                    clearPanel()
+                  }
+                }}
+                className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              >
+                {defaultViewMode ? '← Back' : '✕'}
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 pb-0">
+              <ManageActivityForm
+                mode="edit"
+                activity={sidePanelState.activity}
+                onSave={() => {
+                  if (defaultViewMode) {
+                    viewActivity(sidePanelState.activity)
+                  } else {
+                    clearPanel()
+                  }
+                }}
+                onCancel={() => {
+                  if (defaultViewMode) {
+                    viewActivity(sidePanelState.activity)
+                  } else {
+                    clearPanel()
+                  }
+                }}
+              />
+            </div>
+          </div>
+        )
+
+      default:
+        return null
+    }
   }
 
   return (
@@ -148,128 +232,7 @@ export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
         <div className="flex-1 overflow-y-auto min-h-0">
           {activeTab === 'details' && (
             <div className="h-full">
-              {isCreatingActivity ? (
-                <div className="flex flex-col h-full">
-                  <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                    <h3 className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                      {creatingActivityType ? (
-                        <>
-                          <ActivityIcon type={creatingActivityType} size={16} className="text-gray-600 dark:text-gray-400" />
-                          Add {getActivityLabel(creatingActivityType)}
-                        </>
-                      ) : (
-                        'What would you like to add?'
-                      )}
-                    </h3>
-                    <button
-                      onClick={handleCreateCancel}
-                      className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  <div className="flex-1 overflow-y-auto p-4 pb-0">
-                    <ManageActivityForm
-                      key={`create-${creatingActivityDay ?? 'no-day'}-${activityContext?.preselectedType ?? 'no-type'}`}
-                      mode="create"
-                      onSave={handleCreateSave}
-                      onCancel={handleCreateCancel}
-                      onTypeChange={setCreatingActivityType}
-                      initialContext={activityContext ?? (creatingActivityDay ? { day: creatingActivityDay } : undefined)}
-                    />
-                  </div>
-                </div>
-              ) : selectedSuggestion && trip ? (
-                /* Suggestion view - shows suggestion details with booking links */
-                <div className="flex flex-col h-full">
-                  <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800">
-                    <h3 className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                      💡 Suggestion
-                    </h3>
-                    <button
-                      onClick={() => setSelectedSuggestion(null)}
-                      className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  <div className="flex-1 overflow-y-auto p-4">
-                    <SuggestionDetailView
-                      suggestion={selectedSuggestion}
-                      trip={trip}
-                      onCreateActivity={handleCreateFromSuggestion}
-                    />
-                  </div>
-                </div>
-              ) : selectedActivity ? (
-                viewMode === 'view' && defaultViewMode ? (
-                  /* View mode - shows activity details with Edit button */
-                  <div className="flex flex-col h-full">
-                    <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                    <h3 className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                      <ActivityIcon type={selectedActivity.type} size={16} className="text-gray-600 dark:text-gray-400" />
-                      {getActivityLabel(selectedActivity.type)}
-                    </h3>
-                      <button
-                        onClick={handleClose}
-                        className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                    <div className="flex-1 overflow-y-auto p-4">
-                      <ActivityReadView
-                        activity={selectedActivity}
-                        onEdit={() => setViewMode('edit')}
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  /* Edit mode */
-                  <div className="flex flex-col h-full">
-                    <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                      <h3 className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                        <ActivityIcon type={selectedActivity.type} size={16} className="text-gray-600 dark:text-gray-400" />
-                        Edit {getActivityLabel(selectedActivity.type)}
-                      </h3>
-                      <button
-                        onClick={() => {
-                          if (defaultViewMode) {
-                            setViewMode('view')
-                          } else {
-                            handleClose()
-                          }
-                        }}
-                        className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-                      >
-                        {defaultViewMode ? '← Back' : '✕'}
-                      </button>
-                    </div>
-                    <div className="flex-1 overflow-y-auto p-4 pb-0">
-                      <ManageActivityForm
-                        mode="edit"
-                        activity={selectedActivity}
-                        onSave={() => {
-                          if (defaultViewMode) {
-                            setViewMode('view')
-                          } else {
-                            handleSave()
-                          }
-                        }}
-                        onCancel={() => {
-                          if (defaultViewMode) {
-                            setViewMode('view')
-                          } else {
-                            handleCancel()
-                          }
-                        }}
-                      />
-                    </div>
-                  </div>
-                )
-              ) : (
-                <EmptyDetailsState onAddClick={handleAddActivity} />
-              )}
+              {renderDetailsContent()}
             </div>
           )}
 

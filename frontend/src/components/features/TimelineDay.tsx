@@ -27,12 +27,10 @@ export function TimelineDay({
   onSuggestionSelect,
   onSuggestionDismiss
 }: TimelineDayProps) {
-  const { setIsCreatingActivity, setSelectedActivity, setSelectedSuggestion } = useTripContext()
+  const { createActivity } = useTripContext()
 
   const handleAddActivityClick = () => {
-    setSelectedActivity(null)
-    setSelectedSuggestion(null)
-    setIsCreatingActivity(true)
+    createActivity({ day })
   }
 
   // Group activities by city for the day header

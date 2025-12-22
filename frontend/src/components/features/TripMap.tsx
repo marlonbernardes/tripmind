@@ -85,7 +85,7 @@ export function TripMap({ className }: TripMapProps) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   
-  const { trip, activities, setSelectedActivity, setIsCreatingActivity } = useTripContext()
+  const { trip, activities, viewActivity, createActivity } = useTripContext()
   
   const [isMapLoaded, setIsMapLoaded] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -348,7 +348,7 @@ export function TripMap({ className }: TripMapProps) {
       el.textContent = String(point.index)
       el.addEventListener('click', () => {
         setCurrentIndex(arrayIdx)
-        setSelectedActivity(point.activity)
+        viewActivity(point.activity)
       })
       
       const marker = new mapboxgl.Marker({ element: el })
@@ -360,7 +360,7 @@ export function TripMap({ className }: TripMapProps) {
     
     // Focus on current point
     focusOnPoint(currentIndex)
-  }, [mapPoints, isMapLoaded, visiblePointIndices, currentIndex, setSelectedActivity, focusOnPoint])
+  }, [mapPoints, isMapLoaded, visiblePointIndices, currentIndex, viewActivity, focusOnPoint])
 
   // Update route lines: current route (for ranges) and next route (preview)
   useEffect(() => {
@@ -446,7 +446,7 @@ export function TripMap({ className }: TripMapProps) {
       setCurrentIndex(newIndex)
       const point = mapPoints[newIndex]
       if (point) {
-        setSelectedActivity(point.activity)
+        viewActivity(point.activity)
       }
     }
   }
@@ -457,7 +457,7 @@ export function TripMap({ className }: TripMapProps) {
       setCurrentIndex(newIndex)
       const point = mapPoints[newIndex]
       if (point) {
-        setSelectedActivity(point.activity)
+        viewActivity(point.activity)
       }
     }
   }
@@ -600,7 +600,7 @@ export function TripMap({ className }: TripMapProps) {
             
             {/* Single Add button */}
             <button
-              onClick={() => setIsCreatingActivity(true)}
+              onClick={() => createActivity()}
               className="flex items-center gap-1.5 px-4 border-l border-gray-200 dark:border-gray-700 text-sm font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
             >
               <span>+</span>

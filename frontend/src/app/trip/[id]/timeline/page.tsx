@@ -436,14 +436,22 @@ function TimelineContent() {
   const { 
     trip, 
     activities, 
-    selectedActivity, 
-    setSelectedActivity,
+    sidePanelState,
+    editActivity,
+    viewSuggestion,
+    createActivity,
     deleteActivityWithUndo,
     suggestions,
-    selectedSuggestion,
-    setSelectedSuggestion,
     dismissSuggestion
   } = useTripContext()
+  
+  // Derive selected IDs from sidePanelState for highlighting
+  const selectedActivityId = (sidePanelState.mode === 'viewing' || sidePanelState.mode === 'editing') 
+    ? sidePanelState.activity.id 
+    : undefined
+  const selectedSuggestionId = sidePanelState.mode === 'suggestion' 
+    ? sidePanelState.suggestion.id 
+    : undefined
   const [groupBy, setGroupBy] = useState<GroupByMode>('date')
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
   
@@ -554,9 +562,8 @@ function TimelineContent() {
   }
   
   // Handle add activity - open create form with optional day
-  const { startCreatingActivity } = useTripContext()
   const handleAddActivity = (day?: number) => {
-    startCreatingActivity(day)
+    createActivity(day ? { day } : undefined)
   }
   
   if (!trip) {
@@ -607,8 +614,8 @@ function TimelineContent() {
                         <CompactSuggestionRow
                           suggestion={item.item}
                           trip={trip}
-                          isSelected={selectedSuggestion?.id === item.item.id}
-                          onClick={() => setSelectedSuggestion(item.item)}
+                          isSelected={selectedSuggestionId === item.item.id}
+                          onClick={() => viewSuggestion(item.item)}
                           onDismiss={() => dismissSuggestion(item.item.id)}
                         />
                       ) : (
@@ -617,8 +624,8 @@ function TimelineContent() {
                           trip={trip}
                           displayDay={item.item.displayDay}
                           dayInfo={item.item.dayNumber ? { dayNumber: item.item.dayNumber, totalDays: item.item.totalDays! } : undefined}
-                          isSelected={selectedActivity?.id === item.item.id}
-                          onClick={() => setSelectedActivity(item.item)}
+                          isSelected={selectedActivityId === item.item.id}
+                          onClick={() => editActivity(item.item)}
                           onDelete={() => deleteActivityWithUndo(item.item.id)}
                           showDate
                         />
@@ -637,11 +644,11 @@ function TimelineContent() {
                     activities={group.activities}
                     suggestions={suggestionsByDay[group.day] || []}
                     trip={trip}
-                    selectedActivityId={selectedActivity?.id}
-                    selectedSuggestionId={selectedSuggestion?.id}
-                    onActivitySelect={setSelectedActivity}
+                    selectedActivityId={selectedActivityId}
+                    selectedSuggestionId={selectedSuggestionId}
+                    onActivitySelect={editActivity}
                     onActivityDelete={deleteActivityWithUndo}
-                    onSuggestionSelect={setSelectedSuggestion}
+                    onSuggestionSelect={viewSuggestion}
                     onSuggestionDismiss={dismissSuggestion}
                     isCollapsed={collapsedGroups.has(group.key)}
                     onToggleCollapse={handleToggleCollapse}
@@ -659,11 +666,11 @@ function TimelineContent() {
                     activities={group.activities}
                     suggestions={suggestionsByType[group.key as keyof typeof suggestionsByType] || []}
                     trip={trip}
-                    selectedActivityId={selectedActivity?.id}
-                    selectedSuggestionId={selectedSuggestion?.id}
-                    onActivitySelect={setSelectedActivity}
+                    selectedActivityId={selectedActivityId}
+                    selectedSuggestionId={selectedSuggestionId}
+                    onActivitySelect={editActivity}
                     onActivityDelete={deleteActivityWithUndo}
-                    onSuggestionSelect={setSelectedSuggestion}
+                    onSuggestionSelect={viewSuggestion}
                     onSuggestionDismiss={dismissSuggestion}
                     isCollapsed={collapsedGroups.has(group.key)}
                     onToggleCollapse={handleToggleCollapse}

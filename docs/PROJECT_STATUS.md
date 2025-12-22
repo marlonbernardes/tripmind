@@ -1,7 +1,7 @@
 # 🧭 Tripmind Project Status
 
-## Current Status: **AI Trip Planning Interface Complete - Ready for Overview Page Enhancements**
-*Last Updated: November 24, 2025*
+## Current Status: **TripContext Refactored - Ready for Further UI Improvements**
+*Last Updated: December 22, 2025*
 
 ### 📍 What We Have
 - ✅ Complete project specification (`docs/PLAN.md`)
@@ -28,9 +28,31 @@
 - ✅ **Inter font family already installed and configured**
 
 ### 🚧 Current State
-**Overview page (`/trip/[id]/overview`) exists with basic Gantt chart implementation using `gantt-task-react` library.**
+**TripContext state architecture refactored with discriminated union pattern for cleaner state management.**
 
-The project has a working Gantt chart but needs visual and UX improvements based on user feedback.
+#### Recent Refactoring (December 22, 2025)
+Refactored the TripContext side panel state from fragmented boolean/nullable variables to a single discriminated union:
+
+**Before (problematic):**
+- 4 interdependent state variables: `selectedActivity`, `isCreatingActivity`, `creatingActivityDay`, `selectedSuggestion`
+- Required careful coordination to avoid invalid states
+- Scattered clearing logic across handlers
+
+**After (clean):**
+- Single `sidePanelState` with discriminated union type:
+  - `{ mode: 'empty' }`
+  - `{ mode: 'viewing', activity }`
+  - `{ mode: 'editing', activity }`
+  - `{ mode: 'creating', context? }`
+  - `{ mode: 'suggestion', suggestion }`
+- Clean transition functions: `viewActivity`, `editActivity`, `createActivity`, `viewSuggestion`, `clearPanel`
+- Invalid states now impossible at the type level
+
+**Files changed:**
+- `types/simple.ts` - Added `SidePanelMode` and `SidePanelState` types
+- `TripContext.tsx` - Replaced fragmented state with discriminated union
+- `TripSidePanel.tsx` - Uses clean switch/case on `sidePanelState.mode`
+- `TimelineDay.tsx`, `timeline/page.tsx`, `map/page.tsx`, `TripMap.tsx`, `TripConfigTab.tsx` - Updated to use new API
 
 ---
 

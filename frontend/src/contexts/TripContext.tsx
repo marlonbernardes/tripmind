@@ -2,31 +2,37 @@
 
 import { createContext, useContext, useState, ReactNode, useEffect, useRef, useCallback } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
-import type { Activity, Trip, Suggestion } from '@/types/simple'
+import type { Activity, Trip, Suggestion, SidePanelState, ActivityContext } from '@/types/simple'
 import { useToast } from '@/components/ui/toast'
 import { tripService } from '@/lib/trip-service'
 import { suggestionService } from '@/lib/suggestion-service'
 
 interface TripContextType {
-  selectedActivity: Activity | null
-  setSelectedActivity: (activity: Activity | null) => void
-  isCreatingActivity: boolean
-  setIsCreatingActivity: (isCreating: boolean) => void
-  creatingActivityDay: number | null
-  startCreatingActivity: (day?: number) => void
+  // Side panel state - single source of truth
+  sidePanelState: SidePanelState
+  
+  // Transition functions
+  viewActivity: (activity: Activity) => void
+  editActivity: (activity: Activity) => void
+  createActivity: (context?: ActivityContext) => void
+  viewSuggestion: (suggestion: Suggestion) => void
+  clearPanel: () => void
+  
+  // Trip data
   trip: Trip | null
   setTrip: (trip: Trip | null) => void
   updateTripName: (name: string) => void
+  
+  // Activities
   activities: Activity[]
   setActivities: (activities: Activity[]) => void
   addActivity: (activity: Omit<Activity, 'id'>) => void
   updateActivity: (id: string, updates: Partial<Activity>) => void
   deleteActivity: (id: string) => void
   deleteActivityWithUndo: (id: string) => void
+  
   // Suggestions
   suggestions: Suggestion[]
-  selectedSuggestion: Suggestion | null
-  setSelectedSuggestion: (suggestion: Suggestion | null) => void
   dismissSuggestion: (id: string) => void
   refreshSuggestions: () => void
 }
@@ -46,60 +52,90 @@ interface TripProviderProps {
 }
 
 export function TripProvider({ children }: TripProviderProps) {
-  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null)
-  const [isCreatingActivity, setIsCreatingActivity] = useState(false)
-  const [creatingActivityDay, setCreatingActivityDay] = useState<number | null>(null)
+  // ==================== SIDE PANEL STATE ====================
+  const [sidePanelState, setSidePanelState] = useState<SidePanelState>({ mode: 'empty' })
+  
   const [trip, setTrip] = useState<Trip | null>(null)
   const [activities, setActivities] = useState<Activity[]>([])
-  const [isInternalNavigation, setIsInternalNavigation] = useState(false)
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([])
+  
+  // One-time URL initialization flag
+  const hasInitializedFromUrl = useRef(false)
+  
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
 
-  // Handle URL-based activity selection (only for external URL changes, not internal navigation)
-  useEffect(() => {
-    // Skip if this is an internal navigation (user clicking within the app)
-    if (isInternalNavigation) {
-      setIsInternalNavigation(false)
-      return
-    }
-    
-    const activityId = searchParams.get('activity')
-    if (activityId && activities.length > 0) {
-      const activity = activities.find(a => a.id === activityId)
-      if (activity && activity.id !== selectedActivity?.id) {
-        setSelectedActivity(activity)
-      }
-    }
-  }, [searchParams, activities])
-
-  // Update URL when activity selection changes
-  const handleActivitySelect = (activity: Activity | null) => {
-    // Mark this as internal navigation to prevent the useEffect from re-selecting
-    setIsInternalNavigation(true)
-    setSelectedActivity(activity)
-    
+  // ==================== URL SYNC (Write-only) ====================
+  // URL reflects state but doesn't control it (except on initial load)
+  
+  const updateUrlWithActivity = useCallback((activityId: string) => {
     const params = new URLSearchParams(searchParams.toString())
-    if (activity) {
-      params.set('activity', activity.id)
-    } else {
-      params.delete('activity')
-    }
-    
+    params.set('activity', activityId)
     const newUrl = `${pathname}?${params.toString()}`
     router.replace(newUrl, { scroll: false })
-  }
+  }, [searchParams, pathname, router])
 
-  // CRUD methods for activities
-  const addActivity = (activityData: Omit<Activity, 'id'>) => {
+  const clearActivityFromUrl = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete('activity')
+    const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname
+    router.replace(newUrl, { scroll: false })
+  }, [searchParams, pathname, router])
+
+  // One-time initialization from URL on first load
+  useEffect(() => {
+    if (hasInitializedFromUrl.current) return
+    if (activities.length === 0) return
+    
+    const activityId = searchParams.get('activity')
+    if (activityId) {
+      const activity = activities.find(a => a.id === activityId)
+      if (activity) {
+        setSidePanelState({ mode: 'editing', activity })
+      }
+    }
+    hasInitializedFromUrl.current = true
+  }, [activities, searchParams])
+
+  // ==================== TRANSITION FUNCTIONS ====================
+  
+  const viewActivity = useCallback((activity: Activity) => {
+    updateUrlWithActivity(activity.id)
+    setSidePanelState({ mode: 'viewing', activity })
+  }, [updateUrlWithActivity])
+
+  const editActivity = useCallback((activity: Activity) => {
+    updateUrlWithActivity(activity.id)
+    setSidePanelState({ mode: 'editing', activity })
+  }, [updateUrlWithActivity])
+
+  const createActivity = useCallback((context?: ActivityContext) => {
+    clearActivityFromUrl()
+    setSidePanelState({ mode: 'creating', context })
+  }, [clearActivityFromUrl])
+
+  const viewSuggestion = useCallback((suggestion: Suggestion) => {
+    clearActivityFromUrl()
+    setSidePanelState({ mode: 'suggestion', suggestion })
+  }, [clearActivityFromUrl])
+
+  const clearPanel = useCallback(() => {
+    clearActivityFromUrl()
+    setSidePanelState({ mode: 'empty' })
+  }, [clearActivityFromUrl])
+
+  // ==================== ACTIVITY CRUD ====================
+
+  const addActivity = useCallback((activityData: Omit<Activity, 'id'>) => {
     const newActivity: Activity = {
       ...activityData,
       id: `activity_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     }
     setActivities(prevActivities => [...prevActivities, newActivity])
-  }
+  }, [])
 
-  const updateActivity = (id: string, updates: Partial<Activity>) => {
+  const updateActivity = useCallback((id: string, updates: Partial<Activity>) => {
     setActivities(prevActivities => 
       prevActivities.map(activity => 
         activity.id === id 
@@ -108,22 +144,28 @@ export function TripProvider({ children }: TripProviderProps) {
       )
     )
     
-    // Update selected activity if it's the one being edited
-    if (selectedActivity?.id === id) {
-      setSelectedActivity(prev => prev ? { ...prev, ...updates } : null)
-    }
-  }
+    // Update side panel if viewing/editing this activity
+    setSidePanelState(prev => {
+      if ((prev.mode === 'viewing' || prev.mode === 'editing') && prev.activity.id === id) {
+        return { ...prev, activity: { ...prev.activity, ...updates } }
+      }
+      return prev
+    })
+  }, [])
 
-  const deleteActivity = (id: string) => {
+  const deleteActivity = useCallback((id: string) => {
     setActivities(prevActivities => 
       prevActivities.filter(activity => activity.id !== id)
     )
     
-    // Clear selected activity if it's the one being deleted
-    if (selectedActivity?.id === id) {
-      setSelectedActivity(null)
-    }
-  }
+    // Clear panel if viewing/editing deleted activity
+    setSidePanelState(prev => {
+      if ((prev.mode === 'viewing' || prev.mode === 'editing') && prev.activity.id === id) {
+        return { mode: 'empty' }
+      }
+      return prev
+    })
+  }, [])
 
   // Pending deletion tracking for undo functionality
   const pendingDeletionRef = useRef<{
@@ -131,17 +173,15 @@ export function TripProvider({ children }: TripProviderProps) {
     timeoutId: NodeJS.Timeout
   } | null>(null)
 
-  const { showToast, hideToast } = useToast()
+  const { showToast } = useToast()
 
   const deleteActivityWithUndo = useCallback((id: string) => {
-    // Find the activity to delete
     const activityToDelete = activities.find(a => a.id === id)
     if (!activityToDelete) return
 
     // Clear any existing pending deletion
     if (pendingDeletionRef.current) {
       clearTimeout(pendingDeletionRef.current.timeoutId)
-      // Commit the previous pending deletion
       tripService.deleteActivity(pendingDeletionRef.current.activity.id)
     }
 
@@ -150,14 +190,17 @@ export function TripProvider({ children }: TripProviderProps) {
       prevActivities.filter(activity => activity.id !== id)
     )
 
-    // Clear selected activity if it's the one being deleted
-    if (selectedActivity?.id === id) {
-      handleActivitySelect(null)
-    }
+    // Clear panel if viewing/editing deleted activity
+    setSidePanelState(prev => {
+      if ((prev.mode === 'viewing' || prev.mode === 'editing') && prev.activity.id === id) {
+        clearActivityFromUrl()
+        return { mode: 'empty' }
+      }
+      return prev
+    })
 
     // Set up the delayed permanent deletion
     const timeoutId = setTimeout(() => {
-      // Actually delete from service
       tripService.deleteActivity(id)
       pendingDeletionRef.current = null
     }, 5000)
@@ -173,10 +216,8 @@ export function TripProvider({ children }: TripProviderProps) {
       action: {
         label: 'Undo',
         onClick: () => {
-          // Cancel the pending deletion
           if (pendingDeletionRef.current?.activity.id === id) {
             clearTimeout(pendingDeletionRef.current.timeoutId)
-            // Restore the activity
             setActivities(prev => [...prev, activityToDelete])
             pendingDeletionRef.current = null
           }
@@ -184,19 +225,16 @@ export function TripProvider({ children }: TripProviderProps) {
       },
       duration: 5000
     })
-  }, [activities, selectedActivity, showToast])
+  }, [activities, showToast, clearActivityFromUrl])
 
-  const updateTripName = (name: string) => {
+  const updateTripName = useCallback((name: string) => {
     if (trip) {
       setTrip({ ...trip, name })
     }
-  }
+  }, [trip])
 
   // ==================== SUGGESTIONS ====================
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([])
-  const [selectedSuggestion, setSelectedSuggestionState] = useState<Suggestion | null>(null)
 
-  // Regenerate suggestions when trip or activities change
   const refreshSuggestions = useCallback(async () => {
     if (!trip) {
       setSuggestions([])
@@ -207,77 +245,57 @@ export function TripProvider({ children }: TripProviderProps) {
     setSuggestions(newSuggestions)
     
     // Clear selected suggestion if it no longer exists
-    if (selectedSuggestion && !newSuggestions.find(s => s.id === selectedSuggestion.id)) {
-      setSelectedSuggestionState(null)
+    if (sidePanelState.mode === 'suggestion') {
+      const stillExists = newSuggestions.find(s => s.id === sidePanelState.suggestion.id)
+      if (!stillExists) {
+        setSidePanelState({ mode: 'empty' })
+      }
     }
-  }, [trip, activities, selectedSuggestion])
+  }, [trip, activities, sidePanelState])
 
   // Refresh suggestions when activities change
   useEffect(() => {
     refreshSuggestions()
   }, [activities, trip])
 
-  // Handle suggestion selection (clears activity selection)
-  const handleSuggestionSelect = (suggestion: Suggestion | null) => {
-    setSelectedSuggestionState(suggestion)
-    if (suggestion) {
-      // Clear activity selection when a suggestion is selected
-      setSelectedActivity(null)
-      setIsCreatingActivity(false)
-    }
-  }
-
-  // Handle activity selection override to clear suggestion and creating mode
-  const handleActivitySelectWithSuggestionClear = (activity: Activity | null) => {
-    handleActivitySelect(activity)
-    if (activity) {
-      // Clear suggestion selection and creating mode when an activity is selected
-      setSelectedSuggestionState(null)
-      setIsCreatingActivity(false)
-    }
-  }
-
-  // Dismiss a suggestion
   const dismissSuggestion = useCallback(async (id: string) => {
     await suggestionService.dismissSuggestion(id)
     setSuggestions(prev => prev.filter(s => s.id !== id))
     
-    // Clear selected suggestion if it's the one being dismissed
-    if (selectedSuggestion?.id === id) {
-      setSelectedSuggestionState(null)
+    // Clear panel if viewing dismissed suggestion
+    if (sidePanelState.mode === 'suggestion' && sidePanelState.suggestion.id === id) {
+      setSidePanelState({ mode: 'empty' })
     }
-  }, [selectedSuggestion])
+  }, [sidePanelState])
 
-  // Start creating a new activity, optionally with a pre-selected day
-  const startCreatingActivity = useCallback((day?: number) => {
-    setSelectedActivity(null)
-    setSelectedSuggestionState(null)
-    setCreatingActivityDay(day ?? null)
-    setIsCreatingActivity(true)
-  }, [])
+  // ==================== CONTEXT VALUE ====================
 
   return (
     <TripContext.Provider
       value={{
-        selectedActivity,
-        setSelectedActivity: handleActivitySelectWithSuggestionClear,
-        isCreatingActivity,
-        setIsCreatingActivity,
-        creatingActivityDay,
-        startCreatingActivity,
+        // Side panel state
+        sidePanelState,
+        viewActivity,
+        editActivity,
+        createActivity,
+        viewSuggestion,
+        clearPanel,
+        
+        // Trip data
         trip,
         setTrip,
         updateTripName,
+        
+        // Activities
         activities,
         setActivities,
         addActivity,
         updateActivity,
         deleteActivity,
         deleteActivityWithUndo,
+        
         // Suggestions
         suggestions,
-        selectedSuggestion,
-        setSelectedSuggestion: handleSuggestionSelect,
         dismissSuggestion,
         refreshSuggestions,
       }}

@@ -53,7 +53,7 @@ function createInitialFormData(trip: Trip | null) {
 }
 
 export function TripConfigTab({ onClose }: TripConfigTabProps) {
-  const { trip, setTrip, activities, setSelectedActivity } = useTripContext()
+  const { trip, setTrip, activities, clearPanel } = useTripContext()
   
   // Initialize form data from trip immediately to prevent flicker
   const [formData, setFormData] = useState(() => createInitialFormData(trip))
@@ -99,7 +99,7 @@ export function TripConfigTab({ onClose }: TripConfigTabProps) {
       })
 
       setTrip(updatedTrip)
-      setSelectedActivity(null) // Clear any selected activity to prevent stale data
+      clearPanel() // Clear any selected activity to prevent stale data
       onClose?.()
     } catch (error) {
       console.error('Failed to save trip:', error)

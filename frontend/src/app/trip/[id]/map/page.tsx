@@ -15,7 +15,7 @@ interface MapPageProps {
 }
 
 function MapContent() {
-  const { activities, setSelectedActivity } = useTripContext()
+  const { activities, viewActivity } = useTripContext()
   const { theme } = useTheme()
   const searchParams = useSearchParams()
   const hasInitialized = useRef(false)
@@ -28,11 +28,11 @@ function MapContent() {
     if (activityId && activities.length > 0) {
       const activity = activities.find(a => a.id === activityId)
       if (activity) {
-        setSelectedActivity(activity)
+        viewActivity(activity)
         hasInitialized.current = true
       }
     }
-  }, [searchParams, activities, setSelectedActivity])
+  }, [searchParams, activities, viewActivity])
 
   // Check if there are any activities with locations
   const hasLocationActivities = activities.some(a => a.location)

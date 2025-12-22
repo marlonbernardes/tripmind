@@ -164,6 +164,24 @@ export interface Suggestion {
   context: SuggestionContext
 }
 
+// ==================== SIDE PANEL STATE ====================
+
+/**
+ * Represents the current mode of the side panel.
+ */
+export type SidePanelMode = 'empty' | 'viewing' | 'editing' | 'creating' | 'suggestion'
+
+/**
+ * Represents the current state of the side panel.
+ * Uses a discriminated union to ensure only one mode is active at a time.
+ */
+export type SidePanelState =
+  | { mode: 'empty' }
+  | { mode: 'viewing'; activity: Activity }
+  | { mode: 'editing'; activity: Activity }
+  | { mode: 'creating'; context?: ActivityContext }
+  | { mode: 'suggestion'; suggestion: Suggestion }
+
 // ==================== LEGACY TYPE MAPPINGS ====================
 // These help with migration - can be removed once migration is complete
 
