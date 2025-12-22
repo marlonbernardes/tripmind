@@ -7,9 +7,6 @@
 import type { Trip, FixedTrip, FlexibleTrip, Activity } from '@/types/simple'
 import { isFixedTrip } from '@/types/simple'
 
-// Constants
-export const MAX_TRIP_DURATION = 30 // Maximum trip duration in days
-
 /**
  * Calculate the duration (in days) of a trip
  */

@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight, Search, Plus, X, Check, Loader2, Info } from 'lucide-react'
 import { generateMockTrip } from '@/lib/trip-generator'
 import { tripService } from '@/lib/trip-service'
-import { INTERESTS, PACING_OPTIONS } from '@/lib/interests-config'
+import { INTERESTS, PACING_OPTIONS } from '@/lib/config'
 import type { TripPacing, TripInterest } from '@/types/simple'
 
 // Types
@@ -19,7 +19,6 @@ interface WizardData {
   startDate: string
   endDate: string
   duration: string | null
-  customDuration: string
   interests: TripInterest[]
   customInterest: string
   pacing: TripPacing | null
@@ -78,7 +77,6 @@ export function TripWizard() {
     startDate: '',
     endDate: '',
     duration: null,
-    customDuration: '',
     interests: [],
     customInterest: '',
     pacing: null,
@@ -115,7 +113,7 @@ export function TripWizard() {
         if (data.hasSpecificDates) {
           return Boolean(data.startDate && data.endDate)
         } else {
-          return data.duration !== null || data.customDuration.trim().length > 0
+          return data.duration !== null
         }
       case 'style':
         return data.interests.length > 0 || data.customInterest.trim().length > 0
@@ -187,7 +185,7 @@ export function TripWizard() {
         const start = new Date(data.startDate)
         const end = new Date(data.endDate)
         durationDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1
-      } else if (data.duration) {
+      } else {
         // Map duration id to approximate days
         const durationMap: Record<string, number> = {
           'weekend': 3,
@@ -196,12 +194,10 @@ export function TripWizard() {
           '2weeks': 14,
           '3weeks': 21
         }
-        durationDays = durationMap[data.duration] || 7
-      } else {
-        durationDays = parseInt(data.customDuration) || 7
+        durationDays = durationMap[data.duration || 'week'] || 7
       }
       
-      const duration = DURATIONS.find(d => d.id === data.duration)?.days || data.customDuration
+      const duration = DURATIONS.find(d => d.id === data.duration)?.days || '7 days'
       
       const interestNames = data.interests.map(id => {
         const interest = INTERESTS.find(i => i.id === id)
@@ -426,7 +422,7 @@ export function TripWizard() {
                   {DURATIONS.map(dur => (
                     <button
                       key={dur.id}
-                      onClick={() => setData(prev => ({ ...prev, duration: dur.id, customDuration: '' }))}
+                      onClick={() => setData(prev => ({ ...prev, duration: dur.id }))}
                       className={`p-4 rounded-xl border-2 transition-all text-center ${
                         data.duration === dur.id
                           ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
@@ -438,17 +434,6 @@ export function TripWizard() {
                       <div className="text-xs text-gray-500 dark:text-gray-400">{dur.days}</div>
                     </button>
                   ))}
-                </div>
-
-                {/* Custom duration */}
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Or enter a custom duration (e.g., 12 days)"
-                    value={data.customDuration}
-                    onChange={(e) => setData(prev => ({ ...prev, customDuration: e.target.value, duration: null }))}
-                    className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
                 </div>
               </div>
             )}

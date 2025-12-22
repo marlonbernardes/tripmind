@@ -5,9 +5,9 @@ import { Settings, Calendar, Clock, AlertTriangle, Check, Target, Timer } from '
 import type { Trip, TripPacing, TripInterest } from '@/types/simple'
 import { isFixedTrip } from '@/types/simple'
 import { useTripContext } from '@/contexts/TripContext'
-import { getTripDuration, MAX_TRIP_DURATION } from '@/lib/date-service'
+import { getTripDuration } from '@/lib/date-service'
 import { tripService } from '@/lib/trip-service'
-import { INTERESTS, PACING_OPTIONS } from '@/lib/interests-config'
+import { INTERESTS, PACING_OPTIONS, MAX_TRIP_DURATION } from '@/lib/config'
 
 interface TripConfigTabProps {
   onClose?: () => void

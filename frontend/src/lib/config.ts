@@ -1,3 +1,10 @@
+/**
+ * Tripmind Configuration
+ * 
+ * Centralized configuration for the application.
+ * All constants, settings, and configurable options go here.
+ */
+
 import { 
   UtensilsCrossed, 
   Landmark, 
@@ -12,6 +19,11 @@ import {
   type LucideIcon 
 } from 'lucide-react'
 import type { TripInterest, TripPacing } from '@/types/simple'
+
+// ==================== TRIP LIMITS ====================
+
+/** Maximum trip duration in days (for flexible trip slider) */
+export const MAX_TRIP_DURATION = 60
 
 // ==================== INTERESTS CONFIG ====================
 
@@ -47,10 +59,10 @@ export const INTERESTS: InterestConfig[] = [
   { id: 'nature', name: 'Nature', icon: TreePine },
 ]
 
-// Helper to get all interest IDs
+/** All available interest IDs */
 export const ALL_INTEREST_IDS: TripInterest[] = INTERESTS.map(i => i.id)
 
-// Helper to get interest by ID
+/** Get interest config by ID */
 export function getInterest(id: TripInterest): InterestConfig | undefined {
   return INTERESTS.find(i => i.id === id)
 }
@@ -78,7 +90,7 @@ export const PACING_OPTIONS: PacingConfig[] = [
   { id: 'packed', name: 'Packed', description: 'Action-packed, maximize every moment', icon: Rocket },
 ]
 
-// Helper to get pacing by ID
+/** Get pacing config by ID */
 export function getPacing(id: TripPacing): PacingConfig | undefined {
   return PACING_OPTIONS.find(p => p.id === id)
 }
