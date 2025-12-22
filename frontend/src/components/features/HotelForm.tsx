@@ -110,7 +110,7 @@ export function StayForm({ activity, onSave, onCancel, onDelete, defaultDay = 1,
       {/* Check-in / Check-out */}
       {trip && (
         <div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))' }}>
             <div>
               <label className={labelClass}>Check-in</label>
               <div className="flex gap-1.5">

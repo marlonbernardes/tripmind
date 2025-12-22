@@ -90,7 +90,7 @@ export function FlightForm({ activity, onSave, onCancel, onDelete, defaultDay = 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       {/* From / To */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))' }}>
         <div>
           <label className={labelClass}>From *</label>
           <input
@@ -118,7 +118,7 @@ export function FlightForm({ activity, onSave, onCancel, onDelete, defaultDay = 
       {/* Departure → Arrival */}
       {trip && (
         <div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))' }}>
             <div>
               <label className={labelClass}>Departure</label>
               <div className="flex gap-1.5">
@@ -176,7 +176,7 @@ export function FlightForm({ activity, onSave, onCancel, onDelete, defaultDay = 
       {/* Flight Details */}
       <div>
         <label className={labelClass}>Flight details</label>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))' }}>
           <input
             type="text"
             value={formData.flightNumber}

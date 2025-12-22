@@ -98,7 +98,7 @@ export function EventForm({ activity, onSave, onCancel, onDelete, defaultDay = 1
       {/* Start / End */}
       {trip && (
         <div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))' }}>
             <div>
               <label className={labelClass}>Start</label>
               <div className="flex gap-1.5">
