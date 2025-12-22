@@ -94,13 +94,6 @@ export function ActivityReadView({ activity, onEdit }: ActivityReadViewProps) {
         {activity.type === 'event' && activity.metadata && (
           <EventDetails metadata={activity.metadata as EventMetadata} />
         )}
-
-        {/* Notes */}
-        {activity.notes && (
-          <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-            <p className="text-gray-600 dark:text-gray-400">{activity.notes}</p>
-          </div>
-        )}
       </div>
 
       {/* Edit button */}

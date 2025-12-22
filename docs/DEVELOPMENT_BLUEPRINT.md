@@ -54,7 +54,6 @@ activities (
   status: activity_status DEFAULT 'planned', -- enum: planned, confirmed, cancelled
   city: text,
   location: text,
-  notes: text,
   meta: jsonb, -- type-specific data
   created_at: timestamptz,
   updated_at: timestamptz

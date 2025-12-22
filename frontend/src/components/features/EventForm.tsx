@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react'
 import type { Activity, EventMetadata, ActivityStatus, ActivityContext } from '@/types/simple'
 import { RecommendationsSection } from './RecommendationsSection'
 import { useTripContext } from '@/contexts/TripContext'
-import { getTripDuration } from '@/lib/date-service'
 import { DaySelect } from '@/components/ui/day-select'
+import { TimePicker } from '@/components/ui/date-time-picker'
+import { StatusToggle } from '@/components/ui/status-toggle'
 import { FormActions } from '@/components/ui/form-actions'
 
 interface EventFormProps {
@@ -27,8 +28,7 @@ export function EventForm({ activity, onSave, onCancel, onDelete, defaultDay = 1
     endDay: undefined as number | undefined,
     endTime: '',
     location: initialContext?.city || '',
-    status: 'draft' as ActivityStatus,
-    notes: ''
+    status: 'draft' as ActivityStatus
   })
 
   useEffect(() => {
@@ -40,8 +40,7 @@ export function EventForm({ activity, onSave, onCancel, onDelete, defaultDay = 1
         endDay: activity.endDay,
         endTime: activity.endTime || '',
         location: activity.city || '',
-        status: activity.status,
-        notes: activity.notes || ''
+        status: activity.status
       })
     }
   }, [activity])
@@ -59,144 +58,98 @@ export function EventForm({ activity, onSave, onCancel, onDelete, defaultDay = 1
       endTime: formData.endTime || undefined,
       city: formData.location,
       status: formData.status,
-      notes: formData.notes || undefined,
       metadata: {} as EventMetadata
     }
 
     onSave(activityData)
   }
 
-  const tripDuration = trip ? getTripDuration(trip) : 14
+  const inputClass = "w-full h-9 px-3 text-sm border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+  const labelClass = "block text-xs font-medium text-muted-foreground mb-1"
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       {/* Title */}
       <div>
-        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Event Title *
-        </label>
+        <label className={labelClass}>Title *</label>
         <input
           type="text"
           value={formData.title}
           onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-          className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-          placeholder="e.g. Concert at Madison Square Garden"
+          className={inputClass}
+          placeholder="Event name"
           required
         />
       </div>
 
       {/* Location */}
       <div>
-        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Location *
-        </label>
+        <label className={labelClass}>Location *</label>
         <input
           type="text"
           value={formData.location}
           onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-          className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-          placeholder="e.g. New York"
+          className={inputClass}
+          placeholder="City or venue"
           required
         />
       </div>
 
-      {/* Day and Time - always on same line */}
+      {/* Start / End */}
       {trip && (
-        <div className="grid grid-cols-2 gap-2">
-          <DaySelect
-            trip={trip}
-            value={formData.day}
-            onChange={(day) => setFormData(prev => ({ 
-              ...prev, 
-              day,
-              endDay: prev.endDay && prev.endDay < day ? undefined : prev.endDay
-            }))}
-            label="Day"
-            required
-          />
-          <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Time
-            </label>
-            <input
-              type="time"
-              value={formData.time}
-              onChange={(e) => setFormData(prev => ({ ...prev, time: e.target.value }))}
-              className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-            />
-          </div>
-        </div>
-      )}
-
-      {/* End Day and Time - on same line */}
-      {trip && (
-        <div className="grid grid-cols-2 gap-2">
-          <DaySelect
-            trip={trip}
-            value={formData.endDay ?? formData.day}
-            onChange={(day) => setFormData(prev => ({ 
-              ...prev, 
-              endDay: day === prev.day ? undefined : day
-            }))}
-            label="End Day"
-            minDay={formData.day}
-          />
-          <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-              End Time
-            </label>
-            <input
-              type="time"
-              value={formData.endTime}
-              onChange={(e) => setFormData(prev => ({ ...prev, endTime: e.target.value }))}
-              className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-            />
+        <div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelClass}>Start</label>
+              <div className="flex gap-1.5">
+                <div className="flex-1 min-w-0">
+                  <DaySelect
+                    trip={trip}
+                    value={formData.day}
+                    onChange={(day) => setFormData(prev => ({ 
+                      ...prev, 
+                      day,
+                      endDay: prev.endDay && prev.endDay < day ? undefined : prev.endDay
+                    }))}
+                    required
+                  />
+                </div>
+                <TimePicker
+                  value={formData.time}
+                  onChange={(time) => setFormData(prev => ({ ...prev, time }))}
+                />
+              </div>
+            </div>
+            <div>
+              <label className={labelClass}>End</label>
+              <div className="flex gap-1.5">
+                <div className="flex-1 min-w-0">
+                  <DaySelect
+                    trip={trip}
+                    value={formData.endDay ?? formData.day}
+                    onChange={(day) => setFormData(prev => ({ 
+                      ...prev, 
+                      endDay: day === prev.day ? undefined : day
+                    }))}
+                    minDay={formData.day}
+                  />
+                </div>
+                <TimePicker
+                  value={formData.endTime}
+                  onChange={(time) => setFormData(prev => ({ ...prev, endTime: time }))}
+                />
+              </div>
+            </div>
           </div>
         </div>
       )}
 
       {/* Status */}
       <div>
-        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Status *
-        </label>
-        <div className="flex gap-4">
-          <label className="flex items-center">
-            <input
-              type="radio"
-              name="status"
-              value="draft"
-              checked={formData.status === 'draft'}
-              onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as ActivityStatus }))}
-              className="mr-1.5"
-            />
-            <span className="text-xs text-gray-700 dark:text-gray-300">Draft</span>
-          </label>
-          <label className="flex items-center">
-            <input
-              type="radio"
-              name="status"
-              value="confirmed"
-              checked={formData.status === 'confirmed'}
-              onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as ActivityStatus }))}
-              className="mr-1.5"
-            />
-            <span className="text-xs text-gray-700 dark:text-gray-300">Confirmed</span>
-          </label>
-        </div>
-      </div>
-
-      {/* Notes */}
-      <div>
-        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Notes
-        </label>
-        <textarea
-          value={formData.notes}
-          onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-          className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-          rows={2}
-          placeholder="Additional notes..."
+        <label className={labelClass}>Status</label>
+        <StatusToggle
+          value={formData.status}
+          onChange={(status) => setFormData(prev => ({ ...prev, status }))}
         />
       </div>
 

@@ -74,9 +74,6 @@ export interface Activity {
   location?: ActivityLocation
   city?: string
   
-  // Content
-  notes?: string
-  
   // Type-specific metadata
   metadata?: FlightMetadata | StayMetadata | EventMetadata | TransportMetadata
 }

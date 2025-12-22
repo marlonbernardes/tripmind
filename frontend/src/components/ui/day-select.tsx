@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { DatePicker } from '@/components/ui/date-time-picker'
 
 interface DaySelectProps {
   trip: Trip
@@ -45,12 +46,13 @@ export function DaySelect({
   if (isFixedTrip(trip)) {
     // Fixed trip: show date picker
     const selectedDate = getDateForDay(trip, value)
-    const minDate = minDay > 1 ? getDateForDay(trip, minDay) : new Date(trip.startDate)
+    const minDateObj = minDay > 1 ? getDateForDay(trip, minDay) : new Date(trip.startDate)
+    const maxDateObj = new Date(trip.endDate)
     
-    const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const selectedDate = new Date(e.target.value)
+    const handleDateChange = (date: Date | undefined) => {
+      if (!date) return
       const startDate = new Date(trip.startDate)
-      const diffTime = selectedDate.getTime() - startDate.getTime()
+      const diffTime = date.getTime() - startDate.getTime()
       const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
       const day = diffDays + 1
       if (day >= minDay && day <= duration) {
@@ -65,14 +67,12 @@ export function DaySelect({
             {label} {required && '*'}
           </label>
         )}
-        <input
-          type="date"
-          value={selectedDate.toISOString().split('T')[0]}
-          min={minDate.toISOString().split('T')[0]}
-          max={trip.endDate}
+        <DatePicker
+          value={selectedDate}
           onChange={handleDateChange}
-          required={required}
-          className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+          minDate={minDateObj}
+          maxDate={maxDateObj}
+          placeholder={label || 'Select date'}
         />
       </div>
     )
@@ -138,10 +138,10 @@ export function DayRangeSelect({
     const startDate = getDateForDay(trip, startDay)
     const endDate = endDay ? getDateForDay(trip, endDay) : undefined
 
-    const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const selectedDate = new Date(e.target.value)
+    const handleStartDateChange = (date: Date | undefined) => {
+      if (!date) return
       const tripStart = new Date(trip.startDate)
-      const diffTime = selectedDate.getTime() - tripStart.getTime()
+      const diffTime = date.getTime() - tripStart.getTime()
       const day = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1
       if (day >= 1 && day <= duration) {
         onStartDayChange(day)
@@ -151,19 +151,21 @@ export function DayRangeSelect({
       }
     }
 
-    const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (!e.target.value) {
+    const handleEndDateChange = (date: Date | undefined) => {
+      if (!date) {
         onEndDayChange(undefined)
         return
       }
-      const selectedDate = new Date(e.target.value)
       const tripStart = new Date(trip.startDate)
-      const diffTime = selectedDate.getTime() - tripStart.getTime()
+      const diffTime = date.getTime() - tripStart.getTime()
       const day = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1
       if (day >= startDay && day <= duration) {
         onEndDayChange(day)
       }
     }
+
+    const tripStartDate = new Date(trip.startDate)
+    const tripEndDate = new Date(trip.endDate)
 
     return (
       <div className={`grid grid-cols-2 gap-2 ${className}`}>
@@ -171,27 +173,24 @@ export function DayRangeSelect({
           <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
             {startLabel} {required && '*'}
           </label>
-          <input
-            type="date"
-            value={startDate.toISOString().split('T')[0]}
-            min={trip.startDate}
-            max={trip.endDate}
+          <DatePicker
+            value={startDate}
             onChange={handleStartDateChange}
-            required={required}
-            className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            minDate={tripStartDate}
+            maxDate={tripEndDate}
+            placeholder={startLabel}
           />
         </div>
         <div>
           <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
             {endLabel}
           </label>
-          <input
-            type="date"
-            value={endDate?.toISOString().split('T')[0] || ''}
-            min={startDate.toISOString().split('T')[0]}
-            max={trip.endDate}
+          <DatePicker
+            value={endDate}
             onChange={handleEndDateChange}
-            className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            minDate={startDate}
+            maxDate={tripEndDate}
+            placeholder={endLabel}
           />
         </div>
       </div>
