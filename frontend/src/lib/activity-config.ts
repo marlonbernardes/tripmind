@@ -24,7 +24,7 @@ export const activityTypeConfig: Record<ActivityType, ActivityTypeConfig> = {
   event: {
     label: 'Event',
     color: '#F59E0B', // amber-500
-    description: 'Attractions, shows, concerts'
+    description: 'Attractions, shows, concerts, tours'
   },
   transport: {
     label: 'Transport',

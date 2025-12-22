@@ -224,12 +224,13 @@ export function TripProvider({ children }: TripProviderProps) {
     }
   }
 
-  // Handle activity selection override to clear suggestion
+  // Handle activity selection override to clear suggestion and creating mode
   const handleActivitySelectWithSuggestionClear = (activity: Activity | null) => {
     handleActivitySelect(activity)
     if (activity) {
-      // Clear suggestion selection when an activity is selected
+      // Clear suggestion selection and creating mode when an activity is selected
       setSelectedSuggestionState(null)
+      setIsCreatingActivity(false)
     }
   }
 
