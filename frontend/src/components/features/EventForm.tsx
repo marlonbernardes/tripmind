@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import type { Activity, EventMetadata, ActivityStatus } from '@/types/simple'
+import type { Activity, EventMetadata, ActivityStatus, ActivityContext } from '@/types/simple'
 import { RecommendationsSection } from './RecommendationsSection'
 import { useTripContext } from '@/contexts/TripContext'
 import { getTripDuration } from '@/lib/date-service'
@@ -13,18 +13,20 @@ interface EventFormProps {
   onSave: (activityData: Omit<Activity, 'id'>) => void
   onCancel: () => void
   onDelete?: () => void
+  defaultDay?: number
+  initialContext?: ActivityContext
 }
 
-export function EventForm({ activity, onSave, onCancel, onDelete }: EventFormProps) {
+export function EventForm({ activity, onSave, onCancel, onDelete, defaultDay = 1, initialContext }: EventFormProps) {
   const { trip } = useTripContext()
   
   const [formData, setFormData] = useState({
     title: '',
-    day: 1,
+    day: defaultDay,
     time: '',
     endDay: undefined as number | undefined,
     endTime: '',
-    location: '',
+    location: initialContext?.city || '',
     status: 'draft' as ActivityStatus,
     notes: ''
   })

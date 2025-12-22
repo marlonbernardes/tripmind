@@ -1,7 +1,7 @@
 'use client'
 
 import { ExternalLink, Plus } from 'lucide-react'
-import type { Suggestion, Trip, StaySuggestionContext, FlightSuggestionContext } from '@/types/simple'
+import type { Suggestion, Trip, StaySuggestionContext, FlightSuggestionContext, ActivityContext } from '@/types/simple'
 import { isFixedTrip } from '@/types/simple'
 import { getActivityLabel } from '@/lib/activity-config'
 import { ActivityIcon } from '@/components/ui/activity-icon'
@@ -10,7 +10,35 @@ import { resolveDayToDate, formatSkyscannerDate, formatShortDayHeader } from '@/
 interface SuggestionDetailViewProps {
   suggestion: Suggestion
   trip: Trip
-  onCreateActivity: () => void
+  onCreateActivity: (context: ActivityContext) => void
+}
+
+/**
+ * Convert suggestion context to activity context for pre-filling forms
+ */
+function suggestionToActivityContext(suggestion: Suggestion): ActivityContext {
+  if (suggestion.context.type === 'stay') {
+    return {
+      preselectedType: 'stay',
+      day: suggestion.context.checkInDay,
+      city: suggestion.context.city,
+      checkOutDay: suggestion.context.checkOutDay
+    }
+  }
+  
+  if (suggestion.context.type === 'flight') {
+    return {
+      preselectedType: 'flight',
+      day: suggestion.context.departureDay,
+      fromCity: suggestion.context.originCity,
+      toCity: suggestion.context.destinationCity
+    }
+  }
+  
+  // Fallback
+  return {
+    day: suggestion.day
+  }
 }
 
 interface BookingLink {
@@ -201,7 +229,7 @@ export function SuggestionDetailView({ suggestion, trip, onCreateActivity }: Sug
       {/* Create Activity Button */}
       <div className="pt-2">
         <button
-          onClick={onCreateActivity}
+          onClick={() => onCreateActivity(suggestionToActivityContext(suggestion))}
           className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium"
         >
           <Plus className="w-4 h-4" />

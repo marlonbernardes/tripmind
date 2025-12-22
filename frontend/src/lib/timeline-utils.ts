@@ -178,8 +178,6 @@ export function groupSuggestionsByActivityType(suggestions: Suggestion[]): Recor
     stay: [],
     event: [],
     transport: [],
-    note: [],
-    task: []
   }
   
   suggestions.forEach(suggestion => {

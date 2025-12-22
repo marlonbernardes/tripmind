@@ -12,6 +12,8 @@ interface TripContextType {
   setSelectedActivity: (activity: Activity | null) => void
   isCreatingActivity: boolean
   setIsCreatingActivity: (isCreating: boolean) => void
+  creatingActivityDay: number | null
+  startCreatingActivity: (day?: number) => void
   trip: Trip | null
   setTrip: (trip: Trip | null) => void
   updateTripName: (name: string) => void
@@ -46,6 +48,7 @@ interface TripProviderProps {
 export function TripProvider({ children }: TripProviderProps) {
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null)
   const [isCreatingActivity, setIsCreatingActivity] = useState(false)
+  const [creatingActivityDay, setCreatingActivityDay] = useState<number | null>(null)
   const [trip, setTrip] = useState<Trip | null>(null)
   const [activities, setActivities] = useState<Activity[]>([])
   const [isInternalNavigation, setIsInternalNavigation] = useState(false)
@@ -245,6 +248,14 @@ export function TripProvider({ children }: TripProviderProps) {
     }
   }, [selectedSuggestion])
 
+  // Start creating a new activity, optionally with a pre-selected day
+  const startCreatingActivity = useCallback((day?: number) => {
+    setSelectedActivity(null)
+    setSelectedSuggestionState(null)
+    setCreatingActivityDay(day ?? null)
+    setIsCreatingActivity(true)
+  }, [])
+
   return (
     <TripContext.Provider
       value={{
@@ -252,6 +263,8 @@ export function TripProvider({ children }: TripProviderProps) {
         setSelectedActivity: handleActivitySelectWithSuggestionClear,
         isCreatingActivity,
         setIsCreatingActivity,
+        creatingActivityDay,
+        startCreatingActivity,
         trip,
         setTrip,
         updateTripName,

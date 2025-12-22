@@ -111,6 +111,21 @@ export interface TransportMetadata {
 }
 
 
+// ==================== ACTIVITY CONTEXT ====================
+
+/**
+ * Context passed when creating a new activity to pre-populate form fields.
+ * Used when creating activities from suggestions or with contextual awareness.
+ */
+export interface ActivityContext {
+  day?: number              // Day to pre-select
+  city?: string             // For stays/events - pre-populate city field
+  fromCity?: string         // For flights/transport - pre-populate origin
+  toCity?: string           // For flights/transport - pre-populate destination
+  checkOutDay?: number      // For stays - pre-populate check-out day
+  preselectedType?: ActivityType  // Skip type selection and go straight to form
+}
+
 // ==================== SUGGESTIONS ====================
 
 export type SuggestionType = 'flight' | 'stay'

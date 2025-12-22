@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import type { Activity, StayMetadata, ActivityStatus } from '@/types/simple'
+import type { Activity, StayMetadata, ActivityStatus, ActivityContext } from '@/types/simple'
 import { RecommendationsSection } from './RecommendationsSection'
 import { useTripContext } from '@/contexts/TripContext'
 import { DaySelect } from '@/components/ui/day-select'
@@ -13,17 +13,18 @@ interface StayFormProps {
   onCancel: () => void
   onDelete?: () => void
   defaultDay?: number
+  initialContext?: ActivityContext
 }
 
 // Exported as both StayForm and HotelForm for backward compatibility
-export function StayForm({ activity, onSave, onCancel, onDelete, defaultDay = 1 }: StayFormProps) {
+export function StayForm({ activity, onSave, onCancel, onDelete, defaultDay = 1, initialContext }: StayFormProps) {
   const { trip } = useTripContext()
   const [formData, setFormData] = useState({
     propertyName: '',
-    city: '',
+    city: initialContext?.city || '',
     day: defaultDay,
     time: '',
-    endDay: undefined as number | undefined,
+    endDay: initialContext?.checkOutDay as number | undefined,
     endTime: '',
     confirmationCode: '',
     status: 'draft' as ActivityStatus,

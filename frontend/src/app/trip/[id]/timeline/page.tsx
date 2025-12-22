@@ -233,10 +233,11 @@ function CollapsibleSection({
   isCollapsed,
   onToggleCollapse,
   onAddActivity,
+  day,
   color,
   showDateInRows = false,
   showEndDateInRows = false
-}: { 
+}: {
   groupKey: string
   title: string
   subtitle?: string
@@ -251,13 +252,19 @@ function CollapsibleSection({
   onSuggestionDismiss?: (id: string) => void
   isCollapsed: boolean
   onToggleCollapse: (key: string) => void
-  onAddActivity: () => void
+  onAddActivity: (day?: number) => void
+  day?: number
   color?: string
   showDateInRows?: boolean
   showEndDateInRows?: boolean
 }) {
   // Sort activities by day and time
   const sortedActivities = [...activities].sort(compareActivities)
+  
+  // Handle add click - pass day if available
+  const handleAddClick = () => {
+    onAddActivity(day)
+  }
 
   return (
     <div className="border-b border-gray-100 dark:border-gray-800 last:border-b-0">
@@ -305,7 +312,7 @@ function CollapsibleSection({
           type="button"
           onClick={(e) => {
             e.stopPropagation()
-            onAddActivity()
+            handleAddClick()
           }}
           className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
         >
@@ -546,11 +553,10 @@ function TimelineContent() {
     setCollapsedGroups(new Set())
   }
   
-  // Handle add activity - open create form
-  const { setIsCreatingActivity } = useTripContext()
-  const handleAddActivity = () => {
-    setSelectedActivity(null)
-    setIsCreatingActivity(true)
+  // Handle add activity - open create form with optional day
+  const { startCreatingActivity } = useTripContext()
+  const handleAddActivity = (day?: number) => {
+    startCreatingActivity(day)
   }
   
   if (!trip) {
@@ -640,6 +646,7 @@ function TimelineContent() {
                     isCollapsed={collapsedGroups.has(group.key)}
                     onToggleCollapse={handleToggleCollapse}
                     onAddActivity={handleAddActivity}
+                    day={group.day}
                   />
                 ))
               ) : (

@@ -9,7 +9,7 @@ import { SuggestionDetailView } from './SuggestionDetailView'
 import { TripConfigTab } from './TripConfigTab'
 import { getActivityLabel } from '@/lib/activity-config'
 import { ActivityIcon } from '@/components/ui/activity-icon'
-import type { ActivityType } from '@/types/simple'
+import type { ActivityType, ActivityContext } from '@/types/simple'
 
 type TabType = 'details' | 'config'
 type ViewMode = 'view' | 'edit'
@@ -25,6 +25,7 @@ export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
     setSelectedActivity, 
     isCreatingActivity, 
     setIsCreatingActivity,
+    creatingActivityDay,
     trip,
     selectedSuggestion,
     setSelectedSuggestion
@@ -32,6 +33,7 @@ export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
   const [activeTab, setActiveTab] = useState<TabType>('details')
   const [viewMode, setViewMode] = useState<ViewMode>(defaultViewMode ? 'view' : 'edit')
   const [creatingActivityType, setCreatingActivityType] = useState<ActivityType | null>(null)
+  const [activityContext, setActivityContext] = useState<ActivityContext | undefined>(undefined)
   const previousActivityId = useRef<string | null>(null)
 
   // Auto-switch to details tab when an activity or suggestion is selected
@@ -54,6 +56,16 @@ export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
     }
   }, [selectedSuggestion])
 
+  // Reset form state when creatingActivityDay changes (user clicked "Add" on a different day)
+  useEffect(() => {
+    if (isCreatingActivity && creatingActivityDay !== null) {
+      // Reset form state when a new day is selected for creating activity
+      setActivityContext(undefined)
+      setCreatingActivityType(null)
+      setActiveTab('details')
+    }
+  }, [creatingActivityDay])
+
   const handleClose = () => {
     setSelectedActivity(null)
     setIsCreatingActivity(false)
@@ -74,19 +86,30 @@ export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
   const handleAddActivity = () => {
     setSelectedActivity(null)
     setCreatingActivityType(null) // Reset type when starting fresh
+    setActivityContext(undefined) // Clear context for fresh add
     setIsCreatingActivity(true)
     setActiveTab('details')
   }
 
   const handleCreateCancel = () => {
     setCreatingActivityType(null)
+    setActivityContext(undefined)
     setIsCreatingActivity(false)
   }
 
   const handleCreateSave = () => {
     setCreatingActivityType(null)
+    setActivityContext(undefined)
     setSelectedActivity(null)
     setIsCreatingActivity(false)
+  }
+
+  // Create activity from suggestion with pre-filled context
+  const handleCreateFromSuggestion = (context: ActivityContext) => {
+    setActivityContext(context)
+    setCreatingActivityType(context.preselectedType || null)
+    setSelectedSuggestion(null)
+    setIsCreatingActivity(true)
   }
 
   return (
@@ -147,10 +170,12 @@ export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
                   </div>
                   <div className="flex-1 overflow-y-auto p-4 pb-0">
                     <ManageActivityForm
+                      key={`create-${creatingActivityDay ?? 'no-day'}-${activityContext?.preselectedType ?? 'no-type'}`}
                       mode="create"
                       onSave={handleCreateSave}
                       onCancel={handleCreateCancel}
                       onTypeChange={setCreatingActivityType}
+                      initialContext={activityContext ?? (creatingActivityDay ? { day: creatingActivityDay } : undefined)}
                     />
                   </div>
                 </div>
@@ -172,11 +197,7 @@ export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
                     <SuggestionDetailView
                       suggestion={selectedSuggestion}
                       trip={trip}
-                      onCreateActivity={() => {
-                        // TODO: Pre-fill activity form with suggestion data
-                        setSelectedSuggestion(null)
-                        setIsCreatingActivity(true)
-                      }}
+                      onCreateActivity={handleCreateFromSuggestion}
                     />
                   </div>
                 </div>

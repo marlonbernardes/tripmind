@@ -13,7 +13,7 @@ export const activityTypeConfig: Record<ActivityType, ActivityTypeConfig> = {
     label: 'Flight',
     color: '#3B82F6', // blue-500
     description: 'Air travel between destinations',
-    defaultCollapsed: true
+  defaultCollapsed: true
   },
   stay: {
     label: 'Stay',

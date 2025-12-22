@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import type { Activity, FlightMetadata, ActivityStatus } from '@/types/simple'
+import type { Activity, FlightMetadata, ActivityStatus, ActivityContext } from '@/types/simple'
 import { RecommendationsSection } from './RecommendationsSection'
 import { useTripContext } from '@/contexts/TripContext'
 import { DaySelect } from '@/components/ui/day-select'
@@ -13,13 +13,14 @@ interface FlightFormProps {
   onCancel: () => void
   onDelete?: () => void
   defaultDay?: number
+  initialContext?: ActivityContext
 }
 
-export function FlightForm({ activity, onSave, onCancel, onDelete, defaultDay = 1 }: FlightFormProps) {
+export function FlightForm({ activity, onSave, onCancel, onDelete, defaultDay = 1, initialContext }: FlightFormProps) {
   const { trip } = useTripContext()
   const [formData, setFormData] = useState({
-    from: '',
-    to: '',
+    from: initialContext?.fromCity || '',
+    to: initialContext?.toCity || '',
     day: defaultDay,
     time: '',
     endDay: undefined as number | undefined,

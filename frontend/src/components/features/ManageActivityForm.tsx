@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useTripContext } from '@/contexts/TripContext'
-import type { Activity, ActivityType } from '@/types/simple'
+import type { Activity, ActivityType, ActivityContext } from '@/types/simple'
 import { FlightForm } from './FlightForm'
 import { StayForm } from './HotelForm'
 import { EventForm } from './EventForm'
@@ -14,6 +14,7 @@ interface ManageActivityFormProps {
   mode: 'create' | 'edit'
   activity?: Activity
   initialDay?: number // For create mode, pre-populate the day
+  initialContext?: ActivityContext // Context for pre-populating form fields
   onSave?: () => void
   onCancel?: () => void
   onTypeChange?: (type: ActivityType | null) => void // Callback when type selection changes
@@ -23,6 +24,7 @@ export function ManageActivityForm({
   mode, 
   activity, 
   initialDay = 1,
+  initialContext,
   onSave, 
   onCancel,
   onTypeChange
@@ -30,13 +32,26 @@ export function ManageActivityForm({
   const { addActivity, updateActivity, deleteActivityWithUndo } = useTripContext()
   // For create mode, track type selection in state
   // For edit mode, derive type from the activity prop to react to type changes
-  const [createModeType, setCreateModeType] = useState<ActivityType | null>(null)
+  // If initialContext has preselectedType, use that as the initial type
+  const [createModeType, setCreateModeType] = useState<ActivityType | null>(
+    initialContext?.preselectedType || null
+  )
   const selectedType = mode === 'edit' && activity ? activity.type : createModeType
+  
+  // Notify parent of preselected type on mount
+  useEffect(() => {
+    if (initialContext?.preselectedType) {
+      onTypeChange?.(initialContext.preselectedType)
+    }
+  }, [initialContext?.preselectedType, onTypeChange])
   
   const setSelectedType = (type: ActivityType | null) => {
     setCreateModeType(type)
     onTypeChange?.(type)
   }
+
+  // Determine the effective day - prefer context, fallback to initialDay
+  const effectiveDay = initialContext?.day ?? initialDay
 
   const handleActivitySave = (activityData: Omit<Activity, 'id'>) => {
     try {
@@ -67,7 +82,8 @@ export function ManageActivityForm({
         onSave={handleActivitySave}
         onCancel={onCancel || (() => {})}
         onDelete={handleActivityDelete}
-        defaultDay={initialDay}
+        defaultDay={effectiveDay}
+        initialContext={initialContext}
       />
     )
   }
@@ -123,7 +139,8 @@ export function ManageActivityForm({
       onSave={handleActivitySave}
       onCancel={onCancel || (() => {})}
       onDelete={activity ? handleActivityDelete : undefined}
-      defaultDay={initialDay}
+      defaultDay={effectiveDay}
+      initialContext={initialContext}
     />
   )
 }
