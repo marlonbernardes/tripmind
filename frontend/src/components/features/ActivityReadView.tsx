@@ -3,7 +3,7 @@
 import type { Activity, FlightMetadata, StayMetadata, EventMetadata } from '@/types/simple'
 import { useTripContext } from '@/contexts/TripContext'
 import { formatDayHeader } from '@/lib/date-service'
-import { getActivityIcon } from '@/lib/activity-config'
+import { ActivityIcon } from '@/components/ui/activity-icon'
 
 interface ActivityReadViewProps {
   activity: Activity
@@ -41,8 +41,8 @@ export function ActivityReadView({ activity, onEdit }: ActivityReadViewProps) {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-start justify-between">
-        <div className="flex items-start gap-2">
-          <span className="text-xl">{getActivityIcon(activity.type)}</span>
+        <div className="flex items-start gap-3">
+          <ActivityIcon type={activity.type} size={20} colored />
           <div>
             <h4 className="text-sm font-medium text-gray-900 dark:text-white">
               {activity.title}

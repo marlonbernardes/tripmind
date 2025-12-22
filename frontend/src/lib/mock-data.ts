@@ -91,9 +91,9 @@ export const mockActivities: Activity[] = [
     type: 'flight',
     title: 'Bangkok (BKK) → Phuket (HKT) - VZ2304',
     day: 2,
-    time: '17:30',
+    time: '18:35',
     endDay: 2,
-    endTime: '19:00',
+    endTime: '20:10',
     city: 'Bangkok',
     location: {
       start: { lat: 13.7563, lng: 100.5018 },
@@ -556,17 +556,4 @@ export function getDaysCount(startDate: string, endDate: string): number {
   const end = new Date(endDate)
   const diffTime = Math.abs(end.getTime() - start.getTime())
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
-}
-
-// Trip creation functions (for MVP - later will be replaced with database calls)
-export function addNewTrip(trip: Trip): void {
-  mockTrips.push(trip)
-}
-
-export function addNewActivities(activities: Activity[]): void {
-  mockActivities.push(...activities)
-}
-
-export function getTripById(tripId: string): Trip | undefined {
-  return mockTrips.find(trip => trip.id === tripId)
 }

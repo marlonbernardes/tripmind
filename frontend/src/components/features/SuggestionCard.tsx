@@ -2,7 +2,7 @@
 
 import type { Suggestion } from '@/types/simple'
 import { Lightbulb, X } from 'lucide-react'
-import { getActivityColor, getActivityIcon } from '@/lib/activity-config'
+import { ActivityIcon } from '@/components/ui/activity-icon'
 
 interface SuggestionCardProps {
   suggestion: Suggestion
@@ -12,9 +12,6 @@ interface SuggestionCardProps {
 }
 
 export function SuggestionCard({ suggestion, isSelected = false, onClick, onDismiss }: SuggestionCardProps) {
-  // Reuse activity colors and icons from the config
-  const color = getActivityColor(suggestion.type)
-  const icon = getActivityIcon(suggestion.type)
   
   const handleDismiss = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -31,16 +28,13 @@ export function SuggestionCard({ suggestion, isSelected = false, onClick, onDism
       }`}
     >
       {/* Lightbulb icon */}
-      <div 
-        className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-        style={{ backgroundColor: `${color}20` }}
-      >
+      <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-amber-100 dark:bg-amber-900/30">
         <Lightbulb className="w-4 h-4 text-amber-600 dark:text-amber-400" />
       </div>
       
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span>{icon}</span>
+          <ActivityIcon type={suggestion.type} size={16} colored />
           <h3 className="text-sm font-medium text-gray-900 dark:text-white">
             {suggestion.title}
           </h3>

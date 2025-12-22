@@ -1,9 +1,10 @@
 'use client'
 
-import { ExternalLink, Plane, Building2, Plus } from 'lucide-react'
+import { ExternalLink, Plus } from 'lucide-react'
 import type { Suggestion, Trip, StaySuggestionContext, FlightSuggestionContext } from '@/types/simple'
 import { isFixedTrip } from '@/types/simple'
-import { getActivityIcon, getActivityLabel, getActivityColor } from '@/lib/activity-config'
+import { getActivityLabel } from '@/lib/activity-config'
+import { ActivityIcon } from '@/components/ui/activity-icon'
 import { resolveDayToDate, formatSkyscannerDate, formatShortDayHeader } from '@/lib/date-service'
 
 interface SuggestionDetailViewProps {
@@ -90,20 +91,15 @@ function getBookingLinks(suggestion: Suggestion, trip: Trip): BookingLink[] {
 }
 
 export function SuggestionDetailView({ suggestion, trip, onCreateActivity }: SuggestionDetailViewProps) {
-  const icon = getActivityIcon(suggestion.type)
   const label = getActivityLabel(suggestion.type)
-  const color = getActivityColor(suggestion.type)
   const bookingLinks = getBookingLinks(suggestion, trip)
   
   return (
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-start gap-3">
-        <div 
-          className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-          style={{ backgroundColor: `${color}20` }}
-        >
-          <span className="text-lg">{icon}</span>
+        <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-gray-100 dark:bg-gray-800">
+          <ActivityIcon type={suggestion.type} size={20} colored />
         </div>
         <div>
           <h3 className="text-base font-medium text-gray-900 dark:text-white">
@@ -114,10 +110,7 @@ export function SuggestionDetailView({ suggestion, trip, onCreateActivity }: Sug
               {suggestion.description}
             </p>
           )}
-          <span 
-            className="inline-block mt-1 px-2 py-0.5 rounded text-xs font-medium"
-            style={{ backgroundColor: `${color}20`, color }}
-          >
+          <span className="inline-block mt-1 px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
             {label}
           </span>
         </div>
@@ -182,15 +175,8 @@ export function SuggestionDetailView({ suggestion, trip, onCreateActivity }: Sug
               >
                 <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                   <div className="flex-shrink-0">
-                    <div 
-                      className="w-8 h-8 rounded-lg flex items-center justify-center"
-                      style={{ backgroundColor: `${color}20` }}
-                    >
-                      {suggestion.type === 'flight' ? (
-                        <Plane className="w-4 h-4" style={{ color }} />
-                      ) : (
-                        <Building2 className="w-4 h-4" style={{ color }} />
-                      )}
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-100 dark:bg-gray-800">
+                      <ActivityIcon type={suggestion.type} size={16} colored />
                     </div>
                   </div>
                   

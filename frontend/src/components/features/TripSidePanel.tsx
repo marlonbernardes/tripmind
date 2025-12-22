@@ -8,7 +8,8 @@ import { ManageActivityForm } from './ManageActivityForm'
 import { ActivityReadView } from './ActivityReadView'
 import { SuggestionDetailView } from './SuggestionDetailView'
 import { TripConfigTab } from './TripConfigTab'
-import { getActivityIcon, getActivityLabel } from '@/lib/activity-config'
+import { getActivityLabel } from '@/lib/activity-config'
+import { ActivityIcon } from '@/components/ui/activity-icon'
 import type { ActivityType } from '@/types/simple'
 
 type TabType = 'details' | 'config'
@@ -147,7 +148,7 @@ export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
                     <h3 className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
                       {creatingActivityType ? (
                         <>
-                          <span>{getActivityIcon(creatingActivityType)}</span>
+                          <ActivityIcon type={creatingActivityType} size={16} className="text-gray-600 dark:text-gray-400" />
                           Add {getActivityLabel(creatingActivityType)}
                         </>
                       ) : (
@@ -201,10 +202,10 @@ export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
                   /* View mode - shows activity details with Edit button */
                   <div className="flex flex-col h-full">
                     <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                      <h3 className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                        <span>{getActivityIcon(selectedActivity.type)}</span>
-                        {getActivityLabel(selectedActivity.type)}
-                      </h3>
+                    <h3 className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                      <ActivityIcon type={selectedActivity.type} size={16} className="text-gray-600 dark:text-gray-400" />
+                      {getActivityLabel(selectedActivity.type)}
+                    </h3>
                       <button
                         onClick={handleClose}
                         className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
@@ -224,7 +225,7 @@ export function TripSidePanel({ defaultViewMode = false }: TripSidePanelProps) {
                   <div className="flex flex-col h-full">
                     <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                       <h3 className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                        <span>{getActivityIcon(selectedActivity.type)}</span>
+                        <ActivityIcon type={selectedActivity.type} size={16} className="text-gray-600 dark:text-gray-400" />
                         Edit {getActivityLabel(selectedActivity.type)}
                       </h3>
                       <button

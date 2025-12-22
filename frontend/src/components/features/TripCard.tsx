@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { Trip, Activity } from '@/types/simple'
 import { isFixedTrip } from '@/types/simple'
 import { getTripDuration } from '@/lib/date-service'
+import { ActivityIcon } from '@/components/ui/activity-icon'
 
 interface TripCardProps {
   trip: Trip
@@ -73,19 +74,19 @@ export function TripCard({ trip, activities = [] }: TripCardProps) {
             <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
               {flightCount > 0 && (
                 <span className="flex items-center gap-1">
-                  <span>✈️</span>
+                  <ActivityIcon type="flight" size={14} colored />
                   <span>{flightCount}</span>
                 </span>
               )}
               {stayCount > 0 && (
                 <span className="flex items-center gap-1">
-                  <span>🏨</span>
+                  <ActivityIcon type="stay" size={14} colored />
                   <span>{stayCount}</span>
                 </span>
               )}
               {eventCount > 0 && (
                 <span className="flex items-center gap-1">
-                  <span>🎯</span>
+                  <ActivityIcon type="event" size={14} colored />
                   <span>{eventCount}</span>
                 </span>
               )}

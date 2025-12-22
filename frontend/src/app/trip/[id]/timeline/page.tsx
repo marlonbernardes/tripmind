@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import React from 'react'
 import { ChevronDown, ChevronRight, Calendar, Layers, ChevronsUpDown, Plus, List, Lightbulb, X } from 'lucide-react'
+import { ActivityIcon } from '@/components/ui/activity-icon'
 import { TripLayout } from '@/components/features/TripLayout'
 import { TripSidePanel } from '@/components/features/TripSidePanel'
 import { useTripContext } from '@/contexts/TripContext'
@@ -64,11 +65,8 @@ function CompactActivityRow({
           : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
       } ${activity.status === 'draft' ? 'opacity-75' : ''}`}
     >
-      {/* Color dot */}
-      <div 
-        className="w-2 h-2 rounded-full flex-shrink-0"
-        style={{ backgroundColor: activityColor }}
-      />
+      {/* Activity type icon */}
+      <ActivityIcon type={activity.type} size={12} colored className="flex-shrink-0" />
       
       {/* Day of week and Date */}
       {showDate && (
@@ -285,12 +283,9 @@ function CollapsibleSection({
           )}
         </div>
         
-        {/* Color indicator (for type grouping) */}
+        {/* Activity type icon (for type grouping) */}
         {color && (
-          <div 
-            className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-            style={{ backgroundColor: color }}
-          />
+          <ActivityIcon type={groupKey as any} size={12} colored className="flex-shrink-0" />
         )}
         
         {/* Title */}

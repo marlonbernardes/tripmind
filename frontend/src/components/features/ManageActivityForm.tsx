@@ -7,7 +7,8 @@ import { FlightForm } from './FlightForm'
 import { StayForm } from './HotelForm'
 import { EventForm } from './EventForm'
 import { TransportForm } from './TransportForm'
-import { allActivityTypes, getActivityIcon, getActivityLabel, getActivityDescription } from '@/lib/activity-config'
+import { allActivityTypes, getActivityLabel, getActivityDescription } from '@/lib/activity-config'
+import { ActivityIcon } from '@/components/ui/activity-icon'
 
 interface ManageActivityFormProps {
   mode: 'create' | 'edit'
@@ -86,10 +87,8 @@ export function ManageActivityForm({
               onClick={() => setSelectedType(type)}
               className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors text-left group"
             >
-              <div className="flex items-start gap-2">
-                <span className="text-xl group-hover:scale-110 transition-transform">
-                  {getActivityIcon(type)}
-                </span>
+              <div className="flex items-start gap-3">
+                <ActivityIcon type={type} size={24} className="text-gray-600 dark:text-gray-400 group-hover:scale-110 transition-transform" />
                 <div>
                   <h4 className="text-sm font-medium text-gray-900 dark:text-white">
                     {getActivityLabel(type)}

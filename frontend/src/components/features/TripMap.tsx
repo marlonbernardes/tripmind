@@ -7,7 +7,9 @@ import 'mapbox-gl/dist/mapbox-gl.css'
 import { useTripContext } from '@/contexts/TripContext'
 import type { Activity, Trip } from '@/types/simple'
 import { cn } from '@/lib/utils'
-import { getActivityColor, getActivityIcon, activityTypeConfig, allActivityTypes } from '@/lib/activity-config'
+import { activityTypeConfig, allActivityTypes } from '@/lib/activity-config'
+import { ActivityIcon } from '@/components/ui/activity-icon'
+import { getActivityColor } from '@/lib/activity-config'
 import { formatDayHeader, formatActivityTime } from '@/lib/date-service'
 
 interface TripMapProps {
@@ -539,11 +541,8 @@ export function TripMap({ className }: TripMapProps) {
           <div className="bg-gray-50 dark:bg-gray-900 px-3 py-2 border-b border-gray-200 dark:border-gray-700">
             {currentPoint ? (
               <div className="grid grid-cols-[auto_auto_1fr_auto] items-center gap-2">
-                <div 
-                  className="w-6 h-6 rounded flex items-center justify-center text-sm"
-                  style={{ backgroundColor: `${getActivityColor(currentPoint.activity.type)}20` }}
-                >
-                  {getActivityIcon(currentPoint.activity.type)}
+                <div className="w-6 h-6 rounded flex items-center justify-center bg-gray-100 dark:bg-gray-700">
+                  <ActivityIcon type={currentPoint.activity.type} size={14} colored />
                 </div>
                 <span 
                   className="text-sm font-bold"
@@ -650,11 +649,8 @@ export function TripMap({ className }: TripMapProps) {
               <div className="flex-1 flex items-center px-4 min-w-0 bg-white dark:bg-gray-800">
                 {currentPoint ? (
                   <div className="flex items-center gap-3 min-w-0 w-full">
-                    <div 
-                      className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-base"
-                      style={{ backgroundColor: `${getActivityColor(currentPoint.activity.type)}20` }}
-                    >
-                      {getActivityIcon(currentPoint.activity.type)}
+                    <div className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center bg-gray-100 dark:bg-gray-700">
+                      <ActivityIcon type={currentPoint.activity.type} size={18} colored />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">

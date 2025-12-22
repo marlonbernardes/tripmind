@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from 'react'
 import type { Activity, ActivityType, Trip } from '@/types/simple'
-import { getActivityColor, getActivityLabel } from '@/lib/activity-config'
+import { getActivityLabel, getActivityColor } from '@/lib/activity-config'
+import { ActivityIcon } from '@/components/ui/activity-icon'
 import { getTripDuration, formatDayHeader, compareActivities } from '@/lib/date-service'
 import { useTripContext } from '@/contexts/TripContext'
 
@@ -173,10 +174,7 @@ export function TimelineGrid({ activities, selectedActivityId, onActivitySelect 
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
                     </button>
-                    <div 
-                      className="w-3 h-3 rounded-sm flex-shrink-0"
-                      style={{ backgroundColor: categoryColor }}
-                    />
+                    <ActivityIcon type={type as ActivityType} size={14} colored />
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium text-gray-900 dark:text-white">
                         {getActivityLabel(type as ActivityType)}s
@@ -210,10 +208,7 @@ export function TimelineGrid({ activities, selectedActivityId, onActivitySelect 
                       onClick={() => onActivitySelect?.(activity)}
                     >
                       <div className="w-48 flex-shrink-0 px-6 py-3 pl-12 flex items-center gap-3">
-                        <div 
-                          className="w-2 h-2 rounded-full flex-shrink-0"
-                          style={{ backgroundColor: categoryColor }}
-                        />
+                        <ActivityIcon type={activity.type} size={12} colored className="flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <div className="text-sm text-gray-900 dark:text-white truncate">
                             {activity.title}

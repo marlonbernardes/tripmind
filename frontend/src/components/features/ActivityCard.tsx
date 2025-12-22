@@ -1,5 +1,6 @@
 import type { Activity, ActivityType } from '@/types/simple'
-import { getActivityColor, getActivityLabel } from '@/lib/activity-config'
+import { getActivityLabel } from '@/lib/activity-config'
+import { ActivityIcon } from '@/components/ui/activity-icon'
 
 interface ActivityCardProps {
   activity: Activity
@@ -8,7 +9,6 @@ interface ActivityCardProps {
 }
 
 export function ActivityCard({ activity, isSelected = false, onClick }: ActivityCardProps) {
-  const activityColor = getActivityColor(activity.type)
   const activityLabel = getActivityLabel(activity.type)
   
   const startTime = activity.time ?? ''
@@ -61,10 +61,12 @@ export function ActivityCard({ activity, isSelected = false, onClick }: Activity
         draftStyling.background
       } ${getBorderColor()} ${draftStyling.borderLeft} ${draftStyling.opacity}`}
     >
-      {/* Colored dot indicator */}
-      <div 
-        className="w-3 h-3 rounded-full flex-shrink-0"
-        style={{ backgroundColor: activityColor }}
+      {/* Activity type icon */}
+      <ActivityIcon 
+        type={activity.type} 
+        size={18} 
+        className="flex-shrink-0"
+        colored
       />
       
       <div className="flex-1 min-w-0">
