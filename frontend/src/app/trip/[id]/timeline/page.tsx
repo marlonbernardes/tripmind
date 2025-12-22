@@ -1,22 +1,14 @@
 'use client'
 
-import { useMemo, useState, useCallback, useEffect } from 'react'
+import { useMemo, useState, useCallback } from 'react'
 import React from 'react'
 import { ChevronDown, ChevronRight, Calendar, Layers, ChevronsUpDown, Plus, List, Lightbulb, X } from 'lucide-react'
 import { ActivityIcon } from '@/components/ui/activity-icon'
-import { TripLayout } from '@/components/features/TripLayout'
-import { TripSidePanel } from '@/components/features/TripSidePanel'
 import { useTripContext } from '@/contexts/TripContext'
 import type { Activity, ActivityType, Trip, Suggestion } from '@/types/simple'
 import { getActivityColor, getActivityLabel, allActivityTypes } from '@/lib/activity-config'
 import { expandActivitiesToDays, groupActivitiesByDay, formatShortDate, getDayOfWeek, getAllTripDays, groupSuggestionsByDay, groupSuggestionsByActivityType, mergeActivitiesAndSuggestions, type ExpandedActivity, type TimelineItem } from '@/lib/timeline-utils'
 import { formatDayHeader, compareActivities } from '@/lib/date-service'
-
-interface TimelinePageProps {
-  params: Promise<{
-    id: string;
-  }>;
-}
 
 type GroupByMode = 'date' | 'type' | 'none'
 
@@ -432,7 +424,7 @@ function TimelineToolbar({
   )
 }
 
-function TimelineContent({ onOpenPreferencesRef }: { onOpenPreferencesRef: React.MutableRefObject<(() => void) | null> }) {
+export default function TimelinePage() {
   const { 
     trip, 
     activities, 
@@ -444,19 +436,6 @@ function TimelineContent({ onOpenPreferencesRef }: { onOpenPreferencesRef: React
     suggestions,
     dismissSuggestion
   } = useTripContext()
-  
-  // External tab trigger for side panel (used by TripEditModal -> Preferences link)
-  const [externalTabTrigger, setExternalTabTrigger] = useState<'config' | null>(null)
-  
-  // Expose the openPreferences function via ref so TripLayout can pass it to TripHeader
-  const openPreferences = useCallback(() => {
-    setExternalTabTrigger('config')
-  }, [])
-  
-  // Set the ref so parent can access this function
-  useEffect(() => {
-    onOpenPreferencesRef.current = openPreferences
-  }, [openPreferences, onOpenPreferencesRef])
   
   // Derive selected IDs from sidePanelState for highlighting
   const selectedActivityId = (sidePanelState.mode === 'viewing' || sidePanelState.mode === 'editing') 
@@ -584,146 +563,117 @@ function TimelineContent({ onOpenPreferencesRef }: { onOpenPreferencesRef: React
   }
 
   return (
-    <div className="h-full flex flex-col md:flex-row">
-      {/* Left Panel - Timeline (60% on desktop, full width on mobile) */}
-      <div className="w-full md:w-[60%] h-[50%] md:h-full flex flex-col bg-white dark:bg-gray-950 md:border-r border-b md:border-b-0 border-gray-200 dark:border-gray-800">
-        {/* Toolbar */}
-        <TimelineToolbar
-          groupBy={groupBy}
-          onGroupByChange={handleGroupByChange}
-          allCollapsed={allCollapsed}
-          onToggleAll={handleToggleAll}
-        />
-        
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto">
-          {activities.length === 0 ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center px-4">
-                <div className="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-gray-600">
-                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-1">
-                  No activities yet
-                </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Add your first activity to get started
-                </p>
+    <div className="h-full flex flex-col bg-white dark:bg-gray-950 overflow-hidden">
+      {/* Toolbar */}
+      <TimelineToolbar
+        groupBy={groupBy}
+        onGroupByChange={handleGroupByChange}
+        allCollapsed={allCollapsed}
+        onToggleAll={handleToggleAll}
+      />
+      
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto">
+        {activities.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center px-4">
+              <div className="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-gray-600">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
               </div>
+              <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-1">
+                No activities yet
+              </h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Add your first activity to get started
+              </p>
             </div>
-          ) : (
-            <div>
-              {groupBy === 'none' ? (
-                // Flat list - merged activities and suggestions sorted by day
-                <div className="px-1 py-1">
-                  {timelineItems.map((item, index) => (
-                    <div key={item.type === 'activity' ? `${item.item.id}-day-${item.item.displayDay}` : item.item.id}>
-                      {index > 0 && (
-                        <div className="h-px bg-gray-200/50 dark:bg-gray-700/50 mx-2" />
-                      )}
-                      {item.type === 'suggestion' ? (
-                        <CompactSuggestionRow
-                          suggestion={item.item}
-                          trip={trip}
-                          isSelected={selectedSuggestionId === item.item.id}
-                          onClick={() => viewSuggestion(item.item)}
-                          onDismiss={() => dismissSuggestion(item.item.id)}
-                        />
-                      ) : (
-                        <CompactActivityRow
-                          activity={item.item}
-                          trip={trip}
-                          displayDay={item.item.displayDay}
-                          dayInfo={item.item.dayNumber ? { dayNumber: item.item.dayNumber, totalDays: item.item.totalDays! } : undefined}
-                          isSelected={selectedActivityId === item.item.id}
-                          onClick={() => editActivity(item.item)}
-                          onDelete={() => deleteActivityWithUndo(item.item.id)}
-                          showDate
-                        />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : groupBy === 'date' ? (
-                // Group by Date (Day)
-                activitiesByDay.map((group) => (
-                  <CollapsibleSection
-                    key={group.key}
-                    groupKey={group.key}
-                    title={group.title}
-                    subtitle={group.subtitle}
-                    activities={group.activities}
-                    suggestions={suggestionsByDay[group.day] || []}
-                    trip={trip}
-                    selectedActivityId={selectedActivityId}
-                    selectedSuggestionId={selectedSuggestionId}
-                    onActivitySelect={editActivity}
-                    onActivityDelete={deleteActivityWithUndo}
-                    onSuggestionSelect={viewSuggestion}
-                    onSuggestionDismiss={dismissSuggestion}
-                    isCollapsed={collapsedGroups.has(group.key)}
-                    onToggleCollapse={handleToggleCollapse}
-                    onAddActivity={handleAddActivity}
-                    day={group.day}
-                  />
-                ))
-              ) : (
-                // Group by Type
-                activitiesByType.map((group) => (
-                  <CollapsibleSection
-                    key={group.key}
-                    groupKey={group.key}
-                    title={group.title}
-                    activities={group.activities}
-                    suggestions={suggestionsByType[group.key as keyof typeof suggestionsByType] || []}
-                    trip={trip}
-                    selectedActivityId={selectedActivityId}
-                    selectedSuggestionId={selectedSuggestionId}
-                    onActivitySelect={editActivity}
-                    onActivityDelete={deleteActivityWithUndo}
-                    onSuggestionSelect={viewSuggestion}
-                    onSuggestionDismiss={dismissSuggestion}
-                    isCollapsed={collapsedGroups.has(group.key)}
-                    onToggleCollapse={handleToggleCollapse}
-                    onAddActivity={handleAddActivity}
-                    color={group.color}
-                    showDateInRows
-                    showEndDateInRows
-                  />
-                ))
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Right Panel - Details/Recommendations/AI Chat (40% on desktop, full width on mobile) */}
-      <div className="w-full md:w-[40%] h-[50%] md:h-full">
-        <TripSidePanel 
-          externalTabTrigger={externalTabTrigger}
-          onExternalTabConsumed={() => setExternalTabTrigger(null)}
-        />
+          </div>
+        ) : (
+          <div>
+            {groupBy === 'none' ? (
+              // Flat list - merged activities and suggestions sorted by day
+              <div className="px-1 py-1">
+                {timelineItems.map((item, index) => (
+                  <div key={item.type === 'activity' ? `${item.item.id}-day-${item.item.displayDay}` : item.item.id}>
+                    {index > 0 && (
+                      <div className="h-px bg-gray-200/50 dark:bg-gray-700/50 mx-2" />
+                    )}
+                    {item.type === 'suggestion' ? (
+                      <CompactSuggestionRow
+                        suggestion={item.item}
+                        trip={trip}
+                        isSelected={selectedSuggestionId === item.item.id}
+                        onClick={() => viewSuggestion(item.item)}
+                        onDismiss={() => dismissSuggestion(item.item.id)}
+                      />
+                    ) : (
+                      <CompactActivityRow
+                        activity={item.item}
+                        trip={trip}
+                        displayDay={item.item.displayDay}
+                        dayInfo={item.item.dayNumber ? { dayNumber: item.item.dayNumber, totalDays: item.item.totalDays! } : undefined}
+                        isSelected={selectedActivityId === item.item.id}
+                        onClick={() => editActivity(item.item)}
+                        onDelete={() => deleteActivityWithUndo(item.item.id)}
+                        showDate
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : groupBy === 'date' ? (
+              // Group by Date (Day)
+              activitiesByDay.map((group) => (
+                <CollapsibleSection
+                  key={group.key}
+                  groupKey={group.key}
+                  title={group.title}
+                  subtitle={group.subtitle}
+                  activities={group.activities}
+                  suggestions={suggestionsByDay[group.day] || []}
+                  trip={trip}
+                  selectedActivityId={selectedActivityId}
+                  selectedSuggestionId={selectedSuggestionId}
+                  onActivitySelect={editActivity}
+                  onActivityDelete={deleteActivityWithUndo}
+                  onSuggestionSelect={viewSuggestion}
+                  onSuggestionDismiss={dismissSuggestion}
+                  isCollapsed={collapsedGroups.has(group.key)}
+                  onToggleCollapse={handleToggleCollapse}
+                  onAddActivity={handleAddActivity}
+                  day={group.day}
+                />
+              ))
+            ) : (
+              // Group by Type
+              activitiesByType.map((group) => (
+                <CollapsibleSection
+                  key={group.key}
+                  groupKey={group.key}
+                  title={group.title}
+                  activities={group.activities}
+                  suggestions={suggestionsByType[group.key as keyof typeof suggestionsByType] || []}
+                  trip={trip}
+                  selectedActivityId={selectedActivityId}
+                  selectedSuggestionId={selectedSuggestionId}
+                  onActivitySelect={editActivity}
+                  onActivityDelete={deleteActivityWithUndo}
+                  onSuggestionSelect={viewSuggestion}
+                  onSuggestionDismiss={dismissSuggestion}
+                  isCollapsed={collapsedGroups.has(group.key)}
+                  onToggleCollapse={handleToggleCollapse}
+                  onAddActivity={handleAddActivity}
+                  color={group.color}
+                  showDateInRows
+                  showEndDateInRows
+                />
+              ))
+            )}
+          </div>
+        )}
       </div>
     </div>
-  )
-}
-
-export default function TimelinePage({ params }: TimelinePageProps) {
-  const { id: tripId } = React.use(params)
-  
-  // Ref to hold the openPreferences function from TimelineContent
-  const openPreferencesRef = React.useRef<(() => void) | null>(null)
-  
-  // Callback that TripLayout passes to TripHeader
-  const handleOpenPreferences = React.useCallback(() => {
-    openPreferencesRef.current?.()
-  }, [])
-  
-  return (
-    <TripLayout tripId={tripId} hideSidePanel onOpenPreferences={handleOpenPreferences}>
-      <TimelineContent onOpenPreferencesRef={openPreferencesRef} />
-    </TripLayout>
   )
 }

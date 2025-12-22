@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react'
-import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { useTripContext } from '@/contexts/TripContext'
@@ -79,16 +78,12 @@ export function TripMap({ className }: TripMapProps) {
   const markersRef = useRef<Map<number, mapboxgl.Marker>>(new Map())
   const routeLayerId = 'route-line'
   const nextRouteLayerId = 'next-route-line'
-  const initializedFromUrl = useRef(false)
   
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-  
-  const { trip, activities, viewActivity, createActivity } = useTripContext()
+  const { trip, activities, sidePanelState, viewActivity, createActivity } = useTripContext()
   
   const [isMapLoaded, setIsMapLoaded] = useState(false)
-  const [currentIndex, setCurrentIndex] = useState(0)
+  const [currentIndex, setCurrentIndex] = useState(-1) // Start with -1, will sync on mount
+  const hasInitialized = useRef(false)
   
   // Create flat list of map points from activities
   const mapPoints: MapPoint[] = useMemo(() => {
@@ -169,49 +164,29 @@ export function TripMap({ className }: TripMapProps) {
   const canGoPrev = currentIndex > 0
   const canGoNext = currentIndex < mapPoints.length - 1
 
-  // Initialize from URL params on first load
+  // Initialize currentIndex once on mount - sync from sidePanelState or default to first
   useEffect(() => {
-    if (initializedFromUrl.current || mapPoints.length === 0) return
+    if (hasInitialized.current || mapPoints.length === 0) return
     
-    const urlActivityId = searchParams.get('a')
-    const urlDeparture = searchParams.get('d')
+    // Check if there's a selected activity in sidePanelState
+    const selectedActivityId = (sidePanelState.mode === 'viewing' || sidePanelState.mode === 'editing')
+      ? sidePanelState.activity.id
+      : null
     
-    if (urlActivityId) {
-      // Find map point matching activityId and departure flag
-      const targetIndex = mapPoints.findIndex(point => {
-        if (point.activityId !== urlActivityId) return false
-        
-        // If d=1 in URL, look for DEPARTURE point; otherwise any matching point
-        if (urlDeparture === '1') {
-          return (point.flags & MapPointFlags.DEPARTURE) !== 0
-        }
-        // For non-departure or d not specified, prefer first match (could be single point or arrival)
-        return true
-      })
-      
+    if (selectedActivityId) {
+      // Find map point for this activity
+      const targetIndex = mapPoints.findIndex(point => point.activityId === selectedActivityId)
       if (targetIndex !== -1) {
         setCurrentIndex(targetIndex)
+        hasInitialized.current = true
+        return
       }
     }
     
-    initializedFromUrl.current = true
-  }, [mapPoints, searchParams])
-
-  // Update URL when currentIndex changes
-  useEffect(() => {
-    if (!initializedFromUrl.current || !currentPoint) return
-    
-    const isDeparture = (currentPoint.flags & MapPointFlags.DEPARTURE) !== 0
-    const params = new URLSearchParams()
-    params.set('a', currentPoint.activityId)
-    if (isDeparture) {
-      params.set('d', '1')
-    }
-    
-    // Update URL without navigation (shallow)
-    const newUrl = `${pathname}?${params.toString()}`
-    router.replace(newUrl, { scroll: false })
-  }, [currentIndex, currentPoint, pathname, router])
+    // No activity selected or not found - default to first point
+    setCurrentIndex(0)
+    hasInitialized.current = true
+  }, [mapPoints, sidePanelState])
 
   // Determine which points should be visible based on current point
   // Note: Paired points are NOT shown - they're only used for zoom calculation

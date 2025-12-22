@@ -214,50 +214,47 @@ export function TripSidePanel({
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800">
-      {/* Tabs and Content */}
-      <div className="flex-1 flex flex-col min-h-0">
-        {/* Tab Navigation */}
-        <div className="flex items-center px-2 py-1.5 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setActiveTab('details')}
-              className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-colors ${
-                activeTab === 'details'
-                  ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
-            >
-              <FileText className="w-3 h-3" />
-              Details
-            </button>
-            <button
-              onClick={() => setActiveTab('config')}
-              className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-colors ${
-                activeTab === 'config'
-                  ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
-            >
-              <Settings className="w-3 h-3" />
-              Preferences
-            </button>
+      {/* Tab Navigation */}
+      <div className="flex items-center px-2 py-1.5 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 flex-shrink-0">
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setActiveTab('details')}
+            className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-colors ${
+              activeTab === 'details'
+                ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+            }`}
+          >
+            <FileText className="w-3 h-3" />
+            Details
+          </button>
+          <button
+            onClick={() => setActiveTab('config')}
+            className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-colors ${
+              activeTab === 'config'
+                ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+            }`}
+          >
+            <Settings className="w-3 h-3" />
+            Preferences
+          </button>
+        </div>
+      </div>
+
+      {/* Tab Content */}
+      <div className="flex-1 overflow-y-auto min-h-0">
+        {activeTab === 'details' && (
+          <div className="h-full">
+            {renderDetailsContent()}
           </div>
-        </div>
+        )}
 
-        {/* Tab Content */}
-        <div className="flex-1 overflow-y-auto min-h-0">
-          {activeTab === 'details' && (
-            <div className="h-full">
-              {renderDetailsContent()}
-            </div>
-          )}
-
-          {activeTab === 'config' && (
-            <div className="h-full overflow-y-auto">
-              <TripConfigTab onClose={() => setActiveTab('details')} />
-            </div>
-          )}
-        </div>
+        {activeTab === 'config' && (
+          <div className="h-full overflow-y-auto">
+            <TripConfigTab onClose={() => setActiveTab('details')} />
+          </div>
+        )}
       </div>
     </div>
   )

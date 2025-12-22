@@ -16,7 +16,7 @@ export const navigationItems: Omit<NavigationItem, 'icon'>[] = [
   },
   {
     id: 'plan',
-    label: 'Plan Your Trip',
+    label: 'Plan Your Next Trip',
     href: '/plan',
     activePattern: '/plan',
   },
