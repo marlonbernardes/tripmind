@@ -35,6 +35,7 @@ function CompactActivityRow({
   showEndDate?: boolean // Show end date/time column (for Type grouping)
 }) {
   const activityColor = getActivityColor(activity.type)
+  const isMissingLocation = !activity.location?.start?.lat || !activity.location?.start?.lng
   const startTime = activity.time ?? ''
   const currentDay = displayDay ?? activity.day
   const endDay = activity.endDay ?? activity.day
@@ -103,7 +104,12 @@ function CompactActivityRow({
         )}
       </span>
       
-      {/* Status badge */}
+      {/* Status badges */}
+      {isMissingLocation && (
+        <span className="text-[9px] px-1 py-0.5 rounded bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 flex-shrink-0">
+          NO MAP
+        </span>
+      )}
       {activity.status === 'draft' && (
         <span className="text-[9px] px-1 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 flex-shrink-0">
           DRAFT

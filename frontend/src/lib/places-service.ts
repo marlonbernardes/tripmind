@@ -1,68 +1,19 @@
 /**
- * Google Places Service
+ * Google Places Service (New)
  * 
- * Provides autocomplete functionality for places using Google Places API.
- * Supports filtering by type: lodging (hotels), cities, or general places.
+ * Uses the new Places API (REST) for autocomplete with coordinates.
+ * https://developers.google.com/maps/documentation/places/web-service/op-overview
  * 
- * TODO: Add Google Places API key to environment variables:
- * NEXT_PUBLIC_GOOGLE_PLACES_API_KEY=your_api_key_here
+ * Requires NEXT_PUBLIC_GOOGLE_PLACES_API_KEY in environment variables.
  */
-
-// Declare google namespace for TypeScript
-declare global {
-  interface Window {
-    google?: {
-      maps: {
-        places: {
-          AutocompleteService: new () => GoogleAutocompleteService
-          PlacesService: new (div: HTMLDivElement) => GooglePlacesService
-          PlacesServiceStatus: {
-            OK: string
-          }
-        }
-      }
-    }
-  }
-}
-
-// Simplified types for Google Places API
-interface GoogleAutocompleteService {
-  getPlacePredictions: (
-    request: AutocompletionRequest,
-    callback: (predictions: AutocompletePrediction[] | null, status: string) => void
-  ) => void
-}
-
-interface GooglePlacesService {
-  getDetails: (
-    request: { placeId: string; fields: string[] },
-    callback: (place: unknown, status: string) => void
-  ) => void
-}
-
-interface AutocompletionRequest {
-  input: string
-  types?: string[]
-  locationBias?: {
-    center: { lat: number; lng: number }
-    radius: number
-  }
-}
-
-interface AutocompletePrediction {
-  place_id: string
-  structured_formatting: {
-    main_text: string
-    secondary_text?: string
-  }
-  types?: string[]
-}
 
 export interface PlaceResult {
   placeId: string
   name: string
   address: string
   types: string[]
+  lat?: number
+  lng?: number
 }
 
 export interface CityResult {
@@ -70,6 +21,8 @@ export interface CityResult {
   city: string
   country: string
   fullAddress: string
+  lat?: number
+  lng?: number
 }
 
 export interface HotelResult {
@@ -77,117 +30,129 @@ export interface HotelResult {
   name: string
   address: string
   city?: string
+  lat?: number
+  lng?: number
 }
 
 export type PlaceType = 'lodging' | 'cities' | 'establishment' | 'all'
 
-// Check if Google Places API is available
-let autocompleteService: GoogleAutocompleteService | null = null
-
-function getAutocompleteService(): GoogleAutocompleteService | null {
-  if (typeof window === 'undefined') return null
-  if (!window.google?.maps?.places) return null
-  
-  if (!autocompleteService) {
-    autocompleteService = new window.google.maps.places.AutocompleteService()
-  }
-  return autocompleteService
-}
+const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
 
 /**
- * Check if Google Places API is loaded and ready
+ * Check if Google Places API key is configured
  */
 export function isPlacesApiReady(): boolean {
-  return typeof window !== 'undefined' && !!window.google?.maps?.places
+  return !!API_KEY
 }
 
 /**
- * Get the type restrictions for Google Places API based on PlaceType
- */
-function getTypeRestrictions(type: PlaceType): string[] | undefined {
-  switch (type) {
-    case 'lodging':
-      return ['lodging']
-    case 'cities':
-      return ['(cities)']
-    case 'establishment':
-      return ['establishment']
-    case 'all':
-    default:
-      return undefined // No restriction
-  }
-}
-
-/**
- * Search for places using Google Places Autocomplete
+ * Search for places using Google Places API (New) Text Search
  * 
  * @param query - Search query
  * @param type - Type of place to search for
- * @param location - Optional location to bias results
- * @returns Array of place results
+ * @returns Array of place results with coordinates
  */
 export async function searchPlaces(
   query: string,
-  type: PlaceType = 'all',
-  location?: { lat: number; lng: number }
+  type: PlaceType = 'all'
 ): Promise<PlaceResult[]> {
   if (!query || query.length < 2) {
     return []
   }
 
-  const service = getAutocompleteService()
-  
-  if (!service) {
-    console.warn('Google Places API not loaded. Using mock data.')
-    return searchPlacesMock(query, type)
+  if (!API_KEY) {
+    console.warn('Google Places API key not configured.')
+    return []
   }
 
-  return new Promise((resolve) => {
-    const request: AutocompletionRequest = {
-      input: query,
-      types: getTypeRestrictions(type),
+  try {
+    const includedTypes = getIncludedTypes(type)
+    
+    const requestBody: Record<string, unknown> = {
+      textQuery: query,
+      maxResultCount: 8,
+      languageCode: 'en',
     }
 
-    // Add location bias if provided
-    if (location) {
-      request.locationBias = {
-        center: location,
-        radius: 50000, // 50km radius
-      }
+    // Add type filter if specified
+    if (includedTypes.length > 0) {
+      requestBody.includedType = includedTypes[0] // API only accepts single type
     }
 
-    service.getPlacePredictions(request, (predictions, status) => {
-      if (status !== window.google?.maps?.places?.PlacesServiceStatus?.OK || !predictions) {
-        resolve([])
-        return
-      }
-
-      const results: PlaceResult[] = predictions.slice(0, 8).map(prediction => ({
-        placeId: prediction.place_id,
-        name: prediction.structured_formatting.main_text,
-        address: prediction.structured_formatting.secondary_text || '',
-        types: prediction.types || [],
-      }))
-
-      resolve(results)
+    const response = await fetch('https://places.googleapis.com/v1/places:searchText', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': API_KEY,
+        'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.types,places.location',
+      },
+      body: JSON.stringify(requestBody),
     })
-  })
+
+    if (!response.ok) {
+      console.error('Places API error:', response.status, await response.text())
+      return []
+    }
+
+    const data = await response.json()
+    
+    if (!data.places || data.places.length === 0) {
+      return []
+    }
+
+    return data.places.map((place: PlacesApiResult) => ({
+      placeId: place.id,
+      name: place.displayName?.text || '',
+      address: place.formattedAddress || '',
+      types: place.types || [],
+      lat: place.location?.latitude,
+      lng: place.location?.longitude,
+    }))
+  } catch (error) {
+    console.error('Places API search error:', error)
+    return []
+  }
+}
+
+// Type for Places API (New) response
+interface PlacesApiResult {
+  id: string
+  displayName?: { text: string; languageCode: string }
+  formattedAddress?: string
+  types?: string[]
+  location?: { latitude: number; longitude: number }
+}
+
+/**
+ * Get included types for Places API based on PlaceType
+ */
+function getIncludedTypes(type: PlaceType): string[] {
+  switch (type) {
+    case 'lodging':
+      return ['lodging']
+    case 'cities':
+      return ['locality'] // Cities are localities in the new API
+    case 'establishment':
+      return [] // No filter, includes all establishments
+    case 'all':
+    default:
+      return []
+  }
 }
 
 /**
  * Search for hotels/lodging
  */
-export async function searchHotels(
-  query: string,
-  location?: { lat: number; lng: number }
-): Promise<HotelResult[]> {
-  const places = await searchPlaces(query, 'lodging', location)
+export async function searchHotels(query: string): Promise<HotelResult[]> {
+  const places = await searchPlaces(query, 'lodging')
   
   return places.map(place => ({
     placeId: place.placeId,
     name: place.name,
     address: place.address,
     city: extractCity(place.address),
+    lat: place.lat,
+    lng: place.lng,
   }))
 }
 
@@ -203,7 +168,9 @@ export async function searchCities(query: string): Promise<CityResult[]> {
       placeId: place.placeId,
       city: place.name,
       country: parts[parts.length - 1] || '',
-      fullAddress: `${place.name}, ${place.address}`,
+      fullAddress: place.address,
+      lat: place.lat,
+      lng: place.lng,
     }
   })
 }
@@ -211,11 +178,8 @@ export async function searchCities(query: string): Promise<CityResult[]> {
 /**
  * Search for any establishment (restaurants, museums, attractions, etc.)
  */
-export async function searchEstablishments(
-  query: string,
-  location?: { lat: number; lng: number }
-): Promise<PlaceResult[]> {
-  return searchPlaces(query, 'all', location)
+export async function searchEstablishments(query: string): Promise<PlaceResult[]> {
+  return searchPlaces(query, 'all')
 }
 
 /**
@@ -226,121 +190,4 @@ function extractCity(address: string): string | undefined {
   const parts = address.split(', ')
   // Usually city is the first or second part
   return parts[0] || undefined
-}
-
-// ==================== MOCK DATA ====================
-// Used when Google Places API is not available
-
-const MOCK_HOTELS: HotelResult[] = [
-  { placeId: 'mock-1', name: 'The Grand Hotel', address: '123 Main St, Dublin, Ireland', city: 'Dublin' },
-  { placeId: 'mock-2', name: 'Park Hyatt', address: '456 Park Ave, Tokyo, Japan', city: 'Tokyo' },
-  { placeId: 'mock-3', name: 'The Ritz', address: '789 Bond St, London, UK', city: 'London' },
-  { placeId: 'mock-4', name: 'Four Seasons', address: '321 Beach Rd, Bali, Indonesia', city: 'Bali' },
-  { placeId: 'mock-5', name: 'Marriott Downtown', address: '555 City Center, New York, USA', city: 'New York' },
-]
-
-const MOCK_CITIES: CityResult[] = [
-  { placeId: 'city-1', city: 'Dublin', country: 'Ireland', fullAddress: 'Dublin, Ireland' },
-  { placeId: 'city-2', city: 'London', country: 'United Kingdom', fullAddress: 'London, United Kingdom' },
-  { placeId: 'city-3', city: 'Paris', country: 'France', fullAddress: 'Paris, France' },
-  { placeId: 'city-4', city: 'Tokyo', country: 'Japan', fullAddress: 'Tokyo, Japan' },
-  { placeId: 'city-5', city: 'New York', country: 'United States', fullAddress: 'New York, NY, USA' },
-  { placeId: 'city-6', city: 'Barcelona', country: 'Spain', fullAddress: 'Barcelona, Spain' },
-  { placeId: 'city-7', city: 'Rome', country: 'Italy', fullAddress: 'Rome, Italy' },
-  { placeId: 'city-8', city: 'Amsterdam', country: 'Netherlands', fullAddress: 'Amsterdam, Netherlands' },
-  { placeId: 'city-9', city: 'Berlin', country: 'Germany', fullAddress: 'Berlin, Germany' },
-  { placeId: 'city-10', city: 'Sydney', country: 'Australia', fullAddress: 'Sydney, Australia' },
-  { placeId: 'city-11', city: 'Dubai', country: 'United Arab Emirates', fullAddress: 'Dubai, UAE' },
-  { placeId: 'city-12', city: 'Singapore', country: 'Singapore', fullAddress: 'Singapore' },
-  { placeId: 'city-13', city: 'Bangkok', country: 'Thailand', fullAddress: 'Bangkok, Thailand' },
-  { placeId: 'city-14', city: 'Lisbon', country: 'Portugal', fullAddress: 'Lisbon, Portugal' },
-  { placeId: 'city-15', city: 'Prague', country: 'Czech Republic', fullAddress: 'Prague, Czech Republic' },
-]
-
-const MOCK_PLACES: PlaceResult[] = [
-  { placeId: 'place-1', name: 'The Louvre', address: 'Paris, France', types: ['museum'] },
-  { placeId: 'place-2', name: 'Central Park', address: 'New York, USA', types: ['park'] },
-  { placeId: 'place-3', name: 'Eiffel Tower', address: 'Paris, France', types: ['tourist_attraction'] },
-  { placeId: 'place-4', name: 'Nobu Restaurant', address: 'London, UK', types: ['restaurant'] },
-  { placeId: 'place-5', name: 'British Museum', address: 'London, UK', types: ['museum'] },
-]
-
-/**
- * Mock search function when Google Places API is not available
- */
-function searchPlacesMock(query: string, type: PlaceType): PlaceResult[] {
-  const normalizedQuery = query.toLowerCase()
-  
-  if (type === 'lodging') {
-    return MOCK_HOTELS
-      .filter(h => 
-        h.name.toLowerCase().includes(normalizedQuery) ||
-        h.city?.toLowerCase().includes(normalizedQuery)
-      )
-      .slice(0, 5)
-      .map(h => ({
-        placeId: h.placeId,
-        name: h.name,
-        address: h.address,
-        types: ['lodging'],
-      }))
-  }
-  
-  if (type === 'cities') {
-    return MOCK_CITIES
-      .filter(c => 
-        c.city.toLowerCase().includes(normalizedQuery) ||
-        c.country.toLowerCase().includes(normalizedQuery)
-      )
-      .slice(0, 8)
-      .map(c => ({
-        placeId: c.placeId,
-        name: c.city,
-        address: c.country,
-        types: ['locality'],
-      }))
-  }
-  
-  // Generic places
-  return MOCK_PLACES
-    .filter(p => 
-      p.name.toLowerCase().includes(normalizedQuery) ||
-      p.address.toLowerCase().includes(normalizedQuery)
-    )
-    .slice(0, 5)
-}
-
-// ==================== GOOGLE MAPS SCRIPT LOADER ====================
-
-let scriptLoadPromise: Promise<void> | null = null
-
-/**
- * Load Google Maps Places API script
- * Call this on app initialization if you need Places API
- */
-export function loadGooglePlacesScript(): Promise<void> {
-  if (scriptLoadPromise) return scriptLoadPromise
-  
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
-  
-  if (!apiKey) {
-    console.warn('NEXT_PUBLIC_GOOGLE_PLACES_API_KEY not set. Places autocomplete will use mock data.')
-    return Promise.resolve()
-  }
-  
-  if (isPlacesApiReady()) {
-    return Promise.resolve()
-  }
-  
-  scriptLoadPromise = new Promise((resolve, reject) => {
-    const script = document.createElement('script')
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`
-    script.async = true
-    script.defer = true
-    script.onload = () => resolve()
-    script.onerror = () => reject(new Error('Failed to load Google Maps script'))
-    document.head.appendChild(script)
-  })
-  
-  return scriptLoadPromise
 }

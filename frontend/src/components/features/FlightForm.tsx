@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import type { Activity, FlightMetadata, ActivityStatus, ActivityContext } from '@/types/simple'
+import type { Activity, FlightMetadata, ActivityStatus, ActivityContext, GeoLocation } from '@/types/simple'
 import { RecommendationsSection } from './RecommendationsSection'
 import { useTripContext } from '@/contexts/TripContext'
 import { DaySelect } from '@/components/ui/day-select'
@@ -9,6 +9,7 @@ import { TimePicker } from '@/components/ui/date-time-picker'
 import { StatusToggle } from '@/components/ui/status-toggle'
 import { FormActions } from '@/components/ui/form-actions'
 import { AirportAutocomplete } from '@/components/ui/autocomplete'
+import type { Airport } from '@/lib/airport-service'
 
 interface FlightFormProps {
   activity?: Activity
@@ -32,6 +33,14 @@ export function FlightForm({ activity, onSave, onCancel, onDelete, defaultDay = 
     airline: '',
     status: 'draft' as ActivityStatus
   })
+  
+  // Track airport coordinates separately
+  const [fromLocation, setFromLocation] = useState<GeoLocation | undefined>(
+    activity?.location?.start
+  )
+  const [toLocation, setToLocation] = useState<GeoLocation | undefined>(
+    activity?.location?.end
+  )
 
   useEffect(() => {
     if (activity) {
@@ -47,8 +56,20 @@ export function FlightForm({ activity, onSave, onCancel, onDelete, defaultDay = 
         airline: metadata.airline || '',
         status: activity.status
       })
+      // Set locations from existing activity
+      setFromLocation(activity.location?.start)
+      setToLocation(activity.location?.end)
     }
   }, [activity])
+
+  // Handle airport selection with coordinates
+  const handleFromAirportSelect = (airport: Airport) => {
+    setFromLocation({ lat: airport.lat, lng: airport.lng })
+  }
+
+  const handleToAirportSelect = (airport: Airport) => {
+    setToLocation({ lat: airport.lat, lng: airport.lng })
+  }
 
   const generateTitle = () => {
     if (formData.from && formData.to) {
@@ -74,6 +95,11 @@ export function FlightForm({ activity, onSave, onCancel, onDelete, defaultDay = 
       endTime: formData.endTime || undefined,
       city: formData.from || undefined,
       status: formData.status,
+      // Include location with coordinates if available
+      location: fromLocation ? {
+        start: fromLocation,
+        end: toLocation  // Will be undefined if not set, which is fine
+      } : undefined,
       metadata: {
         from: formData.from || undefined,
         to: formData.to || undefined,
@@ -96,7 +122,11 @@ export function FlightForm({ activity, onSave, onCancel, onDelete, defaultDay = 
           <label className={labelClass}>From *</label>
           <AirportAutocomplete
             value={formData.from}
-            onChange={(value) => setFormData(prev => ({ ...prev, from: value }))}
+            onChange={(value) => {
+              setFormData(prev => ({ ...prev, from: value }))
+              setFromLocation(undefined) // Clear coordinates when typing
+            }}
+            onAirportSelect={handleFromAirportSelect}
             placeholder="City or airport code"
             required
           />
@@ -105,7 +135,11 @@ export function FlightForm({ activity, onSave, onCancel, onDelete, defaultDay = 
           <label className={labelClass}>To *</label>
           <AirportAutocomplete
             value={formData.to}
-            onChange={(value) => setFormData(prev => ({ ...prev, to: value }))}
+            onChange={(value) => {
+              setFormData(prev => ({ ...prev, to: value }))
+              setToLocation(undefined) // Clear coordinates when typing
+            }}
+            onAirportSelect={handleToAirportSelect}
             placeholder="City or airport code"
             required
           />

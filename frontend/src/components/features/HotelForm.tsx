@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import type { Activity, StayMetadata, ActivityStatus, ActivityContext } from '@/types/simple'
+import type { Activity, StayMetadata, ActivityStatus, ActivityContext, GeoLocation } from '@/types/simple'
 import { RecommendationsSection } from './RecommendationsSection'
 import { useTripContext } from '@/contexts/TripContext'
 import { DaySelect } from '@/components/ui/day-select'
@@ -9,6 +9,7 @@ import { TimePicker } from '@/components/ui/date-time-picker'
 import { StatusToggle } from '@/components/ui/status-toggle'
 import { FormActions } from '@/components/ui/form-actions'
 import { HotelAutocomplete, CityAutocomplete } from '@/components/ui/autocomplete'
+import type { HotelResult } from '@/lib/places-service'
 
 interface StayFormProps {
   activity?: Activity
@@ -31,6 +32,13 @@ export function StayForm({ activity, onSave, onCancel, onDelete, defaultDay = 1,
     confirmationCode: '',
     status: 'draft' as ActivityStatus
   })
+  
+  // Track hotel coordinates
+  const [hotelLocation, setHotelLocation] = useState<GeoLocation | undefined>(
+    activity?.location?.start
+  )
+  // Track if city was auto-populated from hotel selection
+  const [cityFromHotel, setCityFromHotel] = useState(false)
 
   useEffect(() => {
     if (activity) {
@@ -45,6 +53,8 @@ export function StayForm({ activity, onSave, onCancel, onDelete, defaultDay = 1,
         confirmationCode: metadata.confirmationCode || '',
         status: activity.status
       })
+      // Set location from existing activity
+      setHotelLocation(activity.location?.start)
     }
   }, [activity])
 
@@ -68,6 +78,10 @@ export function StayForm({ activity, onSave, onCancel, onDelete, defaultDay = 1,
       endTime: formData.endTime || undefined,
       city: formData.city || undefined,
       status: formData.status,
+      // Include location with coordinates if available
+      location: hotelLocation ? {
+        start: hotelLocation
+      } : undefined,
       metadata: {
         propertyName: formData.propertyName || undefined,
         confirmationCode: formData.confirmationCode || undefined
@@ -87,7 +101,23 @@ export function StayForm({ activity, onSave, onCancel, onDelete, defaultDay = 1,
         <label className={labelClass}>Property *</label>
         <HotelAutocomplete
           value={formData.propertyName}
-          onChange={(value) => setFormData(prev => ({ ...prev, propertyName: value }))}
+          onChange={(value) => {
+            setFormData(prev => ({ ...prev, propertyName: value }))
+            // Clear coordinates and unlock city when typing
+            setHotelLocation(undefined)
+            setCityFromHotel(false)
+          }}
+          onHotelSelect={(hotel: HotelResult) => {
+            // Set coordinates
+            if (hotel.lat && hotel.lng) {
+              setHotelLocation({ lat: hotel.lat, lng: hotel.lng })
+            }
+            // Auto-populate city if the hotel has city info
+            if (hotel.city) {
+              setFormData(prev => ({ ...prev, city: hotel.city! }))
+              setCityFromHotel(true)
+            }
+          }}
           placeholder="Hotel or accommodation name"
           required
         />
@@ -95,12 +125,18 @@ export function StayForm({ activity, onSave, onCancel, onDelete, defaultDay = 1,
 
       {/* City */}
       <div>
-        <label className={labelClass}>City *</label>
+        <label className={labelClass}>
+          City *
+          {cityFromHotel && (
+            <span className="ml-1 text-[10px] text-muted-foreground font-normal">(from hotel)</span>
+          )}
+        </label>
         <CityAutocomplete
           value={formData.city}
           onChange={(value) => setFormData(prev => ({ ...prev, city: value }))}
           placeholder="City"
           required
+          disabled={cityFromHotel}
         />
       </div>
 

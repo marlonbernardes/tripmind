@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import type { Activity, EventMetadata, ActivityStatus, ActivityContext } from '@/types/simple'
+import type { Activity, EventMetadata, ActivityStatus, ActivityContext, GeoLocation } from '@/types/simple'
 import { RecommendationsSection } from './RecommendationsSection'
 import { useTripContext } from '@/contexts/TripContext'
 import { DaySelect } from '@/components/ui/day-select'
@@ -9,6 +9,7 @@ import { TimePicker } from '@/components/ui/date-time-picker'
 import { StatusToggle } from '@/components/ui/status-toggle'
 import { FormActions } from '@/components/ui/form-actions'
 import { PlaceAutocomplete } from '@/components/ui/autocomplete'
+import type { PlaceResult } from '@/lib/places-service'
 
 interface EventFormProps {
   activity?: Activity
@@ -31,6 +32,9 @@ export function EventForm({ activity, onSave, onCancel, onDelete, defaultDay = 1
     location: initialContext?.city || '',
     status: 'draft' as ActivityStatus
   })
+  
+  // Track coordinates for map display
+  const [eventLocation, setEventLocation] = useState<GeoLocation | undefined>(undefined)
 
   useEffect(() => {
     if (activity) {
@@ -43,8 +47,18 @@ export function EventForm({ activity, onSave, onCancel, onDelete, defaultDay = 1
         location: activity.city || '',
         status: activity.status
       })
+      // Restore location from activity if available
+      if (activity.location?.start) {
+        setEventLocation(activity.location.start)
+      }
     }
   }, [activity])
+
+  const handlePlaceSelect = (place: PlaceResult) => {
+    if (place.lat !== undefined && place.lng !== undefined) {
+      setEventLocation({ lat: place.lat, lng: place.lng })
+    }
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -59,6 +73,7 @@ export function EventForm({ activity, onSave, onCancel, onDelete, defaultDay = 1
       endTime: formData.endTime || undefined,
       city: formData.location,
       status: formData.status,
+      location: eventLocation ? { start: eventLocation } : undefined,
       metadata: {} as EventMetadata
     }
 
@@ -88,7 +103,11 @@ export function EventForm({ activity, onSave, onCancel, onDelete, defaultDay = 1
         <label className={labelClass}>Location *</label>
         <PlaceAutocomplete
           value={formData.location}
-          onChange={(value) => setFormData(prev => ({ ...prev, location: value }))}
+          onChange={(value) => {
+            setFormData(prev => ({ ...prev, location: value }))
+            setEventLocation(undefined) // Clear coordinates when typing
+          }}
+          onPlaceSelect={handlePlaceSelect}
           placeholder="City or venue"
           required
         />

@@ -1,13 +1,15 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import type { Activity, TransportMetadata, ActivityStatus, ActivityContext } from '@/types/simple'
+import type { Activity, TransportMetadata, ActivityStatus, ActivityContext, GeoLocation } from '@/types/simple'
 import { RecommendationsSection } from './RecommendationsSection'
 import { useTripContext } from '@/contexts/TripContext'
 import { DaySelect } from '@/components/ui/day-select'
 import { TimePicker } from '@/components/ui/date-time-picker'
 import { StatusToggle } from '@/components/ui/status-toggle'
 import { FormActions } from '@/components/ui/form-actions'
+import { PlaceAutocomplete } from '@/components/ui/autocomplete'
+import type { PlaceResult } from '@/lib/places-service'
 
 interface TransportFormProps {
   activity?: Activity
@@ -30,6 +32,10 @@ export function TransportForm({ activity, onSave, onCancel, onDelete, defaultDay
     vehicleType: '',
     status: 'draft' as ActivityStatus
   })
+  
+  // Track coordinates for map display
+  const [fromLocation, setFromLocation] = useState<GeoLocation | undefined>(undefined)
+  const [toLocation, setToLocation] = useState<GeoLocation | undefined>(undefined)
 
   useEffect(() => {
     if (activity) {
@@ -44,6 +50,13 @@ export function TransportForm({ activity, onSave, onCancel, onDelete, defaultDay
         vehicleType: metadata.vehicleType || '',
         status: activity.status
       })
+      // Restore locations from activity if available
+      if (activity.location?.start) {
+        setFromLocation(activity.location.start)
+      }
+      if (activity.location?.end) {
+        setToLocation(activity.location.end)
+      }
     }
   }, [activity])
 
@@ -61,6 +74,18 @@ export function TransportForm({ activity, onSave, onCancel, onDelete, defaultDay
     return 'Transport'
   }
 
+  const handleFromPlaceSelect = (place: PlaceResult) => {
+    if (place.lat !== undefined && place.lng !== undefined) {
+      setFromLocation({ lat: place.lat, lng: place.lng })
+    }
+  }
+
+  const handleToPlaceSelect = (place: PlaceResult) => {
+    if (place.lat !== undefined && place.lng !== undefined) {
+      setToLocation({ lat: place.lat, lng: place.lng })
+    }
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -74,6 +99,10 @@ export function TransportForm({ activity, onSave, onCancel, onDelete, defaultDay
       endTime: formData.endTime || undefined,
       city: formData.from || undefined,
       status: formData.status,
+      location: (fromLocation || toLocation) ? {
+        start: fromLocation || toLocation!,
+        end: toLocation
+      } : undefined,
       metadata: {
         from: formData.from || undefined,
         to: formData.to || undefined,
@@ -84,7 +113,6 @@ export function TransportForm({ activity, onSave, onCancel, onDelete, defaultDay
     onSave(activityData)
   }
 
-  const inputClass = "w-full h-9 px-3 text-sm border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
   const labelClass = "block text-xs font-medium text-muted-foreground mb-1"
 
   return (
@@ -93,22 +121,26 @@ export function TransportForm({ activity, onSave, onCancel, onDelete, defaultDay
       <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))' }}>
         <div>
           <label className={labelClass}>From *</label>
-          <input
-            type="text"
+          <PlaceAutocomplete
             value={formData.from}
-            onChange={(e) => setFormData(prev => ({ ...prev, from: e.target.value }))}
-            className={inputClass}
+            onChange={(value) => {
+              setFormData(prev => ({ ...prev, from: value }))
+              setFromLocation(undefined) // Clear coordinates when typing
+            }}
+            onPlaceSelect={handleFromPlaceSelect}
             placeholder="Where from?"
             required
           />
         </div>
         <div>
           <label className={labelClass}>To *</label>
-          <input
-            type="text"
+          <PlaceAutocomplete
             value={formData.to}
-            onChange={(e) => setFormData(prev => ({ ...prev, to: e.target.value }))}
-            className={inputClass}
+            onChange={(value) => {
+              setFormData(prev => ({ ...prev, to: value }))
+              setToLocation(undefined) // Clear coordinates when typing
+            }}
+            onPlaceSelect={handleToPlaceSelect}
             placeholder="Where to?"
             required
           />
@@ -122,7 +154,7 @@ export function TransportForm({ activity, onSave, onCancel, onDelete, defaultDay
           type="text"
           value={formData.vehicleType}
           onChange={(e) => setFormData(prev => ({ ...prev, vehicleType: e.target.value }))}
-          className={inputClass}
+          className="w-full h-9 px-3 text-sm border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
           placeholder="Train, Bus, Taxi, etc."
         />
       </div>

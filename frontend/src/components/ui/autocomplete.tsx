@@ -233,9 +233,9 @@ export function Autocomplete({
               )}
               {!isLoading && options.length > 0 && (
                 <CommandGroup>
-                  {options.map((option) => (
+                  {options.map((option, index) => (
                     <CommandItem
-                      key={option.value}
+                      key={`${option.value}-${index}`}
                       value={option.value}
                       onMouseDown={(e) => {
                         e.preventDefault()
@@ -272,7 +272,7 @@ export function Autocomplete({
 
 // ==================== Specialized Autocomplete Components ====================
 
-import { searchAirports, formatAirport, type Airport } from '@/lib/airport-service'
+import { searchAirports, formatAirport, getAirportByCode, type Airport } from '@/lib/airport-service'
 import { searchHotels, searchCities, searchEstablishments, type HotelResult, type CityResult, type PlaceResult } from '@/lib/places-service'
 
 /**
@@ -282,6 +282,8 @@ import { searchHotels, searchCities, searchEstablishments, type HotelResult, typ
 export interface AirportAutocompleteProps {
   value: string
   onChange: (value: string) => void
+  /** Called when user selects an airport from the list (provides full airport data including coordinates) */
+  onAirportSelect?: (airport: Airport) => void
   placeholder?: string
   className?: string
   disabled?: boolean
@@ -291,13 +293,21 @@ export interface AirportAutocompleteProps {
 export function AirportAutocomplete({
   value,
   onChange,
+  onAirportSelect,
   placeholder = 'Search airports...',
   className,
   disabled,
   required,
 }: AirportAutocompleteProps) {
+  // Store airport data keyed by formatted display value
+  const airportMapRef = React.useRef<Map<string, Airport>>(new Map())
+
   const handleSearch = async (query: string): Promise<AutocompleteOption[]> => {
     const airports = await searchAirports(query)
+    // Store airport data for lookup when selected
+    airports.forEach(airport => {
+      airportMapRef.current.set(formatAirport(airport), airport)
+    })
     return airports.map((airport) => ({
       value: formatAirport(airport),
       label: formatAirport(airport),
@@ -305,10 +315,21 @@ export function AirportAutocomplete({
     }))
   }
 
+  const handleChange = (newValue: string) => {
+    onChange(newValue)
+    // Check if the value matches a known airport and call onAirportSelect
+    if (onAirportSelect) {
+      const airport = airportMapRef.current.get(newValue)
+      if (airport) {
+        onAirportSelect(airport)
+      }
+    }
+  }
+
   return (
     <Autocomplete
       value={value}
-      onChange={onChange}
+      onChange={handleChange}
       onSearch={handleSearch}
       placeholder={placeholder}
       className={className}
@@ -328,6 +349,8 @@ export function AirportAutocomplete({
 export interface HotelAutocompleteProps {
   value: string
   onChange: (value: string) => void
+  /** Called when user selects a hotel from the list (provides full hotel data including city) */
+  onHotelSelect?: (hotel: HotelResult) => void
   placeholder?: string
   className?: string
   disabled?: boolean
@@ -337,13 +360,21 @@ export interface HotelAutocompleteProps {
 export function HotelAutocomplete({
   value,
   onChange,
+  onHotelSelect,
   placeholder = 'Search hotels...',
   className,
   disabled,
   required,
 }: HotelAutocompleteProps) {
+  // Store hotel data keyed by name for lookup when selected
+  const hotelMapRef = React.useRef<Map<string, HotelResult>>(new Map())
+
   const handleSearch = async (query: string): Promise<AutocompleteOption[]> => {
     const hotels = await searchHotels(query)
+    // Store hotel data for lookup when selected
+    hotels.forEach(hotel => {
+      hotelMapRef.current.set(hotel.name, hotel)
+    })
     return hotels.map((hotel) => ({
       value: hotel.name,
       label: hotel.name,
@@ -351,10 +382,21 @@ export function HotelAutocomplete({
     }))
   }
 
+  const handleChange = (newValue: string) => {
+    onChange(newValue)
+    // Check if the value matches a known hotel and call onHotelSelect
+    if (onHotelSelect) {
+      const hotel = hotelMapRef.current.get(newValue)
+      if (hotel) {
+        onHotelSelect(hotel)
+      }
+    }
+  }
+
   return (
     <Autocomplete
       value={value}
-      onChange={onChange}
+      onChange={handleChange}
       onSearch={handleSearch}
       placeholder={placeholder}
       className={className}
@@ -420,6 +462,8 @@ export function CityAutocomplete({
 export interface PlaceAutocompleteProps {
   value: string
   onChange: (value: string) => void
+  /** Called when user selects a place from the list (provides full place data including coordinates) */
+  onPlaceSelect?: (place: PlaceResult) => void
   placeholder?: string
   className?: string
   disabled?: boolean
@@ -429,13 +473,21 @@ export interface PlaceAutocompleteProps {
 export function PlaceAutocomplete({
   value,
   onChange,
+  onPlaceSelect,
   placeholder = 'Search places...',
   className,
   disabled,
   required,
 }: PlaceAutocompleteProps) {
+  // Store place data keyed by name for lookup when selected
+  const placeMapRef = React.useRef<Map<string, PlaceResult>>(new Map())
+
   const handleSearch = async (query: string): Promise<AutocompleteOption[]> => {
     const places = await searchEstablishments(query)
+    // Store place data for lookup when selected
+    places.forEach(place => {
+      placeMapRef.current.set(place.name, place)
+    })
     return places.map((place) => ({
       value: place.name,
       label: place.name,
@@ -443,10 +495,21 @@ export function PlaceAutocomplete({
     }))
   }
 
+  const handleChange = (newValue: string) => {
+    onChange(newValue)
+    // Check if the value matches a known place and call onPlaceSelect
+    if (onPlaceSelect) {
+      const place = placeMapRef.current.get(newValue)
+      if (place) {
+        onPlaceSelect(place)
+      }
+    }
+  }
+
   return (
     <Autocomplete
       value={value}
-      onChange={onChange}
+      onChange={handleChange}
       onSearch={handleSearch}
       placeholder={placeholder}
       className={className}
