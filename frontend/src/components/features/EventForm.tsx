@@ -8,6 +8,7 @@ import { DaySelect } from '@/components/ui/day-select'
 import { TimePicker } from '@/components/ui/date-time-picker'
 import { StatusToggle } from '@/components/ui/status-toggle'
 import { FormActions } from '@/components/ui/form-actions'
+import { PlaceAutocomplete } from '@/components/ui/autocomplete'
 
 interface EventFormProps {
   activity?: Activity
@@ -85,11 +86,9 @@ export function EventForm({ activity, onSave, onCancel, onDelete, defaultDay = 1
       {/* Location */}
       <div>
         <label className={labelClass}>Location *</label>
-        <input
-          type="text"
+        <PlaceAutocomplete
           value={formData.location}
-          onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-          className={inputClass}
+          onChange={(value) => setFormData(prev => ({ ...prev, location: value }))}
           placeholder="City or venue"
           required
         />

@@ -8,6 +8,7 @@ import { DaySelect } from '@/components/ui/day-select'
 import { TimePicker } from '@/components/ui/date-time-picker'
 import { StatusToggle } from '@/components/ui/status-toggle'
 import { FormActions } from '@/components/ui/form-actions'
+import { AirportAutocomplete } from '@/components/ui/autocomplete'
 
 interface FlightFormProps {
   activity?: Activity
@@ -93,23 +94,19 @@ export function FlightForm({ activity, onSave, onCancel, onDelete, defaultDay = 
       <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))' }}>
         <div>
           <label className={labelClass}>From *</label>
-          <input
-            type="text"
+          <AirportAutocomplete
             value={formData.from}
-            onChange={(e) => setFormData(prev => ({ ...prev, from: e.target.value }))}
-            className={inputClass}
-            placeholder="Where from?"
+            onChange={(value) => setFormData(prev => ({ ...prev, from: value }))}
+            placeholder="City or airport code"
             required
           />
         </div>
         <div>
           <label className={labelClass}>To *</label>
-          <input
-            type="text"
+          <AirportAutocomplete
             value={formData.to}
-            onChange={(e) => setFormData(prev => ({ ...prev, to: e.target.value }))}
-            className={inputClass}
-            placeholder="Where to?"
+            onChange={(value) => setFormData(prev => ({ ...prev, to: value }))}
+            placeholder="City or airport code"
             required
           />
         </div>

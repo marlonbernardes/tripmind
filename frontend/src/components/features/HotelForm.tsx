@@ -8,6 +8,7 @@ import { DaySelect } from '@/components/ui/day-select'
 import { TimePicker } from '@/components/ui/date-time-picker'
 import { StatusToggle } from '@/components/ui/status-toggle'
 import { FormActions } from '@/components/ui/form-actions'
+import { HotelAutocomplete, CityAutocomplete } from '@/components/ui/autocomplete'
 
 interface StayFormProps {
   activity?: Activity
@@ -84,11 +85,9 @@ export function StayForm({ activity, onSave, onCancel, onDelete, defaultDay = 1,
       {/* Property Name */}
       <div>
         <label className={labelClass}>Property *</label>
-        <input
-          type="text"
+        <HotelAutocomplete
           value={formData.propertyName}
-          onChange={(e) => setFormData(prev => ({ ...prev, propertyName: e.target.value }))}
-          className={inputClass}
+          onChange={(value) => setFormData(prev => ({ ...prev, propertyName: value }))}
           placeholder="Hotel or accommodation name"
           required
         />
@@ -97,11 +96,9 @@ export function StayForm({ activity, onSave, onCancel, onDelete, defaultDay = 1,
       {/* City */}
       <div>
         <label className={labelClass}>City *</label>
-        <input
-          type="text"
+        <CityAutocomplete
           value={formData.city}
-          onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
-          className={inputClass}
+          onChange={(value) => setFormData(prev => ({ ...prev, city: value }))}
           placeholder="City"
           required
         />

@@ -4,6 +4,7 @@ import "./globals.css";
 import { TopNavbar } from "@/components/ui/top-navbar";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ToastProvider } from "@/components/ui/toast";
+import { GooglePlacesLoader } from "@/components/features/GooglePlacesLoader";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -25,6 +26,7 @@ export default function RootLayout({
       <body className="font-sans antialiased bg-white dark:bg-gray-950">
         <ThemeProvider>
           <ToastProvider>
+            <GooglePlacesLoader />
             <div className="grid grid-rows-[auto_1fr] h-dvh overflow-hidden">
               <TopNavbar />
               <main className="overflow-hidden bg-white dark:bg-gray-950">

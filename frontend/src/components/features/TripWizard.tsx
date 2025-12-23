@@ -8,6 +8,7 @@ import { generateMockTrip } from '@/lib/trip-generator'
 import { tripService } from '@/lib/trip-service'
 import { INTERESTS, PACING_OPTIONS } from '@/lib/config'
 import type { TripPacing, TripInterest } from '@/types/simple'
+import { CityAutocomplete } from '@/components/ui/autocomplete'
 
 // Types
 type WizardStep = 'destinations' | 'dates' | 'style' | 'pacing' | 'loading'
@@ -304,17 +305,13 @@ export function TripWizard() {
               ))}
             </div>
 
-            {/* Custom destination input */}
+            {/* Custom destination input with autocomplete */}
             <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Plus className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Add a different destination..."
+              <div className="flex-1">
+                <CityAutocomplete
                   value={data.customDestination}
-                  onChange={(e) => setData(prev => ({ ...prev, customDestination: e.target.value }))}
-                  onKeyDown={(e) => e.key === 'Enter' && addCustomDestination()}
-                  className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={(value) => setData(prev => ({ ...prev, customDestination: value }))}
+                  placeholder="Add a different destination..."
                 />
               </div>
               {data.customDestination && (
