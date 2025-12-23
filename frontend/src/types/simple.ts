@@ -81,6 +81,7 @@ export interface Activity {
   // Location (optional)
   location?: ActivityLocation
   city?: string
+  address?: string  // Full address string
   
   // Type-specific metadata
   metadata?: FlightMetadata | StayMetadata | EventMetadata | TransportMetadata
@@ -105,12 +106,14 @@ export interface StayMetadata {
 }
 
 export interface EventMetadata {
-  // Simplified - no event-specific fields needed for MVP
+  placeName?: string  // Name of venue/place
 }
 
 export interface TransportMetadata {
   from?: string
   to?: string
+  fromAddress?: string
+  toAddress?: string
   vehicleType?: string
   confirmationCode?: string
 }

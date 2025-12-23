@@ -10,6 +10,16 @@ import { StatusToggle } from '@/components/ui/status-toggle'
 import { FormActions } from '@/components/ui/form-actions'
 import { PlaceAutocomplete } from '@/components/ui/autocomplete'
 import type { PlaceResult } from '@/lib/places-service'
+import { Train, Bus, Car, Ship } from 'lucide-react'
+
+// Vehicle type options with icons
+const VEHICLE_TYPES = [
+  { id: 'train', label: 'Train', icon: Train },
+  { id: 'bus', label: 'Bus', icon: Bus },
+  { id: 'taxi', label: 'Taxi', icon: Car },
+  { id: 'car', label: 'Car', icon: Car },
+  { id: 'ferry', label: 'Ferry', icon: Ship },
+] as const
 
 interface TransportFormProps {
   activity?: Activity
@@ -23,8 +33,10 @@ interface TransportFormProps {
 export function TransportForm({ activity, onSave, onCancel, onDelete, defaultDay = 1, initialContext }: TransportFormProps) {
   const { trip } = useTripContext()
   const [formData, setFormData] = useState({
-    from: initialContext?.fromCity || '',
-    to: initialContext?.toCity || '',
+    fromAddress: '',
+    toAddress: '',
+    fromCity: initialContext?.fromCity || '',
+    toCity: initialContext?.toCity || '',
     day: defaultDay,
     time: '',
     endDay: undefined as number | undefined,
@@ -41,8 +53,10 @@ export function TransportForm({ activity, onSave, onCancel, onDelete, defaultDay
     if (activity) {
       const metadata = activity.metadata as TransportMetadata || {}
       setFormData({
-        from: metadata.from || '',
-        to: metadata.to || '',
+        fromAddress: metadata.fromAddress || metadata.from || '',
+        toAddress: metadata.toAddress || metadata.to || '',
+        fromCity: metadata.from || '',
+        toCity: metadata.to || '',
         day: activity.day,
         time: activity.time || '',
         endDay: activity.endDay,
@@ -61,15 +75,18 @@ export function TransportForm({ activity, onSave, onCancel, onDelete, defaultDay
   }, [activity])
 
   const generateTitle = () => {
-    if (formData.from && formData.to) {
-      let title = `${formData.from} → ${formData.to}`
+    const from = formData.fromCity || formData.fromAddress
+    const to = formData.toCity || formData.toAddress
+    if (from && to) {
+      let title = `${from} → ${to}`
       if (formData.vehicleType) {
-        title = `${formData.vehicleType}: ${title}`
+        const vehicleLabel = VEHICLE_TYPES.find(v => v.id === formData.vehicleType)?.label || formData.vehicleType
+        title = `${vehicleLabel}: ${title}`
       }
       return title
     }
     if (formData.vehicleType) {
-      return formData.vehicleType
+      return VEHICLE_TYPES.find(v => v.id === formData.vehicleType)?.label || formData.vehicleType
     }
     return 'Transport'
   }
@@ -78,11 +95,19 @@ export function TransportForm({ activity, onSave, onCancel, onDelete, defaultDay
     if (place.lat !== undefined && place.lng !== undefined) {
       setFromLocation({ lat: place.lat, lng: place.lng })
     }
+    // Extract city from place
+    if (place.city) {
+      setFormData(prev => ({ ...prev, fromCity: place.city! }))
+    }
   }
 
   const handleToPlaceSelect = (place: PlaceResult) => {
     if (place.lat !== undefined && place.lng !== undefined) {
       setToLocation({ lat: place.lat, lng: place.lng })
+    }
+    // Extract city from place
+    if (place.city) {
+      setFormData(prev => ({ ...prev, toCity: place.city! }))
     }
   }
 
@@ -97,15 +122,18 @@ export function TransportForm({ activity, onSave, onCancel, onDelete, defaultDay
       time: formData.time || undefined,
       endDay: formData.endDay,
       endTime: formData.endTime || undefined,
-      city: formData.from || undefined,
+      city: formData.fromCity || undefined,
+      address: formData.fromAddress || undefined,
       status: formData.status,
       location: (fromLocation || toLocation) ? {
         start: fromLocation || toLocation!,
         end: toLocation
       } : undefined,
       metadata: {
-        from: formData.from || undefined,
-        to: formData.to || undefined,
+        from: formData.fromCity || undefined,
+        to: formData.toCity || undefined,
+        fromAddress: formData.fromAddress || undefined,
+        toAddress: formData.toAddress || undefined,
         vehicleType: formData.vehicleType || undefined
       } as TransportMetadata
     }
@@ -117,46 +145,63 @@ export function TransportForm({ activity, onSave, onCancel, onDelete, defaultDay
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      {/* From / To */}
+      {/* Vehicle Type Pills */}
+      <div>
+        <label className={labelClass}>Vehicle type</label>
+        <div className="flex flex-wrap gap-1.5">
+          {VEHICLE_TYPES.map((type) => {
+            const Icon = type.icon
+            const isSelected = formData.vehicleType === type.id
+            return (
+              <button
+                key={type.id}
+                type="button"
+                onClick={() => setFormData(prev => ({ 
+                  ...prev, 
+                  vehicleType: prev.vehicleType === type.id ? '' : type.id 
+                }))}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                  isSelected
+                    ? 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {type.label}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* From / To Addresses */}
       <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))' }}>
         <div>
           <label className={labelClass}>From *</label>
           <PlaceAutocomplete
-            value={formData.from}
+            value={formData.fromAddress}
             onChange={(value) => {
-              setFormData(prev => ({ ...prev, from: value }))
+              setFormData(prev => ({ ...prev, fromAddress: value }))
               setFromLocation(undefined) // Clear coordinates when typing
             }}
             onPlaceSelect={handleFromPlaceSelect}
-            placeholder="Where from?"
+            placeholder="Departure address"
             required
           />
         </div>
         <div>
           <label className={labelClass}>To *</label>
           <PlaceAutocomplete
-            value={formData.to}
+            value={formData.toAddress}
             onChange={(value) => {
-              setFormData(prev => ({ ...prev, to: value }))
+              setFormData(prev => ({ ...prev, toAddress: value }))
               setToLocation(undefined) // Clear coordinates when typing
             }}
             onPlaceSelect={handleToPlaceSelect}
-            placeholder="Where to?"
+            placeholder="Arrival address"
             required
           />
         </div>
-      </div>
-
-      {/* Vehicle Type */}
-      <div>
-        <label className={labelClass}>Vehicle type</label>
-        <input
-          type="text"
-          value={formData.vehicleType}
-          onChange={(e) => setFormData(prev => ({ ...prev, vehicleType: e.target.value }))}
-          className="w-full h-9 px-3 text-sm border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-          placeholder="Train, Bus, Taxi, etc."
-        />
       </div>
 
       {/* Departure / Arrival */}
@@ -223,7 +268,7 @@ export function TransportForm({ activity, onSave, onCancel, onDelete, defaultDay
           activity={{
             type: 'transport',
             status: formData.status,
-            city: formData.from && formData.to ? `${formData.from} to ${formData.to}` : undefined,
+            city: formData.fromCity && formData.toCity ? `${formData.fromCity} to ${formData.toCity}` : undefined,
             day: formData.day
           }}
         />

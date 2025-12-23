@@ -25,11 +25,13 @@ export function EventForm({ activity, onSave, onCancel, onDelete, defaultDay = 1
   
   const [formData, setFormData] = useState({
     title: '',
+    placeName: '',
+    address: '',
+    city: initialContext?.city || '',
     day: defaultDay,
     time: '',
     endDay: undefined as number | undefined,
     endTime: '',
-    location: initialContext?.city || '',
     status: 'draft' as ActivityStatus
   })
   
@@ -38,13 +40,16 @@ export function EventForm({ activity, onSave, onCancel, onDelete, defaultDay = 1
 
   useEffect(() => {
     if (activity) {
+      const metadata = activity.metadata as EventMetadata || {}
       setFormData({
         title: activity.title,
+        placeName: metadata.placeName || '',
+        address: activity.address || '',
+        city: activity.city || '',
         day: activity.day,
         time: activity.time || '',
         endDay: activity.endDay,
         endTime: activity.endTime || '',
-        location: activity.city || '',
         status: activity.status
       })
       // Restore location from activity if available
@@ -57,6 +62,14 @@ export function EventForm({ activity, onSave, onCancel, onDelete, defaultDay = 1
   const handlePlaceSelect = (place: PlaceResult) => {
     if (place.lat !== undefined && place.lng !== undefined) {
       setEventLocation({ lat: place.lat, lng: place.lng })
+    }
+    // Auto-populate place name from selection
+    if (place.name) {
+      setFormData(prev => ({ 
+        ...prev, 
+        placeName: place.name,
+        city: place.city || prev.city
+      }))
     }
   }
 
@@ -71,10 +84,13 @@ export function EventForm({ activity, onSave, onCancel, onDelete, defaultDay = 1
       time: formData.time || undefined,
       endDay: formData.endDay,
       endTime: formData.endTime || undefined,
-      city: formData.location,
+      city: formData.city || undefined,
+      address: formData.address || undefined,
       status: formData.status,
       location: eventLocation ? { start: eventLocation } : undefined,
-      metadata: {} as EventMetadata
+      metadata: {
+        placeName: formData.placeName || undefined
+      } as EventMetadata
     }
 
     onSave(activityData)
@@ -98,17 +114,29 @@ export function EventForm({ activity, onSave, onCancel, onDelete, defaultDay = 1
         />
       </div>
 
-      {/* Location */}
+      {/* Place Name (optional) */}
       <div>
-        <label className={labelClass}>Location *</label>
+        <label className={labelClass}>Place name</label>
+        <input
+          type="text"
+          value={formData.placeName}
+          onChange={(e) => setFormData(prev => ({ ...prev, placeName: e.target.value }))}
+          className={inputClass}
+          placeholder="Restaurant, museum, venue..."
+        />
+      </div>
+
+      {/* Address */}
+      <div>
+        <label className={labelClass}>Address *</label>
         <PlaceAutocomplete
-          value={formData.location}
+          value={formData.address}
           onChange={(value) => {
-            setFormData(prev => ({ ...prev, location: value }))
+            setFormData(prev => ({ ...prev, address: value }))
             setEventLocation(undefined) // Clear coordinates when typing
           }}
           onPlaceSelect={handlePlaceSelect}
-          placeholder="City or venue"
+          placeholder="Search for address or place"
           required
         />
       </div>
@@ -177,7 +205,7 @@ export function EventForm({ activity, onSave, onCancel, onDelete, defaultDay = 1
           activity={{
             type: 'event',
             status: formData.status,
-            city: formData.location || undefined,
+            city: formData.city || undefined,
             day: formData.day,
             time: formData.time,
             endDay: formData.endDay,

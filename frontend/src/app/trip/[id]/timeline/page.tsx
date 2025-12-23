@@ -107,7 +107,7 @@ function CompactActivityRow({
       {/* Status badges */}
       {isMissingLocation && (
         <span className="text-[9px] px-1 py-0.5 rounded bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 flex-shrink-0">
-          NO MAP
+          NO ADDRESS
         </span>
       )}
       {activity.status === 'draft' && (

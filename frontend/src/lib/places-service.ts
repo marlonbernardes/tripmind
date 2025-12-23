@@ -14,6 +14,7 @@ export interface PlaceResult {
   types: string[]
   lat?: number
   lng?: number
+  city?: string
 }
 
 export interface CityResult {
@@ -107,6 +108,7 @@ export async function searchPlaces(
       types: place.types || [],
       lat: place.location?.latitude,
       lng: place.location?.longitude,
+      city: extractCity(place.formattedAddress || ''),
     }))
   } catch (error) {
     console.error('Places API search error:', error)
