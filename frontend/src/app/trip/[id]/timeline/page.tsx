@@ -429,7 +429,7 @@ export default function TimelinePage() {
     trip, 
     activities, 
     sidePanelState,
-    editActivity,
+    selectActivity,
     viewSuggestion,
     createActivity,
     deleteActivityWithUndo,
@@ -438,8 +438,8 @@ export default function TimelinePage() {
   } = useTripContext()
   
   // Derive selected IDs from sidePanelState for highlighting
-  const selectedActivityId = (sidePanelState.mode === 'viewing' || sidePanelState.mode === 'editing') 
-    ? sidePanelState.activity.id 
+  const selectedActivityId = sidePanelState.mode === 'editing'
+    ? sidePanelState.activity.id
     : undefined
   const selectedSuggestionId = sidePanelState.mode === 'suggestion' 
     ? sidePanelState.suggestion.id 
@@ -615,7 +615,7 @@ export default function TimelinePage() {
                         displayDay={item.item.displayDay}
                         dayInfo={item.item.dayNumber ? { dayNumber: item.item.dayNumber, totalDays: item.item.totalDays! } : undefined}
                         isSelected={selectedActivityId === item.item.id}
-                        onClick={() => editActivity(item.item)}
+                        onClick={() => selectActivity(item.item)}
                         onDelete={() => deleteActivityWithUndo(item.item.id)}
                         showDate
                       />
@@ -636,7 +636,7 @@ export default function TimelinePage() {
                   trip={trip}
                   selectedActivityId={selectedActivityId}
                   selectedSuggestionId={selectedSuggestionId}
-                  onActivitySelect={editActivity}
+                  onActivitySelect={selectActivity}
                   onActivityDelete={deleteActivityWithUndo}
                   onSuggestionSelect={viewSuggestion}
                   onSuggestionDismiss={dismissSuggestion}
@@ -658,7 +658,7 @@ export default function TimelinePage() {
                   trip={trip}
                   selectedActivityId={selectedActivityId}
                   selectedSuggestionId={selectedSuggestionId}
-                  onActivitySelect={editActivity}
+                  onActivitySelect={selectActivity}
                   onActivityDelete={deleteActivityWithUndo}
                   onSuggestionSelect={viewSuggestion}
                   onSuggestionDismiss={dismissSuggestion}

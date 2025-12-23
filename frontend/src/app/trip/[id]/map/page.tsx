@@ -7,7 +7,7 @@ import { useTripContext } from '@/contexts/TripContext'
 import { useTheme } from '@/contexts/ThemeContext'
 
 export default function MapPage() {
-  const { activities, viewActivity } = useTripContext()
+  const { activities, selectActivity } = useTripContext()
   const { theme } = useTheme()
   const searchParams = useSearchParams()
   const hasInitialized = useRef(false)
@@ -20,11 +20,11 @@ export default function MapPage() {
     if (activityId && activities.length > 0) {
       const activity = activities.find(a => a.id === activityId)
       if (activity) {
-        viewActivity(activity)
+        selectActivity(activity)
         hasInitialized.current = true
       }
     }
-  }, [searchParams, activities, viewActivity])
+  }, [searchParams, activities, selectActivity])
 
   // Check if there are any activities with locations
   const hasLocationActivities = activities.some(a => a.location)

@@ -99,7 +99,15 @@ Dublin (DUB) -> Beijing (PEK)
 ```
 
 - [ ] Make /trips page look better visually
-- [ ] Side panel in timeline page needs to go full height and be resizable
+- [ ] Add proper auto complete and API integrations. Example:
+    - Property name in Hotel form could be a Google auto complete
+    - Where from/to should be an airport autocomplete
+    - When planning a trip, city should be an auto complete
+    - When adding an event it should be autocomplete
+    - Not sure what options we have for it. Cheaper the better.
+    - Also what if not found? i,e new hotel
+- [ ] Add support for points-of-interest and notes as acitivity types.
+- [x] Side panel in timeline page needs to go full height and be resizable
 - [ ] Important!! suggestion modal should already show the suggestions - instead of links to booking.com or hotels.com it should already show the recommendations (with pictures) (perhaps post MVP - BUT IMPORTANT DONT FORGET FUTURE MARLON)
 - [ ] Show suggestions on Map view
 - [ ] Improvement: Show hotel suggestions at the end and flight at the start

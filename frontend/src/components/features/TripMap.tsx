@@ -79,7 +79,7 @@ export function TripMap({ className }: TripMapProps) {
   const routeLayerId = 'route-line'
   const nextRouteLayerId = 'next-route-line'
   
-  const { trip, activities, sidePanelState, viewActivity, createActivity } = useTripContext()
+  const { trip, activities, sidePanelState, selectActivity, createActivity } = useTripContext()
   
   const [isMapLoaded, setIsMapLoaded] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(-1) // Start with -1, will sync on mount
@@ -169,7 +169,7 @@ export function TripMap({ className }: TripMapProps) {
     if (hasInitialized.current || mapPoints.length === 0) return
     
     // Check if there's a selected activity in sidePanelState
-    const selectedActivityId = (sidePanelState.mode === 'viewing' || sidePanelState.mode === 'editing')
+    const selectedActivityId = sidePanelState.mode === 'editing'
       ? sidePanelState.activity.id
       : null
     
@@ -323,7 +323,7 @@ export function TripMap({ className }: TripMapProps) {
       el.textContent = String(point.index)
       el.addEventListener('click', () => {
         setCurrentIndex(arrayIdx)
-        viewActivity(point.activity)
+        selectActivity(point.activity)
       })
       
       const marker = new mapboxgl.Marker({ element: el })
@@ -335,7 +335,7 @@ export function TripMap({ className }: TripMapProps) {
     
     // Focus on current point
     focusOnPoint(currentIndex)
-  }, [mapPoints, isMapLoaded, visiblePointIndices, currentIndex, viewActivity, focusOnPoint])
+  }, [mapPoints, isMapLoaded, visiblePointIndices, currentIndex, selectActivity, focusOnPoint])
 
   // Update route lines: current route (for ranges) and next route (preview)
   useEffect(() => {
@@ -421,7 +421,7 @@ export function TripMap({ className }: TripMapProps) {
       setCurrentIndex(newIndex)
       const point = mapPoints[newIndex]
       if (point) {
-        viewActivity(point.activity)
+        selectActivity(point.activity)
       }
     }
   }
@@ -432,7 +432,7 @@ export function TripMap({ className }: TripMapProps) {
       setCurrentIndex(newIndex)
       const point = mapPoints[newIndex]
       if (point) {
-        viewActivity(point.activity)
+        selectActivity(point.activity)
       }
     }
   }

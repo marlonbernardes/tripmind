@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { FileText, Plus, Settings } from 'lucide-react'
 import { useTripContext } from '@/contexts/TripContext'
 import { ManageActivityForm } from './ManageActivityForm'
-import { ActivityReadView } from './ActivityReadView'
 import { SuggestionDetailView } from './SuggestionDetailView'
 import { TripConfigTab } from './TripConfigTab'
 import { getActivityLabel } from '@/lib/activity-config'
@@ -14,8 +13,6 @@ import type { ActivityType, ActivityContext } from '@/types/simple'
 type TabType = 'details' | 'config'
 
 interface TripSidePanelProps {
-  /** If true, starts in view mode and allows switching to edit. If false, goes directly to edit mode */
-  defaultViewMode?: boolean
   /** External tab control - when this changes to 'config', switches to the Preferences tab */
   externalTabTrigger?: 'config' | null
   /** Callback when external tab trigger is consumed */
@@ -23,14 +20,11 @@ interface TripSidePanelProps {
 }
 
 export function TripSidePanel({ 
-  defaultViewMode = false, 
   externalTabTrigger,
   onExternalTabConsumed 
 }: TripSidePanelProps) {
   const { 
     sidePanelState,
-    viewActivity,
-    editActivity,
     createActivity,
     clearPanel,
     trip
@@ -139,7 +133,7 @@ export function TripSidePanel({
           </div>
         )
 
-      case 'viewing':
+      case 'editing':
         return (
           <div className="flex flex-col h-full">
             <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
@@ -154,54 +148,12 @@ export function TripSidePanel({
                 ✕
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto p-4">
-              <ActivityReadView
-                activity={sidePanelState.activity}
-                onEdit={() => editActivity(sidePanelState.activity)}
-              />
-            </div>
-          </div>
-        )
-
-      case 'editing':
-        return (
-          <div className="flex flex-col h-full">
-            <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                <ActivityIcon type={sidePanelState.activity.type} size={16} className="text-gray-600 dark:text-gray-400" />
-                Edit {getActivityLabel(sidePanelState.activity.type)}
-              </h3>
-              <button
-                onClick={() => {
-                  if (defaultViewMode) {
-                    viewActivity(sidePanelState.activity)
-                  } else {
-                    clearPanel()
-                  }
-                }}
-                className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-              >
-                {defaultViewMode ? '← Back' : '✕'}
-              </button>
-            </div>
             <div className="flex-1 overflow-y-auto p-4 pb-0">
               <ManageActivityForm
                 mode="edit"
                 activity={sidePanelState.activity}
-                onSave={() => {
-                  if (defaultViewMode) {
-                    viewActivity(sidePanelState.activity)
-                  } else {
-                    clearPanel()
-                  }
-                }}
-                onCancel={() => {
-                  if (defaultViewMode) {
-                    viewActivity(sidePanelState.activity)
-                  } else {
-                    clearPanel()
-                  }
-                }}
+                onSave={clearPanel}
+                onCancel={clearPanel}
               />
             </div>
           </div>

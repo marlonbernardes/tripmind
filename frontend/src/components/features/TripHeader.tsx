@@ -112,50 +112,52 @@ export function TripHeader({ trip, activityCount, onOpenPreferences }: TripHeade
           </nav>
         </div>
         
-        {/* Desktop Layout - Single row */}
-        <div className="hidden md:block px-4 py-2">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2 min-w-0">
-              <div 
-                className="w-2 h-2 rounded-full flex-shrink-0"
-                style={{ backgroundColor: trip.color }}
-              />
-              <h1 className="text-base font-semibold text-gray-900 dark:text-white truncate">
-                {trip.name}
-              </h1>
-              <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                •  {dateDisplay}
-              </span>
-              <button
-                onClick={() => setIsEditModalOpen(true)}
-                className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                title="Edit trip name and color"
-              >
-                <Pencil className="w-3.5 h-3.5" />
-              </button>
-            </div>
-            
-            {/* Trip Sub-Navigation */}
-            <nav className="flex flex-shrink-0 gap-0.5 bg-gray-100 dark:bg-gray-800 p-0.5 rounded-md">
-              {tripViews.map((view) => {
-                const isActive = currentView === view.id
-                return (
-                  <Link
-                    key={view.id}
-                    href={`/trip/${trip.id}/${view.path}`}
-                    className={cn(
-                      'px-2.5 py-1 text-xs font-medium rounded transition-all whitespace-nowrap',
-                      isActive
-                        ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                    )}
-                  >
-                    {view.label}
-                  </Link>
-                )
-              })}
-            </nav>
+        {/* Desktop Layout - Single row with full-height tabs */}
+        <div className="hidden md:flex items-stretch h-11">
+          {/* Left side: Trip info */}
+          <div className="flex items-center gap-2 min-w-0 px-4">
+            <div 
+              className="w-2 h-2 rounded-full flex-shrink-0"
+              style={{ backgroundColor: trip.color }}
+            />
+            <h1 className="text-base font-semibold text-gray-900 dark:text-white truncate">
+              {trip.name}
+            </h1>
+            <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+              •  {dateDisplay}
+            </span>
+            <button
+              onClick={() => setIsEditModalOpen(true)}
+              className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              title="Edit trip name and color"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+            </button>
           </div>
+          
+          {/* Spacer */}
+          <div className="flex-1" />
+          
+          {/* Right side: Full-height navigation tabs */}
+          <nav className="flex">
+            {tripViews.map((view) => {
+              const isActive = currentView === view.id
+              return (
+                <Link
+                  key={view.id}
+                  href={`/trip/${trip.id}/${view.path}`}
+                  className={cn(
+                    'flex items-center px-5 text-sm font-medium border-b-2 transition-all',
+                    isActive
+                      ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/20'
+                      : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                  )}
+                >
+                  {view.label}
+                </Link>
+              )
+            })}
+          </nav>
         </div>
       </div>
 

@@ -173,8 +173,9 @@ export interface Suggestion {
 
 /**
  * Represents the current mode of the side panel.
+ * Simplified: always edit mode, no read-only view.
  */
-export type SidePanelMode = 'empty' | 'viewing' | 'editing' | 'creating' | 'suggestion'
+export type SidePanelMode = 'empty' | 'editing' | 'creating' | 'suggestion'
 
 /**
  * Represents the current state of the side panel.
@@ -182,7 +183,6 @@ export type SidePanelMode = 'empty' | 'viewing' | 'editing' | 'creating' | 'sugg
  */
 export type SidePanelState =
   | { mode: 'empty' }
-  | { mode: 'viewing'; activity: Activity }
   | { mode: 'editing'; activity: Activity }
   | { mode: 'creating'; context?: ActivityContext }
   | { mode: 'suggestion'; suggestion: Suggestion }

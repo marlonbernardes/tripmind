@@ -11,9 +11,8 @@ interface TripContextType {
   // Side panel state - single source of truth
   sidePanelState: SidePanelState
   
-  // Transition functions
-  viewActivity: (activity: Activity) => void
-  editActivity: (activity: Activity) => void
+  // Transition functions (simplified: no view mode, always edit)
+  selectActivity: (activity: Activity) => void
   createActivity: (context?: ActivityContext) => void
   viewSuggestion: (suggestion: Suggestion) => void
   clearPanel: () => void
@@ -100,12 +99,8 @@ export function TripProvider({ children }: TripProviderProps) {
 
   // ==================== TRANSITION FUNCTIONS ====================
   
-  const viewActivity = useCallback((activity: Activity) => {
-    updateUrlWithActivity(activity.id)
-    setSidePanelState({ mode: 'viewing', activity })
-  }, [updateUrlWithActivity])
-
-  const editActivity = useCallback((activity: Activity) => {
+  // Simplified: always go to edit mode (no read-only view)
+  const selectActivity = useCallback((activity: Activity) => {
     updateUrlWithActivity(activity.id)
     setSidePanelState({ mode: 'editing', activity })
   }, [updateUrlWithActivity])
@@ -144,9 +139,9 @@ export function TripProvider({ children }: TripProviderProps) {
       )
     )
     
-    // Update side panel if viewing/editing this activity
+    // Update side panel if editing this activity
     setSidePanelState(prev => {
-      if ((prev.mode === 'viewing' || prev.mode === 'editing') && prev.activity.id === id) {
+      if (prev.mode === 'editing' && prev.activity.id === id) {
         return { ...prev, activity: { ...prev.activity, ...updates } }
       }
       return prev
@@ -158,9 +153,9 @@ export function TripProvider({ children }: TripProviderProps) {
       prevActivities.filter(activity => activity.id !== id)
     )
     
-    // Clear panel if viewing/editing deleted activity
+    // Clear panel if editing deleted activity
     setSidePanelState(prev => {
-      if ((prev.mode === 'viewing' || prev.mode === 'editing') && prev.activity.id === id) {
+      if (prev.mode === 'editing' && prev.activity.id === id) {
         return { mode: 'empty' }
       }
       return prev
@@ -190,9 +185,9 @@ export function TripProvider({ children }: TripProviderProps) {
       prevActivities.filter(activity => activity.id !== id)
     )
 
-    // Clear panel if viewing/editing deleted activity
+    // Clear panel if editing deleted activity
     setSidePanelState(prev => {
-      if ((prev.mode === 'viewing' || prev.mode === 'editing') && prev.activity.id === id) {
+      if (prev.mode === 'editing' && prev.activity.id === id) {
         clearActivityFromUrl()
         return { mode: 'empty' }
       }
@@ -275,8 +270,7 @@ export function TripProvider({ children }: TripProviderProps) {
       value={{
         // Side panel state
         sidePanelState,
-        viewActivity,
-        editActivity,
+        selectActivity,
         createActivity,
         viewSuggestion,
         clearPanel,
