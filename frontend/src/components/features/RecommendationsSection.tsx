@@ -157,14 +157,6 @@ export function RecommendationsSection({ activity }: RecommendationsSectionProps
         ))}
       </div>
       
-      <div className="mt-3 p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
-        <p className="text-xs text-amber-700 dark:text-amber-300 flex items-start gap-2">
-          <span className="text-amber-500 mt-0.5">💡</span>
-          <span>
-            Tip: Mark as "Confirmed" once you've completed your reservation.
-          </span>
-        </p>
-      </div>
     </div>
   )
 }
