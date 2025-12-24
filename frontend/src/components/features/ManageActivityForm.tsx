@@ -3,10 +3,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useTripContext } from '@/contexts/TripContext'
 import type { Activity, ActivityType, ActivityContext } from '@/types/simple'
-import { FlightForm } from './FlightForm'
-import { StayForm } from './HotelForm'
-import { EventForm } from './EventForm'
-import { TransportForm } from './TransportForm'
+import { ActivityForm } from './ActivityForm'
 import { allActivityTypes, getActivityLabel, getActivityDescription } from '@/lib/activity-config'
 import { ActivityIcon } from '@/components/ui/activity-icon'
 
@@ -75,9 +72,9 @@ export function ManageActivityForm({
 
   // If editing, skip type selection and go straight to the form
   if (mode === 'edit' && activity && selectedType) {
-    const FormComponent = getFormComponent(selectedType)
     return (
-      <FormComponent
+      <ActivityForm
+        type={selectedType}
         activity={activity}
         onSave={handleActivitySave}
         onCancel={onCancel || (() => {})}
@@ -130,11 +127,10 @@ export function ManageActivityForm({
     )
   }
 
-  // Form step - show the specific form for the selected type
-  const FormComponent = getFormComponent(selectedType)
-  
+  // Form step - show the unified form for the selected type
   return (
-    <FormComponent
+    <ActivityForm
+      type={selectedType}
       activity={activity}
       onSave={handleActivitySave}
       onCancel={onCancel || (() => {})}
@@ -143,19 +139,4 @@ export function ManageActivityForm({
       initialContext={initialContext}
     />
   )
-}
-
-// Helper function to get the appropriate form component
-function getFormComponent(type: ActivityType) {
-  switch (type) {
-    case 'flight':
-      return FlightForm
-    case 'stay':
-      return StayForm
-    case 'transport':
-      return TransportForm
-    case 'event':
-    default:
-      return EventForm
-  }
 }
