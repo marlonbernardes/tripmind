@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, ReactNode, useEffect, useRef, useCallback } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
-import type { Activity, Trip, Suggestion, SidePanelState, ActivityContext } from '@/types/simple'
+import type { Activity, Trip, Suggestion, SidePanelState, ActivityContext, PointOfInterest } from '@/types/simple'
 import { useToast } from '@/components/ui/toast'
 import { tripService } from '@/lib/trip-service'
 import { suggestionService } from '@/lib/suggestion-service'
@@ -30,6 +30,13 @@ interface TripContextType {
   deleteActivity: (id: string) => void
   deleteActivityWithUndo: (id: string) => void
   
+  // Points of Interest
+  pois: PointOfInterest[]
+  setPois: (pois: PointOfInterest[]) => void
+  addPoi: (poi: Omit<PointOfInterest, 'id'>) => void
+  updatePoi: (id: string, updates: Partial<PointOfInterest>) => void
+  deletePoi: (id: string) => void
+  
   // Suggestions
   suggestions: Suggestion[]
   dismissSuggestion: (id: string) => void
@@ -56,6 +63,7 @@ export function TripProvider({ children }: TripProviderProps) {
   
   const [trip, setTrip] = useState<Trip | null>(null)
   const [activities, setActivities] = useState<Activity[]>([])
+  const [pois, setPois] = useState<PointOfInterest[]>([])
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   
   // One-time URL initialization flag
@@ -263,6 +271,29 @@ export function TripProvider({ children }: TripProviderProps) {
     }
   }, [sidePanelState])
 
+  // ==================== POINTS OF INTEREST ====================
+
+  const addPoi = useCallback((poi: Omit<PointOfInterest, 'id'>) => {
+    const newPoi: PointOfInterest = {
+      ...poi,
+      id: `poi_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    }
+    setPois(prev => [...prev, newPoi])
+    // TODO: Save to backend when implemented
+  }, [])
+
+  const updatePoi = useCallback((id: string, updates: Partial<PointOfInterest>) => {
+    setPois(prev => prev.map(poi => 
+      poi.id === id ? { ...poi, ...updates } : poi
+    ))
+    // TODO: Save to backend when implemented
+  }, [])
+
+  const deletePoi = useCallback((id: string) => {
+    setPois(prev => prev.filter(poi => poi.id !== id))
+    // TODO: Save to backend when implemented
+  }, [])
+
   // ==================== CONTEXT VALUE ====================
 
   return (
@@ -287,6 +318,13 @@ export function TripProvider({ children }: TripProviderProps) {
         updateActivity,
         deleteActivity,
         deleteActivityWithUndo,
+        
+        // Points of Interest
+        pois,
+        setPois,
+        addPoi,
+        updatePoi,
+        deletePoi,
         
         // Suggestions
         suggestions,

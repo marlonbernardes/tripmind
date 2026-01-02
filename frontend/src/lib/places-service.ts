@@ -186,10 +186,24 @@ export async function searchEstablishments(query: string): Promise<PlaceResult[]
 
 /**
  * Extract city from address string
+ * Addresses typically follow: street, city, region/state, country
+ * We want to extract the city (second part) or region (third part as fallback)
  */
 function extractCity(address: string): string | undefined {
   if (!address) return undefined
-  const parts = address.split(', ')
-  // Usually city is the first or second part
-  return parts[0] || undefined
+  const parts = address.split(', ').map(p => p.trim())
+  
+  // For most addresses, city is the second part (index 1)
+  // If only one or two parts, use the first non-country part
+  if (parts.length >= 3) {
+    // Standard format: street, city, region/country
+    return parts[1] || parts[0]
+  } else if (parts.length === 2) {
+    // Format: place, country OR city, country
+    return parts[0]
+  } else if (parts.length === 1) {
+    return parts[0]
+  }
+  
+  return undefined
 }
