@@ -172,6 +172,27 @@ export interface Suggestion {
   context: SuggestionContext
 }
 
+// ==================== POINTS OF INTEREST ====================
+
+/**
+ * Point of Interest - places to visit during a trip.
+ * Stored separately from activities as they don't have specific dates/times.
+ * Sourced from Google Places API.
+ */
+export interface PointOfInterest {
+  id: string
+  tripId: string
+  placeId: string          // Google Places ID
+  name: string
+  address: string
+  city: string
+  location: GeoLocation
+  category?: string        // e.g., 'restaurant', 'museum', 'park'
+  notes?: string           // User's personal notes about this place
+  visited?: boolean        // Has the user visited this place
+  favorite?: boolean       // User marked as favorite
+}
+
 // ==================== SIDE PANEL STATE ====================
 
 /**

@@ -1,16 +1,17 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { FileText, Plus, Settings } from 'lucide-react'
+import { FileText, Plus, Settings, MapPin } from 'lucide-react'
 import { useTripContext } from '@/contexts/TripContext'
 import { ManageActivityForm } from './ManageActivityForm'
 import { SuggestionDetailView } from './SuggestionDetailView'
 import { TripConfigTab } from './TripConfigTab'
+import { PointsOfInterestTab } from './PointsOfInterestTab'
 import { getActivityLabel } from '@/lib/activity-config'
 import { ActivityIcon } from '@/components/ui/activity-icon'
 import type { ActivityType, ActivityContext } from '@/types/simple'
 
-type TabType = 'details' | 'config'
+type TabType = 'details' | 'config' | 'pois'
 
 interface TripSidePanelProps {
   /** External tab control - when this changes to 'config', switches to the Preferences tab */
@@ -181,6 +182,17 @@ export function TripSidePanel({
             Details
           </button>
           <button
+            onClick={() => setActiveTab('pois')}
+            className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-colors ${
+              activeTab === 'pois'
+                ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+            }`}
+          >
+            <MapPin className="w-3 h-3" />
+            Points of Interest
+          </button>
+          <button
             onClick={() => setActiveTab('config')}
             className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-colors ${
               activeTab === 'config'
@@ -199,6 +211,12 @@ export function TripSidePanel({
         {activeTab === 'details' && (
           <div className="h-full">
             {renderDetailsContent()}
+          </div>
+        )}
+
+        {activeTab === 'pois' && (
+          <div className="h-full overflow-hidden">
+            <PointsOfInterestTab />
           </div>
         )}
 
