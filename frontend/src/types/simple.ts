@@ -189,7 +189,6 @@ export interface PointOfInterest {
   location: GeoLocation
   category?: string        // e.g., 'restaurant', 'museum', 'park'
   notes?: string           // User's personal notes about this place
-  visited?: boolean        // Has the user visited this place
   favorite?: boolean       // User marked as favorite
 }
 

@@ -1,14 +1,14 @@
 'use client'
 
 import { useState, useCallback, useMemo } from 'react'
-import { MapPin, Plus, Search, X, Star, Check, Trash2 } from 'lucide-react'
+import { MapPin, Plus, Search, X, Star, Trash2, Calendar } from 'lucide-react'
 import { useTripContext } from '@/contexts/TripContext'
 import { searchEstablishments } from '@/lib/places-service'
 import type { PlaceResult } from '@/lib/places-service'
 import type { PointOfInterest } from '@/types/simple'
 
 export function PointsOfInterestTab() {
-  const { pois, addPoi, updatePoi, deletePoi, trip } = useTripContext()
+  const { pois, addPoi, updatePoi, deletePoi, trip, createActivity } = useTripContext()
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<PlaceResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
@@ -63,7 +63,6 @@ export function PointsOfInterestTab() {
         lng: place.lng || 0
       },
       category: place.types[0] || undefined,
-      visited: false,
       favorite: false
     }
 
@@ -76,9 +75,16 @@ export function PointsOfInterestTab() {
     updatePoi(id, { favorite: !currentFavorite })
   }, [updatePoi])
 
-  const toggleVisited = useCallback((id: string, currentVisited: boolean) => {
-    updatePoi(id, { visited: !currentVisited })
-  }, [updatePoi])
+  const handleAddAsEvent = useCallback((poi: PointOfInterest) => {
+    // Create activity context with POI information pre-populated
+    createActivity({
+      preselectedType: 'event',
+      city: poi.city,
+    })
+    // Note: The address will need to be populated in the activity form
+    // This is a limitation since ActivityContext doesn't have an address field
+    // The user will need to enter the address in the form
+  }, [createActivity])
 
   const handleDeletePoi = useCallback((id: string) => {
     // TODO: Replace with proper modal/confirmation dialog for consistency
@@ -239,15 +245,11 @@ export function PointsOfInterestTab() {
                                   <Star className="w-4 h-4" fill={poi.favorite ? 'currentColor' : 'none'} />
                                 </button>
                                 <button
-                                  onClick={() => toggleVisited(poi.id, poi.visited || false)}
-                                  className={`p-1 rounded transition-colors ${
-                                    poi.visited
-                                      ? 'text-green-500 hover:text-green-600'
-                                      : 'text-gray-300 dark:text-gray-600 hover:text-green-500'
-                                  }`}
-                                  title={poi.visited ? 'Mark as not visited' : 'Mark as visited'}
+                                  onClick={() => handleAddAsEvent(poi)}
+                                  className="p-1 rounded text-gray-300 dark:text-gray-600 hover:text-blue-500 transition-colors"
+                                  title="Add as event"
                                 >
-                                  <Check className="w-4 h-4" />
+                                  <Calendar className="w-4 h-4" />
                                 </button>
                                 <button
                                   onClick={() => handleDeletePoi(poi.id)}
