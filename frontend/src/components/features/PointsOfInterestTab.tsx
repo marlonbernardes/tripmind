@@ -62,7 +62,7 @@ export function PointsOfInterestTab() {
         lat: place.lat || 0,
         lng: place.lng || 0
       },
-      category: place.types[0],
+      category: place.types[0] || undefined,
       visited: false,
       favorite: false
     }
@@ -81,6 +81,7 @@ export function PointsOfInterestTab() {
   }, [updatePoi])
 
   const handleDeletePoi = useCallback((id: string) => {
+    // TODO: Replace with proper modal/confirmation dialog for consistency
     if (confirm('Remove this point of interest?')) {
       deletePoi(id)
     }

@@ -276,7 +276,7 @@ export function TripProvider({ children }: TripProviderProps) {
   const addPoi = useCallback((poi: Omit<PointOfInterest, 'id'>) => {
     const newPoi: PointOfInterest = {
       ...poi,
-      id: `poi-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      id: `poi_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     }
     setPois(prev => [...prev, newPoi])
     // TODO: Save to backend when implemented
