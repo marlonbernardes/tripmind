@@ -75,10 +75,9 @@ export function PointsOfInterestTab() {
     updatePoi(id, { favorite: !currentFavorite })
   }, [updatePoi])
 
-  const handleAddAsEvent = useCallback((poi: PointOfInterest) => {
-    // Create activity context with POI information pre-populated
+  const handleAddAsActivity = useCallback((poi: PointOfInterest) => {
+    // Open activity creation form with POI information pre-populated
     createActivity({
-      preselectedType: 'event',
       city: poi.city,
     })
     // Note: The address will need to be populated in the activity form
@@ -245,9 +244,9 @@ export function PointsOfInterestTab() {
                                   <Star className="w-4 h-4" fill={poi.favorite ? 'currentColor' : 'none'} />
                                 </button>
                                 <button
-                                  onClick={() => handleAddAsEvent(poi)}
+                                  onClick={() => handleAddAsActivity(poi)}
                                   className="p-1 rounded text-gray-300 dark:text-gray-600 hover:text-blue-500 transition-colors"
-                                  title="Add as event"
+                                  title="Add activity"
                                 >
                                   <Calendar className="w-4 h-4" />
                                 </button>
