@@ -502,7 +502,9 @@ export default function TimelinePage() {
       flight: [],
       stay: [],
       event: [],
-      transport: []
+      transport: [],
+      poi: [],
+      note: []
     }
     
     activities.forEach(activity => {

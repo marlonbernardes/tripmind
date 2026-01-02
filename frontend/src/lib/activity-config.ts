@@ -30,6 +30,16 @@ export const activityTypeConfig: Record<ActivityType, ActivityTypeConfig> = {
     label: 'Transport',
     color: '#10B981', // emerald-500
     description: 'Local transportation'
+  },
+  poi: {
+    label: 'Point of Interest',
+    color: '#EC4899', // pink-500
+    description: 'Places to visit, landmarks, viewpoints'
+  },
+  note: {
+    label: 'Note',
+    color: '#6B7280', // gray-500
+    description: 'Reminders and personal notes'
   }
 }
 
@@ -38,7 +48,9 @@ export const allActivityTypes: ActivityType[] = [
   'flight',
   'stay',
   'event',
-  'transport'
+  'transport',
+  'poi',
+  'note'
 ]
 
 // Helper function to get activity color

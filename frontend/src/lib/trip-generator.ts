@@ -25,7 +25,9 @@ export function generateMockTrip(userInput: string): { trip: Trip, activities: A
     dateMode: 'fixed',
     startDate,
     endDate,
-    color: '#8B5CF6'
+    color: '#8B5CF6',
+    interests: ['culture', 'food', 'photos'],
+    pacing: 'moderate'
   }
 
   const activities: Activity[] = []
