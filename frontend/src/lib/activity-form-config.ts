@@ -187,74 +187,12 @@ export const TRANSPORT_FIELDS: FormFieldConfig[] = [
   } as LocationFieldConfig,
 ]
 
-export const POI_FIELDS: FormFieldConfig[] = [
-  {
-    id: 'title',
-    type: 'text',
-    label: 'Title',
-    placeholder: 'Point of interest name',
-    required: true,
-    mapTo: [{ target: 'activity', property: 'title' }],
-  },
-  {
-    id: 'placeName',
-    type: 'text',
-    label: 'Place name',
-    placeholder: 'Specific location or landmark',
-    mapTo: [{ target: 'metadata', property: 'placeName' }],
-  },
-  {
-    id: 'address',
-    type: 'address',
-    label: 'Address',
-    placeholder: 'Search for address or place',
-    required: true,
-    mapTo: [{ target: 'activity', property: 'address' }],
-    locationField: 'start',
-    derivesCity: 'city',
-  } as LocationFieldConfig,
-  {
-    id: 'category',
-    type: 'text',
-    label: 'Category',
-    placeholder: 'e.g., restaurant, museum, park',
-    mapTo: [{ target: 'metadata', property: 'category' }],
-  },
-]
-
-export const NOTE_FIELDS: FormFieldConfig[] = [
-  {
-    id: 'title',
-    type: 'text',
-    label: 'Title',
-    placeholder: 'Note title',
-    required: true,
-    mapTo: [{ target: 'activity', property: 'title' }],
-  },
-  {
-    id: 'content',
-    type: 'text',
-    label: 'Content',
-    placeholder: 'Note details',
-    mapTo: [{ target: 'metadata', property: 'content' }],
-  },
-  {
-    id: 'category',
-    type: 'text',
-    label: 'Category',
-    placeholder: 'e.g., packing, reminder, idea',
-    mapTo: [{ target: 'metadata', property: 'category' }],
-  },
-]
-
 // Map activity type to field configuration
 export const ACTIVITY_FIELD_CONFIGS: Record<ActivityType, FormFieldConfig[]> = {
   flight: FLIGHT_FIELDS,
   stay: STAY_FIELDS,
   event: EVENT_FIELDS,
   transport: TRANSPORT_FIELDS,
-  poi: POI_FIELDS,
-  note: NOTE_FIELDS,
 }
 
 // ==================== TITLE GENERATORS ====================
@@ -289,12 +227,6 @@ export const TITLE_GENERATORS: Record<ActivityType, (data: FormData) => string> 
     }
     return title
   },
-  poi: (data) => {
-    return (data.title as string) || 'Point of Interest'
-  },
-  note: (data) => {
-    return (data.title as string) || 'Note'
-  },
 }
 
 function capitalize(str: string): string {
@@ -313,8 +245,6 @@ export const DATE_TIME_LABELS: Record<ActivityType, DateTimeLabels> = {
   stay: { startLabel: 'Check-in', endLabel: 'Check-out' },
   event: { startLabel: 'Start', endLabel: 'End' },
   transport: { startLabel: 'Departure', endLabel: 'Arrival' },
-  poi: { startLabel: 'Visit', endLabel: 'End' },
-  note: { startLabel: 'Start', endLabel: 'End' },
 }
 
 // ==================== FIELD GROUPING ====================
@@ -345,17 +275,6 @@ export const FIELD_LAYOUT: Record<ActivityType, FieldGroup[]> = {
   transport: [
     { id: 'vehicle', type: 'single', fieldIds: ['vehicleType'] },
     { id: 'locations', type: 'row', fieldIds: ['fromAddress', 'toAddress'] },
-  ],
-  poi: [
-    { id: 'title', type: 'single', fieldIds: ['title'] },
-    { id: 'place', type: 'single', fieldIds: ['placeName'] },
-    { id: 'address', type: 'single', fieldIds: ['address'] },
-    { id: 'category', type: 'single', fieldIds: ['category'] },
-  ],
-  note: [
-    { id: 'title', type: 'single', fieldIds: ['title'] },
-    { id: 'content', type: 'single', fieldIds: ['content'] },
-    { id: 'category', type: 'single', fieldIds: ['category'] },
   ],
 }
 

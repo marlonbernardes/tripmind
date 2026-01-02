@@ -61,7 +61,7 @@ export interface ActivityLocation {
 
 // ==================== ACTIVITIES ====================
 
-export type ActivityType = 'flight' | 'stay' | 'event' | 'transport' | 'poi' | 'note'
+export type ActivityType = 'flight' | 'stay' | 'event' | 'transport'
 export type ActivityStatus = 'draft' | 'confirmed'
 
 export interface Activity {
@@ -84,7 +84,7 @@ export interface Activity {
   address?: string  // Full address string
   
   // Type-specific metadata
-  metadata?: FlightMetadata | StayMetadata | EventMetadata | TransportMetadata | PoiMetadata | NoteMetadata
+  metadata?: FlightMetadata | StayMetadata | EventMetadata | TransportMetadata
 }
 
 // Legacy alias for backward compatibility during migration
@@ -116,16 +116,6 @@ export interface TransportMetadata {
   toAddress?: string
   vehicleType?: string
   confirmationCode?: string
-}
-
-export interface PoiMetadata {
-  placeName?: string  // Name of the point of interest
-  category?: string   // e.g., 'restaurant', 'museum', 'park', 'viewpoint'
-}
-
-export interface NoteMetadata {
-  content?: string    // Note content/description
-  category?: string   // Optional category for organization
 }
 
 

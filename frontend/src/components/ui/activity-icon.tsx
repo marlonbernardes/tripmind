@@ -1,4 +1,4 @@
-import { Plane, Hotel, Ticket, Train, MapPin, StickyNote } from 'lucide-react'
+import { Plane, Hotel, Ticket, Train, MapPin } from 'lucide-react'
 import type { ActivityType } from '@/types/simple'
 import type { CSSProperties } from 'react'
 import { getActivityColor } from '@/lib/activity-config'
@@ -8,8 +8,6 @@ const iconMap = {
   stay: Hotel,
   event: Ticket,
   transport: Train,
-  poi: MapPin,
-  note: StickyNote,
 } as const
 
 interface ActivityIconProps {
